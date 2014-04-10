@@ -29,6 +29,8 @@ $(document).ready(function () {
         return false;
     });
 
+    $('#timeline-example').ehrscapeTimeline();
+
     // ehrscape API
     var baseUrl = "https://rest.ehrscape.com/rest/v1";
     var ehrId = "6f81d77a-26ef-4cf4-926f-40ccfafd8a1f";

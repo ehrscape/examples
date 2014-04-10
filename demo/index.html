@@ -10,6 +10,7 @@
     <!-- Loading Styles -->
     <link href="bootflat/css/bootflat.css" rel="stylesheet">
     <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet" type="text/css">
+    <link href="css/font-awesome.css" rel="stylesheet">
 
     <link href="http://cdn.oesmith.co.uk/morris-0.4.3.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
@@ -187,6 +188,22 @@
                         </div>
                     </div>
                 </div>
+                <div class="panel panel-primary" style="width: 97%;">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Timeline
+                            <span class="remove">
+                                <i class="glyphicon glyphicon-remove"></i>
+                            </span>
+                        </h3>
+                    </div>
+                    <div class="panel-body" style="overflow: auto;">
+                        <div id="timeline-example"></div>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="last-measurement">
+                        </div>
+                    </div>
+                </div>
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         <h3 class="panel-title">Weight
@@ -241,12 +258,32 @@
 </div>
 <a href="#top" id="smoothscroll" title="Back to top"></a>
 
+<script id="timeline-entry" type="text/x-handlebars-template">
+    <li class="timeline-item">
+        <time class="timeline-date" datetime="{{datetime}}">
+            <span>{{date_complete}}</span>
+            <span>{{date_principal}}</span>
+        </time>
+        <div class="timeline-icon {{icon}}"></div>
+        <div class="timeline-label">
+            <div class="timeline-title collapsed">
+                <h3>{{title}} | {{composer}}</h3>
+            </div>
+            <div class="timeline-content">
+                {{{content}}}
+            </div>
+        </div>
+    </li>
+</script>
+
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
 <script src="http://cdn.oesmith.co.uk/morris-0.4.3.min.js"></script>
 <script src="js/app.js"></script>
+<script src="js/handlebars-v1.3.0.js"></script>
+<script src="js/timeline.js"></script>
 
 </body>
 </html>
