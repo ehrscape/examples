@@ -210,7 +210,7 @@
 
             var timelineItem = Handlebars.compile( $("#timeline-entry").html() );
 
-            for(var i=0; i<data.length; i++){
+            for(var i=0; i<data.length && i<=12; i++){
 
                 var title = data[i].metadata.templateId;
 

@@ -436,28 +436,28 @@ $(document).ready(function () {
             days: dateAge
         };
 
-        if (age.years > 1) yearString = " years";
-        else yearString = " year";
-        if (age.months > 1) monthString = " months";
-        else monthString = " month";
+        if (age.years > 1) yearString = "y";
+        else yearString = "y";
+        if (age.months > 1) monthString = "m";
+        else monthString = "m";
         if (age.days > 1) dayString = " days";
         else dayString = " day";
 
 
         if ((age.years > 0) && (age.months > 0) && (age.days > 0))
-            ageString = age.years + yearString + ", " + age.months + monthString + ", and " + age.days + dayString + " old";
+            ageString = age.years + yearString + " " + age.months + monthString;// + ", and " + age.days + dayString + " old";
         else if ((age.years == 0) && (age.months == 0) && (age.days > 0))
             ageString = age.days + dayString + " old";
         else if ((age.years > 0) && (age.months == 0) && (age.days == 0))
-            ageString = age.years + yearString + " old. Happy Birthday!";
+            ageString = age.years + yearString;// + " old. Happy Birthday!";
         else if ((age.years > 0) && (age.months > 0) && (age.days == 0))
-            ageString = age.years + yearString + " and " + age.months + monthString + " old";
+            ageString = age.years + yearString + " and " + age.months + monthString;// + " old";
         else if ((age.years == 0) && (age.months > 0) && (age.days > 0))
-            ageString = age.months + monthString + " and " + age.days + dayString + " old";
+            ageString = age.months + monthString; // + " and " + age.days + dayString + " old";
         else if ((age.years > 0) && (age.months == 0) && (age.days > 0))
-            ageString = age.years + yearString + " and " + age.days + dayString + " old";
+            ageString = age.years + yearString;// + " and " + age.days + dayString + " old";
         else if ((age.years == 0) && (age.months > 0) && (age.days == 0))
-            ageString = age.months + monthString + " old";
+            ageString = age.months + monthString;// + " old";
         else ageString = "Oops! Could not calculate age!";
 
         return ageString;
@@ -485,9 +485,12 @@ $(document).ready(function () {
         var curr_sec = d.getSeconds();
         curr_sec = normalizeDate(curr_sec);
 
-        var dateString;
-        if (completeDate) dateString = curr_date + "-" + curr_month + "-" + curr_year + " " + curr_hour + ":" + curr_min;// + ":" + curr_sec;
-        else dateString = curr_date + "-" + curr_month + "-" + curr_year;
+        var dateString, monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        if (completeDate){
+            dateString = curr_date + "-" + monthNames[curr_month-1] + "-" + curr_year + " at " + curr_hour + ":" + curr_min; // + ":" + curr_sec;
+        }
+        else dateString = curr_date + "-" + monthNames[curr_month-1] + "-" + curr_year;
 
         return dateString;
 

@@ -48,7 +48,7 @@
             <div class="patient-stats well" style="position: relative">
                 <div class="row">
                     <div class="col-md-8 bordered">
-                        <div class="row">
+                        <div class="row" style="min-height: 57px;">
                             <div class="col-md-6 bordered centered">
                                 <p>Age:</p>
                                 <div class="value patient-age-years"></div>
@@ -112,6 +112,22 @@
                 </div>
             </div>
             <div class="patient-records">
+                <div class="panel panel-primary" style="width: 97%;">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Timeline
+                            <span class="remove">
+                                <i class="glyphicon glyphicon-remove"></i>
+                            </span>
+                        </h3>
+                    </div>
+                    <div class="panel-body" style="overflow: auto;">
+                        <div id="timeline-example"></div>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="last-measurement">
+                        </div>
+                    </div>
+                </div>
                 <div class="panel panel-danger">
                     <div class="panel-heading">
                         <h3 class="panel-title">Blood Pressure
@@ -125,8 +141,8 @@
                     </div>
                     <div class="panel-footer">
                         <div class="last-measurement">
-                            Last measurement (as of
-                            <span class="last-bp-date"></span>):
+                            As of:
+                            <span class="last-bp-date"></span>
                             <div class="last-bp"></div>
                         </div>
                     </div>
@@ -144,8 +160,8 @@
                     </div>
                     <div class="panel-footer">
                         <div class="last-measurement">
-                            Last measurement (as of
-                            <span class="last-bt-date"></span>):
+                            As of:
+                            <span class="last-bt-date"></span>
                             <div class="last-bt"></div>
                         </div>
                     </div>
@@ -163,8 +179,8 @@
                     </div>
                     <div class="panel-footer">
                         <div class="last-measurement">
-                            Last measurement (as of
-                            <span class="last-ch-date"></span>):
+                            As of:
+                            <span class="last-ch-date"></span>
                             <div class="last-ch"></div>
                         </div>
                     </div>
@@ -182,25 +198,9 @@
                     </div>
                     <div class="panel-footer">
                         <div class="last-measurement">
-                            Last measurement (as of
-                            <span class="last-pulse-date"></span>):
+                            As of:
+                            <span class="last-pulse-date"></span>
                             <div class="last-pulse"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel panel-primary" style="width: 97%;">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Timeline
-                            <span class="remove">
-                                <i class="glyphicon glyphicon-remove"></i>
-                            </span>
-                        </h3>
-                    </div>
-                    <div class="panel-body" style="overflow: auto;">
-                        <div id="timeline-example"></div>
-                    </div>
-                    <div class="panel-footer">
-                        <div class="last-measurement">
                         </div>
                     </div>
                 </div>
@@ -217,8 +217,8 @@
                     </div>
                     <div class="panel-footer">
                         <div class="last-measurement">
-                            Last measurement (as of
-                            <span class="last-cw-date"></span>):
+                            As of:
+                            <span class="last-cw-date"></span>
                             <div class="last-cw"></div>
                         </div>
                     </div>
