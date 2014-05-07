@@ -1,0 +1,487 @@
+<link rel="stylesheet" type="text/css" href="css/preferences-editor.css"/>
+
+<div id="preferences-editor">
+<table>
+<tr>
+<td style="vertical-align:top">
+    <select id="pref-view" size="10">
+        <option value="panel-colors" selected="selected" data-translatecontent="STR_3060"></option>
+        <option value="panel-fonts" data-translatecontent="STR_3061"></option>
+        <option value="panel-behavior" data-translatecontent="STR_3062"></option>
+        <option value="panel-chart-selection" data-translatecontent="STR_3063"></option>
+        <option value="panel-events" data-translatecontent="STR_3064"></option>
+        <option value="panel-timeline" data-translatecontent="STR_3065"></option>
+        <option value="panel-dates" data-translatecontent="STR_3066"></option>
+        <option value="panel-units" data-translatecontent="STR_3067"></option>
+    </select>
+</td>
+<td style="vertical-align:top;padding-left:10px;">
+<div id="panel-colors" class="prefs-panel">
+    <h1 data-translatecontent="STR_3068"></h1>
+    <b data-translatecontent="STR_3069"></b>
+
+    <div id="color-presets-list"></div>
+    <br/>
+    <table>
+        <tr>
+            <td width="100%"><b data-translatecontent="STR_3070"></b>&nbsp;</td>
+            <td><b class="slider-label">-</b></td>
+            <td>
+                <div id="slider-saturation"></div>
+            </td>
+            <td><b class="slider-label">+</b></td>
+        </tr>
+        <tr>
+            <td width="100%"><b data-translatecontent="STR_3071"></b>&nbsp;</td>
+            <td><b class="slider-label">-</b></td>
+            <td>
+                <div id="slider-brightness"></div>
+            </td>
+            <td><b class="slider-label">+</b></td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <div class="separator"></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><b data-translatecontent="STR_3072"></b>&nbsp;</td>
+            <td colspan="2">
+                <div id="preset-preview">
+                    <div class="color" title="Length"></div>
+                    <div class="color" title="Weight"></div>
+                    <div class="color" title="Head C"></div>
+                    <div class="color" title="BMI"></div>
+                    <div class="color" title="Primary selection"></div>
+                    <div class="color" title="Secondary selection"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4"><br/></td>
+        </tr>
+    </table>
+</div>
+<div id="panel-fonts" class="prefs-panel">
+    <h1 data-translatecontent="STR_3073"></h1>
+    <table>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3074"></td>
+            <td><input name="fontSize" type="text" min="10" max="18" value="14" class="step-input"/></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div class="separator"></div>
+            </td>
+        </tr>
+        <tr>
+            <td data-translatecontent="STR_3075"></td>
+            <td>
+                <select name="fontFamily">
+                    <option value="'Helvetica Neue', Arial, Helvetica, sans-serif">Helvetica Neue</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Tahoma">Tahoma</option>
+                    <option value="'MS Sans Serif', sans-serif">MS Sans Serif</option>
+                    <option value="Courier, monospace">Courier</option>
+                    <optgroup label="Generic Fonts">
+                        <option value="sans-serif">Sans Serif</option>
+                        <option value="serif">Serif</option>
+                        <option value="monospace">Fixed Width</option>
+                    </optgroup>
+                </select>
+            </td>
+        </tr>
+    </table>
+</div>
+<div id="panel-behavior" class="prefs-panel">
+    <h1 data-translatecontent="STR_3076"></h1>
+    <table>
+        <tr>
+            <td colspan="3" align="right">
+                <span data-translatecontent="STR_3077"></span>
+                <select name="aspectRatio">
+                    <option value="0.8">1:1.25</option>
+                    <option value="0.625">1:1.6</option>
+                    <option value="1" data-translatecontent="STR_3078"></option>
+                    <option value="0.5">1:2</option>
+                    <option value="0.6666666666666667">2:3</option>
+                    <option value="0.75">3:4</option>
+                    <option value="0.6">3:5</option>
+                    <option value="0.375">9:16</option>
+                    <option value="0" data-translatecontent="STR_3079"></option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <div class="separator"></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <label>
+                    <input type="radio" name="paper-width-type" value="auto"/>
+                    <span data-translatecontent="STR_3080"></span>
+                </label>
+            </td>
+        </tr>
+        <tr class="paper-max-width-row">
+            <td width="100%">&nbsp;</td>
+            <td style="text-align:right" data-translatecontent="STR_3081"></td>
+            <td><input name="maxWidth" type="text" style="width:120px"/></td>
+        </tr>
+        <tr>
+            <td colspan="3">&nbsp;</td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <label>
+                    <input type="radio" name="paper-width-type" value="fixed"/>
+                    <span data-translatecontent="STR_3082"></span>
+                </label>
+            </td>
+        </tr>
+        <tr class="paper-width-row">
+            <td width="100%">&nbsp;</td>
+            <td style="text-align:right" data-translatecontent="STR_3083"></td>
+            <td><input name="paperWidth" type="text" style="width:120px"/></td>
+        </tr>
+    </table>
+</div>
+<div id="panel-events" class="prefs-panel">
+    <h1 data-translatecontent="STR_3084"></h1>
+    <!--label>
+        <input type="checkbox" name="higlightTimelineRanges" />
+        Highlight time ranges on timeline mouse over
+    </label><br />
+    <label>
+        <input type="checkbox" name="timeline.interactive" />
+        Make selection on timeline items click
+    </label><br /-->
+    <label>
+        <input type="checkbox" name="secondarySelectionEnabled"/>
+        <span data-translatecontent="STR_3085"></span>
+    </label><br/>
+    <label>
+        <input type="checkbox" name="primarySelectionEnabled"/>
+        <span data-translatecontent="STR_3086"></span>
+    </label><br/>
+    <label>
+        <input type="checkbox" name="pointDoubleClickEdit"/>
+        <span data-translatecontent="STR_3087"></span>
+    </label><br/>
+    <label>
+        <input type="checkbox" name="columnResizing.enabled"/>
+        <span data-translatecontent="STR_3088"></span>
+    </label>
+    <br/>
+</div>
+<div id="panel-timeline" class="prefs-panel">
+    <h1 data-translatecontent="STR_3089"></h1>
+    <span data-translatecontent="STR_3090"></span> <br/>
+    <span data-translatecontent="STR_3091"></span>
+
+    <div class="separator"></div>
+    <table>
+        <tr>
+            <td width="100%"><b data-translatecontent="STR_3092"></b></td>
+            <td>&nbsp;&nbsp;<span data-translatecontent="STR_3093"></span></td>
+            <td><input type="text" id="timeline-days-from" value="0" class="timeline-spinner ui-state-disabled"/></td>
+            <td>&nbsp;&nbsp;<span data-translatecontent="STR_3094"></span></td>
+            <td><input type="text" id="timeline-days-to" class="timeline-spinner"></td>
+        </tr>
+        <tr>
+            <td width="100%"><b data-translatecontent="STR_3095"></b></td>
+            <td>&nbsp;&nbsp;<span data-translatecontent="STR_3096"></span></td>
+            <td><input type="text" id="timeline-weeks-from" class="timeline-spinner"/></td>
+            <td>&nbsp;&nbsp;<span data-translatecontent="STR_3097"></span></td>
+            <td><input type="text" id="timeline-weeks-to" class="timeline-spinner"/></td>
+        </tr>
+        <tr>
+            <td width="100%"><b data-translatecontent="STR_3098"></b></td>
+            <td>&nbsp;&nbsp;<span data-translatecontent="STR_3099"></span></td>
+            <td><input type="text" id="timeline-months-from" class="timeline-spinner"/></td>
+            <td>&nbsp;&nbsp;<span data-translatecontent="STR_3100"></span></td>
+            <td><input type="text" id="timeline-months-to" class="timeline-spinner"/></td>
+        </tr>
+        <tr>
+            <td width="100%"><b data-translatecontent="STR_3101"></b></td>
+            <td>&nbsp;&nbsp;<span data-translatecontent="STR_3102"></span></td>
+            <td><input type="text" id="timeline-years-from" class="timeline-spinner"/></td>
+            <td>&nbsp;&nbsp;<span data-translatecontent="STR_3103"></span></td>
+            <td><input type="text" id="timeline-years-to" value="Infinity" class="timeline-spinner ui-state-disabled"/></td>
+        </tr>
+    </table>
+    <br/>
+    <b data-translatecontent="STR_3104"></b>
+
+    <div class="separator"></div>
+    <div id="timeline-preview">
+        <div class="days"><span data-translatecontent="STR_3105"></span>
+
+            <div></div>
+        </div>
+        <div class="weeks"><span data-translatecontent="STR_3106"></span>
+
+            <div></div>
+        </div>
+        <div class="months"><span data-translatecontent="STR_3107"></span>
+
+            <div></div>
+        </div>
+        <div class="years"><span data-translatecontent="STR_3108"></span>
+
+            <div></div>
+        </div>
+    </div>
+
+
+</div>
+<div id="panel-chart-selection" class="prefs-panel">
+    <h1 data-translatecontent="STR_3109"></h1>
+    <table>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3110"></td>
+            <td>
+                <select name="defaultPrematureChart">
+                    <option value="FENTON">Fenton</option>
+                    <option value="CDC">CDC</option>
+                    <option value="WHO">WHO</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3111"></td>
+            <td>
+                <select name="defaultBabyChart">
+                    <option value="FENTON">Fenton</option>
+                    <option value="CDC">CDC</option>
+                    <option value="WHO">WHO</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3112"></td>
+            <td>
+                <select name="defaultChart">
+                    <option value="FENTON">Fenton</option>
+                    <option value="CDC">CDC</option>
+                    <option value="WHO">WHO</option>
+                </select>
+            </td>
+        </tr>
+    </table>
+</div>
+<div id="panel-dates" class="prefs-panel">
+    <h1><span data-translatecontent="STR_3113"></span> &amp; <span data-translatecontent="STR_3114"></span></h1>
+    <table>
+        <tr title="For reference: http://arshaw.com/xdate/#Formatting">
+            <td width="100%" data-translatecontent="STR_3115"></td>
+            <td>
+                <select name="dateFormat">
+                    <option value="ddMMMyyyy" data-translatecontent="STR_3116"></option>
+                    <option value="dd MMM yyyy" data-translatecontent="STR_3117"></option>
+                    <option value="MM/dd/yy" data-translatecontent="STR_3118"></option>
+                    <option value="dd/MM/yy" data-translatecontent="STR_3119"></option>
+                    <option value="dd-MM-yyyy" data-translatecontent="STR_3120"></option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td data-translatecontent="STR_3121"></td>
+            <td>
+                <div class="preview" id="preview-date"></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div class="separator"></div>
+            </td>
+        </tr>
+        <tr title="For reference: http://arshaw.com/xdate/#Formatting">
+            <td data-translatecontent="STR_3122"></td>
+            <td>
+                <select name="timeFormat">
+                    <option value="h:mm tt">h:mm tt</option>
+                    <option value="h:mm TT">h:mm TT</option>
+                    <option value="HH:mm">HH:mm</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td data-translatecontent="STR_3123"></td>
+            <td>
+                <div class="preview" id="preview-time"></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div class="separator"></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><b data-translatecontent="STR_3124"></b><br/><br/></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td data-translatecontent="STR_3125"></td>
+            <td>
+                <select name="timeInterval-precision">
+                    <option value="0" data-translatecontent="STR_3126"></option>
+                    <option value="1" data-translatecontent="STR_3127"></option>
+                    <option value="2" data-translatecontent="STR_3128"></option>
+                    <option value="3" data-translatecontent="STR_3129"></option>
+                    <option value="4" data-translatecontent="STR_3130"></option>
+                    <option value="5" data-translatecontent="STR_3131"></option>
+                    <option value="6" data-translatecontent="STR_3132"></option>
+                    <option value="7" data-translatecontent="STR_3133"></option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td data-translatecontent="STR_3134"></td>
+            <td>
+                <select name="timeInterval.separator" style="font-weight: bold;font-family: monospace;">
+                    <option value=" ">&nbsp;</option>
+                    <option value=" - ">&nbsp;-&nbsp;</option>
+                    <option value=", ">,&nbsp;</option>
+                    <option value=":">:</option>
+                    <option value=" : ">&nbsp;:&nbsp;</option>
+                    <option value="/">/</option>
+                    <option value=" / ">&nbsp;/&nbsp;</option>
+                </select>
+            </td>
+        </tr>
+        <tr title="Only show the first N segments of the result">
+            <td data-translatecontent="STR_3135"></td>
+            <td>
+                <select name="timeInterval.limit">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td data-translatecontent="STR_3136"></td>
+            <td><input type="checkbox" name="timeInterval.zeroFill"/></td>
+        </tr>
+        <tr>
+            <td data-translatecontent="STR_3137"></td>
+            <td>
+                <div class="preview" id="preview-interval"></div>
+            </td>
+        </tr>
+    </table>
+</div>
+<div id="panel-units" class="prefs-panel">
+    <h1><span data-translatecontent="STR_3138"></span> &amp; <span data-translatecontent="STR_3139"></span></h1>
+    <table class="round-precisions">
+        <tr>
+            <td colspan="3"><b data-translatecontent="STR_3140"></b><br/>
+            <td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <label>
+                    <input type="radio" name="percentile" value="0.03,0.15,0.5,0.85,0.97"/>
+                    <span data-translatecontent="STR_3141"></span>
+                </label><br/>
+                <label>
+                    <input type="radio" name="percentile" value="0.05,0.15,0.5,0.85,0.95"/>
+                    <span data-translatecontent="STR_3142"></span>
+                </label>
+                <br/>
+                <br/>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3"><b data-translatecontent="STR_3143"></b></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <div class="separator"></div>
+            </td>
+        </tr>
+        <tr>
+            <td width="100%"></td>
+            <td><b> &nbsp; <span data-translatecontent="STR_3144"></span></b></td>
+            <td><b> &nbsp; <span data-translatecontent="STR_3145"></span></b></td>
+        </tr>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3146"></td>
+            <td><select name="roundPrecision.length.std"></select></td>
+            <td><select name="roundPrecision.length.nicu"></select></td>
+        </tr>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3147"></td>
+            <td><select name="roundPrecision.weight.std"></select></td>
+            <td><select name="roundPrecision.weight.nicu"></select></td>
+        </tr>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3148"></td>
+            <td><select name="roundPrecision.headc.std"></select></td>
+            <td><select name="roundPrecision.headc.nicu"></select></td>
+        </tr>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3149"></td>
+            <td><select name="roundPrecision.bmi.std"></select></td>
+            <td><select name="roundPrecision.bmi.nicu"></select></td>
+        </tr>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3150"></td>
+            <td><select name="roundPrecision.percentile.std"></select></td>
+            <td><select name="roundPrecision.percentile.nicu"></select></td>
+        </tr>
+        <tr>
+            <td width="100%" data-translatecontent="STR_3151"></td>
+            <td><select name="roundPrecision.zscore.std"></select></td>
+            <td><select name="roundPrecision.zscore.nicu"></select></td>
+        </tr>
+        <tr>
+            <td data-translatecontent="STR_3152"></td>
+            <td>
+                <select name="roundPrecision.velocity.std" class="velocity-denominator">
+                    <option value="year" data-translatecontent="STR_3153"></option>
+                    <option value="month" data-translatecontent="STR_3154"></option>
+                    <option value="week" data-translatecontent="STR_3155"></option>
+                    <option value="day" data-translatecontent="STR_3156"></option>
+                    <option value="auto" data-translatecontent="STR_3157"></option>
+                </select>
+            </td>
+            <td>
+                <select name="roundPrecision.velocity.nicu" class="velocity-denominator">
+                    <option value="year" data-translatecontent="STR_3158"></option>
+                    <option value="month" data-translatecontent="STR_3159"></option>
+                    <option value="week" data-translatecontent="STR_3160"></option>
+                    <option value="day" data-translatecontent="STR_3161"></option>
+                    <option value="auto" data-translatecontent="STR_3162"></option>
+                </select>
+            </td>
+        </tr>
+    </table>
+</div>
+</td>
+</tr>
+<tr>
+    <td colspan="2">
+        <div class="separator"></div>
+    </td>
+</tr>
+<tr class="footer">
+    <td><input type="button" data-translateattr="value=STR_6034" value=" Reset to Defaults " class="reset"/></td>
+    <td style="text-align:right">
+        <input type="button" data-translateattr="value=STR_6041" value="  Close  " class="cancel"/>
+        <input type="button" data-translateattr="value=STR_6032" value="  Apply  " class="apply ui-state-disabled"/>
+        <input type="button" data-translateattr="value=STR_6033" value="  Save  " class="save ui-state-disabled"/>
+    </td>
+</tr>
+</table>
+</div>
+<script src="js/settings-editor.js"></script>

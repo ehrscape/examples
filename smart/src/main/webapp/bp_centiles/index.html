@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<!-- 
+/**
+*  Blood Pressure Centiles SMART Application
+*
+*  Developed by: Nikolai Schwertner
+*
+*  Revision history:
+*       2011-12-29 Moved the patient information tab outside the tabs context
+*       2011-06-21 Refactored
+*       2011-06-02 Modified the table template to output the method and the month/year format
+*       2011-05-26 Added JCM's calculator code
+*/
+-->
+<html lang="en">
+
+<head>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>Blood Pressure Centiles SMART Application</title>
+
+    <!-- jQuert UI custom theme-->
+    <link rel="stylesheet" href="css/themes/custom/jquery-ui.css" type="text/css" media="screen"/>
+
+    <!-- BPC stylesheets-->
+    <link rel="stylesheet" href="css/bpc-screen.css" type="text/css" media="screen"/>
+
+    <!-- SMART Connector -->
+    <script src="../js/smart-api-client-0.6-dev.js" type="text/javascript"></script>
+
+    <!-- Standard JS Libraries -->
+    <script src="js/lib/jquery.js" type="text/javascript"></script>
+    <script src="js/lib/jquery-jtemplates.js" type="text/javascript"></script>
+    <script src="js/lib/jquery.validate.min.js" type="text/javascript"></script>
+    <script src="js/lib/jquery-ui.js" type="text/javascript"></script>
+    <script src="js/lib/raphael.js" type="text/javascript"></script>
+    <script src="js/lib/xdate.js" type="text/javascript"></script>
+
+    <!-- BPC Utilities -->
+    <script src="js/cdc_height_tables.js" type="text/javascript"></script>
+    <script src="js/nih_bp_tables.js" type="text/javascript"></script>
+    <script src="js/util.js" type="text/javascript"></script>
+    <script src="js/bpc-localizations.js" type="text/javascript"></script>
+    <script src="js/popup.js" type="text/javascript"></script>
+
+    <!-- BPC App Modules -->
+    <script src="js/bpc-config.js" type="text/javascript"></script>
+    <script src="js/bpc-data.js" type="text/javascript"></script>
+    <script src="js/bpc-filters.js" type="text/javascript"></script>
+    <script src="js/bpc-graph.js" type="text/javascript"></script>
+    <script src="js/bpc-ui.js" type="text/javascript"></script>
+</head>
+
+<body>
+<div id="main">
+
+<!-- Page header -->
+<div id="headings">
+    <table width="786">
+        <tr>
+            <td align="left" valign="bottom">
+                <div id="title">Blood Pressure Centiles</div>
+            </td>
+            <td align="center" valign="bottom">
+                <div id="patient-info"></div>
+            </td>
+            <td align="right">
+                <div id="logo"><a href="http://www.smartplatforms.org/" target="_blank"><img src="images/smart-logo.png" border="0" width="65" height="40"
+                                                                                             alt="SMART Logo"/></a></div>
+            </td>
+                    </tr>
+                </table>
+            </div>
+<div id="info"><img style="border-color:#A00;border-width:3px;" src="images/ajax-loader.gif" alt="Loading"/></div>
+
+<!-- Tabs -->
+<div id="tabs">
+
+<ul>
+    <li><a href="#tab_short" data-translatecontent="STR_SHORT_TERM_VIEW_1" data-translateattr="title=STR_LAST_THREE_BP_DAYS_2"></a></li>
+    <li><a href="#tab_long" data-translatecontent="STR_LONG_TERM_VIEW_3"></a></li>
+    <li><a href="#tab_table" data-translatecontent="STR_TABLE_VIEW_4"></a></li>
+    <li><a href="#tab_calculator" data-translatecontent="STR_CALCULATOR_5"></a></li>
+    <li><a href="#tab_references" data-translatecontent="STR_REFERENCES_6"></a></li>
+    <li>
+        <button onclick="BPC.openPrintWindow();" class="ui-state-default print-button"><img src="images/print2.png"/><span
+                data-translatecontent="STR_PRINT_7"></span></button>
+    </li>
+    <li class="language-selector"></li>
+</ul>
+
+<div id="tab_short">
+    <div id="holder_short"></div>
+    <div id="help_short">
+        <div class="help-panel">
+            <input type="hidden" name="effects" id="effectType" value="slide"/>
+
+            <div id="help-content">
+                <h3 data-translatecontent="STR_ABOUT_SHORT_TERM_VIEW_8"></h3>
+                <table>
+                    <tr>
+                        <td valign="top">
+                            <div class="toLeft size_image_text" data-translatecontent="STR_SYSTOLIC_BP_56"></div>
+                            <div><img src="images/bpc-new.png" alt="short term view illustration"/></div>
+                            <div class="toLeft size_image_text" data-translatecontent="STR_DIASTOLIC_BP_57"></div>
+                            <div id="pos_perc" class="size_image_text" data-translatecontent="STR_PERCENTILE_58"></div>
+                        </td>
+                        <td>
+                            <p align="justify" data-translatecontent="STR_SHORT_TERM_VIEW_EXPLANATION_9">
+
+                            </p>
+
+                            <p align="justify" data-translatecontent="STR_SYSTOLIC_DIASTOLIC_CIRCLES_10">
+
+                            </p>
+
+                            <p align="justify" data-translatecontent="STR_PEDIATRIC_BP_VALUE_IN_CIRCLE_11">
+
+
+                            <div data-translatecontent="STR_ADULT_READING_SYMBOL_12"></div>
+                            </p>
+                            <p align="justify">
+                                <em data-translatecontent="STR_TIP_13"></em>: <span data-translatecontent="STR_HOVER_FOR_DETAILS_14"></span>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div id="dialog-message" title="Information">
+            <p>
+                <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 50px 0;"></span>
+                <span id="alert-message"></span>
+            </p>
+
+            <p data-translatecontent="STR_ADULT_BLOOD_PRESSURE_DATA_15">
+
+            </p>
+        </div>
+        <div id="dialog-demo" title="Information">
+            <p>
+                <span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 50px 0;"></span>
+                <span id="alert-message" data-translatecontent="STR_LAUNCHED_OUTSIDE_SMART_DEMO_MODE_16"></span>
+            </p>
+        </div>
+    </div>
+    <div class="clearall">&nbsp;</div>
+</div>
+
+<div id="tab_long">
+    <div id="wrapper_long" class="tab_wrapper">
+        <div id="filters">
+            <div id="filter_encounter" class="toggle-set">
+                <input type="checkbox" id="chkFilterInpatient" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterInpatient"> <span data-translatecontent="STR_INPATIENT_17"></span> </label>
+                <input type="checkbox" id="chkFilterAmbulatory" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterAmbulatory"> <span data-translatecontent="STR_AMBULATORY_18"></span> </label>
+                <input type="checkbox" id="chkFilterEncounterUnknown" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterEncounterUnknown"> <span data-translatecontent="STR_UNKNOWN_19"></span></label>
+            </div>
+            <div id="filter_site" class="toggle-set">
+                <input type="checkbox" id="chkFilterArm" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterArm"> <span data-translatecontent="STR_ARM_20"></span></label>
+                <input type="checkbox" id="chkFilterLeg" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterLeg"> <span data-translatecontent="STR_LEG_21"></span></label>
+                <input type="checkbox" id="chkFilterSiteUnknown" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterSiteUnknown"> <span data-translatecontent="STR_UNKNOWN_19"></span></label>
+            </div>
+            <div id="filter_position" class="toggle-set">
+                <input type="checkbox" id="chkFilterSitting" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterSitting"><span data-translatecontent="STR_SITTING_23"></span></label>
+                <input type="checkbox" id="chkFilterStanding" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterStanding"><span data-translatecontent="STR_STANDING_24"></span></label>
+                <input type="checkbox" id="chkFilterPositionUnknown" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterPositionUnknown"><span data-translatecontent="STR_UNKNOWN_19"></span></label>
+            </div>
+            <div id="filter_method" class="toggle-set">
+                <input type="checkbox" id="chkFilterAuscultation" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterAuscultation"> <span data-translatecontent="STR_AUSCULTATION_26"></span></label>
+                <input type="checkbox" id="chkFilterMachine" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterMachine"> <span data-translatecontent="STR_MACHINE_27"></span></label>
+                <input type="checkbox" id="chkFilterMethodUnknown" onClick="BPC.updateFilters()"/>
+                <label for="chkFilterMethodUnknown"> <span data-translatecontent="STR_UNKNOWN_19"></span></label>
+            </div>
+            <div id="filter_timerange">
+                <div id="label-timerange"></div>
+                <div id="slider-timerange"></div>
+            </div>
+        </div>
+        <div id="holder_long"></div>
+    </div>
+</div>
+<!-- long term tab -->
+
+<div id="tab_table">
+    <div id="wrapper_table" class="tab_wrapper">
+        <div id="holder_table"></div>
+    </div>
+</div>
+
+<div id="tab_calculator">
+    <div id="calculator-title" data-translatecontent="STR_PEDIATRIC_CALCULATOR_29">
+
+    </div>
+    <div id="result-label">
+    </div>
+    <div id="calculator-inputs" class="calc-panel">
+        <script type="text/javascript">
+            (function () {
+                "use strict";
+
+                BPC.initCalculatorValidation = function () {
+
+                    // Initialization settings for the jQuery Validate plugin
+                    $("#input").validate({
+                        rules: {
+                            add_systolic: {
+                                required: false,
+                                digits: true,
+                                min: 0,
+                                max: 300
+                            },
+                            add_diastolic: {
+                                required: false,
+                                digits: true,
+                                min: 0,
+                                max: 300
+                            },
+                            add_age: {
+                                required: true,
+                                digits: true,
+                                min: 0,
+                                max: 18
+                            },
+                            add_months: {
+                                required: true,
+                                digits: true,
+                                min: 0,
+                                max: 11
+                            },
+                            add_height: {
+                                required: true,
+                                digits: true,
+                                min: 0,
+                                max: 300
+                            },
+                            add_gender: "required"
+                        },
+                        messages: {
+                            add_systolic: {
+                                required: "",
+                                digits: "",
+                                min: "",
+                                max: ""
+                            },
+                            add_diastolic: {
+                                required: "",
+                                digits: "",
+                                min: "",
+                                max: ""
+                            },
+                            add_age: {
+                                required: "",
+                                digits: "",
+                                min: "",
+                                max: ""
+                            },
+                            add_months: {
+                                required: "",
+                                digits: "",
+                                min: "",
+                                max: ""
+                            },
+                            add_height: {
+                                required: "",
+                                digits: "",
+                                min: "",
+                                max: ""
+                            },
+                            add_gender: ""
+                        },
+                        errorClass: "input-invalid",
+                        validClass: "input-valid"
+                    });
+                };
+            }());
+        </script>
+
+        <form id="input" method="GET" action="#" data-ajax="false">
+            <table>
+                <tr>
+                    <th colspan=3 data-translatecontent="STR_PATIENT_30"></th>
+                </tr>
+                <tr>
+                    <td class="inputLabel"><label for="add_systolic">BP</label></td>
+                    <td><input type="number" name="add_systolic" id="add_systolic" value="0" min="0" max="200" size="2"/> /</td>
+                    <td><input type="number" name="add_diastolic" id="add_diastolic" value="0" min="0" max="200" size="2"/> mmHg</td>
+                </tr>
+                <tr>
+                    <td class="inputLabel"><label for="add_age"><span data-translatecontent="STR_AGE_31"></span></label></td>
+                    <td><input type="number" name="add_age" id="add_age" value="0" min="0" max="18" size="2" autofocus/> <span
+                            data-translatecontent="STR_Y_32"></span></td>
+                    <td><input type="number" name="add_months" id="add_months" value="0" min="0" max="11" size="2"/> <span
+                            data-translatecontent="STR_M_33"></span></td>
+                </tr>
+                <tr>
+                    <td class="inputLabel"><label for="add_height"><span data-translatecontent="STR_HEIGHT_34"></span></label></td>
+                    <td colspan=2><input type="number" name="add_height" id="add_height" value="0" min="0" max="200" size="2"/> <span
+                            data-translatecontent="STR_CM_35"></span></td>
+                </tr>
+                <tr>
+                    <td class="inputLabel"><label for="add_gender"><span data-translatecontent="STR_GENDER_36"></span></label></td>
+                    <td colspan=2>
+                        <input type="radio" name="add_gender" id="add_male" value="male" checked="checked"/>
+                        <label for="add_male"><span data-translatecontent="STR_MALE_37"></span></label>
+                        <input type="radio" name="add_gender" id="add_female" value="female"/>
+                        <label for="add_female"><span data-translatecontent="STR_FEMALE_38"></span></label>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="calculator-results-panel">
+        <div id='result-percentiles' class="calc-panel">
+            <table>
+                <tr>
+                    <th data-translatecontent="STR_SYSTOLIC_39"></th>
+                    <th></th>
+                    <th data-translatecontent="STR_DIASTOLIC_40"></th>
+                </tr>
+                <tr>
+                    <td><span class="spct">%</span></td>
+                    <td><span class="slash">/</span></td>
+                    <td><span class="dpct">%</span></td>
+                </tr>
+            </table>
+        </div>
+        <div id='result-thresholds' class="calc-panel">
+            <table>
+                <tr>
+                    <th data-translatecontent="STR_THRESHOLDS_41"></th>
+                </tr>
+                <tr>
+                    <td><span id="calculator-thresholds-out"></span></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="clearall">&nbsp;</div>
+</div>
+<!-- calculator tab -->
+
+<div id="tab_references">
+    <ul>
+
+
+        <li>
+            <p>
+                The Seventh Report of the Joint National Committee on Prevention,
+                Detection, Evaluation, and Treatment of High Blood Pressure,
+                NIH obtained 8 March 2012
+                (<a href="http://www.nhlbi.nih.gov/guidelines/hypertension/jnc7full.htm" target="_blank">http://www.nhlbi.nih.gov/guidelines/hypertension/jnc7full.htm</a>)
+            </p>
+        </li>
+        <li>
+            <p>
+                The Fourth Report on the Diagnosis, Evaluation, and Treatment of High
+                Blood Pressure in Children and Adolescents
+                National Heart, Lung, and Blood Institute,
+                NIH obtained 6 April 2011
+                (<a href="http://www.nhlbi.nih.gov/health/prof/heart/hbp/hbp_ped.pdf"
+                    target="_blank">http://www.nhlbi.nih.gov/health/prof/heart/hbp/hbp_ped.pdf</a>)
+            </p>
+        </li>
+        <li>
+            <p>
+                CDC Clinical Growth Charts obtained 6 April 2011 (
+                <a href="http://www.cdc.gov/growthcharts/clinical_charts.htm" target="_blank">Charts</a>,
+                <a href="http://www.cdc.gov/growthcharts/percentile_data_files.htm" target="_blank">Data</a>,
+                <a href="http://www.cdc.gov/growthcharts/data/zscore/lenageinf.xls" target="_blank">Length</a>,
+                <a href="http://www.cdc.gov/growthcharts/data/zscore/statage.xls" target="_blank">Stature</a>
+                )
+            </p>
+        </li>
+    </ul>
+</div>
+
+</div>
+<!-- tabs -->
+
+<div id="footer">
+    <div id="warning"></div>
+    <div id="copy">v0.9</div>
+    <div id="loaded_through"></div>
+    <div id="div_y">
+        <button id="btn_year" onclick="BPC.loadAnotherY();"><span data-translatecontent="STR_LOAD_YEAR_46"></span></button>
+    </div>
+</div>
+        </div>
+
+<!-- jTemplates template for the table view -->
+<div style="display:none"><textarea id="template" rows="0" cols="0"><!--
+            {#template MAIN}
+                <table class="nicetable">
+                    <thead>
+                        {#include HEAD}
+                    </thead>
+                    <tbody>
+                        {#foreach $T.data as record}
+                            {#include ROW root=$T.record}
+                        {#/for}
+                    </tbody>
+                </table>
+            {#/template MAIN}
+            
+            {#template HEAD}
+                <tr>
+                    <th data-translatecontent="STR_DATE_47"></th>
+                    <th data-translatecontent="STR_AGE_48"></th>
+                    <th data-translatecontent="STR_HEIGHT_49"></th>
+                    <th data-translatecontent="STR_BLOOD_PRESSURE_50"></th>
+                    <th data-translatecontent="STR_PERCENTILES_51"></th>
+                    <th data-translatecontent="STR_SITE_52"></th>
+                    <th data-translatecontent="STR_POSITION_53"></th>
+                    <th data-translatecontent="STR_METHOD_54"></th>
+                    <th data-translatecontent="STR_ENCOUNTER_55"></th>
+                </tr>
+            {#/template HEAD}
+            
+            {#template ROW}
+                <tr>
+                    <td>{$T.date}</td>
+                    <td>{BPC.getYears($T.age)}y {BPC.getMonths($T.age)}m</td>
+                    <td>{#if $T.height}{$T.height} cm{#else}-{#/if}</td>
+                    <td>{$T.systolic}/{$T.diastolic} mmHg</td>
+                    <td>{#if $T.plabel}{$T.plabel}{#else}-{#/if}</td>
+                    <td{#if $T.site} data-translatecontent="STR_SITE_{$T.site.toUpperCase().replace(" ","_")}"{#/if}>{#if $T.site}{$T.site}{#else}-{#/if}</td>
+                    <td{#if $T.position} data-translatecontent="STR_POSITION_{$T.position.toUpperCase()}"{#/if}>{#if $T.position}{$T.position}{#else}-{#/if}</td> 
+                    <td{#if $T.method} data-translatecontent="STR_METHOD_{$T.method.toUpperCase()}"{#/if}>{#if $T.method}{$T.method}{#else}-{#/if}</td>
+                    <td{#if $T.encounter} data-translatecontent="STR_ENCOUNTER_{$T.encounter.toUpperCase()}"{#/if}>{#if $T.encounter}{$T.encounter}{#else}-{#/if}</td>
+                </tr>
+            {#/template ROW}
+        --></textarea></div>
+</body>
+
+</html>

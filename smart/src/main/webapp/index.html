@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Think SMART Container</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script src="js/jschannel.js"></script>
+    <script src="js/smart-api-container.js"></script>
+    <script src="js/smart-container.js"></script>
+</head>
+<body>
+<script>
+    var baseUrl = window.location.origin;
+    var pos = window.location.href.lastIndexOf('/');
+    if (pos > 0) {
+        baseUrl = baseUrl + window.location.href.substring(baseUrl.length, pos);
+    }
+    var apiHeaders = {
+        Authorization: 'Basic ' + btoa('guidemo:gui?!demo123')
+    };
+    var apiBaseUrl = 'https://rest.ehrscape.com/rest/v1/smart';
+
+    var sample_context = {
+        record: {
+            full_name: 'Anonymous Patient',
+            id: '1e4f8dab-6c14-4fd0-a2e9-12bcb516856a'
+        },
+        user: {
+            full_name: 'Logged-in User',
+            id: 'user12345'
+        }
+    };
+
+    var got_statins_manifest = {
+        "name": "Got Statins?",
+        "description": "Determines whether patient is taking a statin",
+        "id": "got-statins@apps.smartplatforms.org",
+        "mode": "ui",
+        "scope": "record",
+        "index": baseUrl + "/got_statins/index.html",
+        "icon": baseUrl + "/got_statins/icon.png"
+    };
+
+    var growthcharts_manifest = {
+        "name": "Growth charts",
+        "description": "Shows patient growthcharts",
+        "id": "gc@apps.smartplatforms.org",
+        "mode": "ui",
+        "scope": "record",
+        "index": baseUrl + "/growth_charts/index.html",
+        "icon": baseUrl + "/growth_charts/img/icon.png"
+    };
+
+    var bp_centiles_manifest = {
+        "name": "BP Centiles",
+        "description": "Displays blood pressure data with calculated percentiles (for pediatric patients)",
+        "author": "Nikolai Schwertner",
+        "id": "bp_centiles@apps.smartplatforms.org",
+        "version": ".1a",
+        "mode": "ui",
+        "scope": "record",
+        "index": baseUrl + "/bp_centiles/index.html",
+        "icon": baseUrl + "/bp_centiles/icon.png",
+        "smart_version": "0.6",
+        "requires": {
+            "http://smartplatforms.org/terms#Demographics": {
+                "methods": ["GET"]
+            },
+            "http://smartplatforms.org/terms#VitalSignSet": {
+                "methods": ["GET"]
+            }
+        }
+    };
+
+    var cardio_risk_manifest = {
+        "name": "Cardiac Risk",
+        "description": "A Visualization of Cardiology Bloodwork Results with the Framingham Risk Score",
+        "author": "Implimentation: Arjun Sanyal, Children's Hospital Boston; Design: McCandless & Posavec http://informationisbeautiful.net",
+        "id": "cardiac_risk@apps.smartplatforms.org",
+        "version": ".1a",
+        "optimalBrowserEnvironments": ["desktop"],
+        "supportedBrowserEnvironments": ["desktop", "tablet"],
+
+        "mode": "ui",
+        "scope": "record",
+
+        "index": baseUrl + "/cardio_risk_viz/index.html",
+        "icon": baseUrl + "/cardio_risk_viz/icon.png",
+
+        "requires": {
+            "http://smartplatforms.org/terms#Demographics": {
+                "methods": ["GET"]
+            },
+            "http://smartplatforms.org/terms#LabResult": {
+                "methods": ["GET"],
+                "codes": [ "http://purl.bioontology.org/ontology/LNC/30522-7",
+                    "http://purl.bioontology.org/ontology/LNC/2093-3",
+                    "http://purl.bioontology.org/ontology/LNC/2085-9"]
+            }
+        }
+    };
+
+    /* Event handler for the UI buttons in our sample container */
+    var launch_app = function (manifest) {
+        SMART.launch_app(manifest, sample_context);
+    };
+
+    $(document).ready(function () {
+        $('img').each(function () {
+            if (this.id == 'i_growthcharts_manifest') {
+                this.src = growthcharts_manifest.icon;
+            } else if (this.id == 'i_bp_centiles_manifest') {
+                this.src = bp_centiles_manifest.icon;
+            } else if (this.id == 'i_cardio_risk_manifest') {
+                this.src = cardio_risk_manifest.icon;
+            }
+        });
+        var app = decodeURIComponent((location.search.match(RegExp("[?|&]app=(.+?)(&|$)")) || [, null])[1]);
+        if (app == 'growthcharts') {
+            launch_app(growthcharts_manifest);
+        } else if (app == 'bp_centiles') {
+            launch_app(bp_centiles_manifest);
+        } else if (app == 'cardio_risk') {
+            launch_app(cardio_risk_manifest);
+        }
+    })
+</script>
+<div id="app_selector">
+</div>
+</body>
+</html>

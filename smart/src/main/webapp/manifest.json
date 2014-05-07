@@ -1,0 +1,31 @@
+{
+    "smart_version": "0.6.0",
+    "api_base": "/smart",
+    "name": "SMART v0.6 Sandbox",
+    "description": "Public sandbox to demonstrate the SMART API",
+    "admin": "info@smartplatforms.org",
+
+    "launch_urls": {
+        "authorize_token": "/smart/oauth/authorize",
+        "exchange_token": "/smart/oauth/access_token",
+        "request_token": "/smart/oauth/request_token"
+    },
+
+    "capabilities": {
+        "http://smartplatforms.org/terms#Demographics": {
+            "methods": [
+                "GET"
+            ]
+        },
+        "http://smartplatforms.org/terms#Encounter": {
+            "methods": [
+                "GET"
+            ]
+        },
+        "http://smartplatforms.org/terms#VitalSignSet": {
+            "methods": [
+                "GET"
+            ]
+        }
+    }
+}
