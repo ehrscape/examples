@@ -188,7 +188,7 @@
                 url: this.options.baseUrl + "/presentation",
                 data: JSON.stringify({
                     queryRequestData: {
-                        aql: "SELECT c FROM COMPOSITION c ORDER BY c/context/start_time DESC FETCH 100"
+                        aql: "SELECT c FROM COMPOSITION c ORDER BY c/context/start_time DESC FETCH 12"
                     }
                 }),
                 contentType: 'application/json',
@@ -210,7 +210,7 @@
 
             var timelineItem = Handlebars.compile( $("#timeline-entry").html() );
 
-            for(var i=0; i<data.length && i<=12; i++){
+            for(var i=0; i<data.length; i++){
 
                 var title = data[i].metadata.templateId;
 

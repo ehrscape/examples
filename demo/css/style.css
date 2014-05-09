@@ -200,7 +200,8 @@ body{
 }
 
 .patient-stats .centered .value{
-    font-size: 26px;
+    margin-top: 5px;
+    font-size: 20px;
 }
 
 .patient-height-image{
@@ -780,6 +781,23 @@ body{
     margin-bottom: 0  !important;
 }
 
+span.bmi-details{
+    display: block;
+    font-size: 10px;
+    color: #DA4453;
+}
+
+span.normal{
+    color: #8CC152;
+}
+
+span.abnormal{
+    color: #DA4453;
+}
+
+span.abnormal i{
+    margin-left: 5px;
+}
 
 
 

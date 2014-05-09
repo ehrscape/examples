@@ -116,7 +116,7 @@ $(document).ready(function () {
                 "Ehr-Session": sessionId
             },
             success: function (res) {
-                console.log('2');
+                //console.log('2');
                 res.forEach(function (el, i, arr) {
                     var date = new Date(el.time);
                     el.date = date.getTime();
@@ -384,6 +384,118 @@ $(document).ready(function () {
         });
     }
 
+    function getBMI(){
+
+        return $.ajax({
+            url: "https://rest.ehrscape.com/ThinkCDS/services/CDSResources/guide/execute/BMI.Calculation.v.1/" + ehrId,
+            type: 'GET',
+            headers: {
+                "Ehr-Session": sessionId
+            },
+            success: function (data) {
+                var bmiVal = '', bmiDet = '';
+                if (data instanceof Array) {
+                    if (data[0].hasOwnProperty('results')) {
+                        data[0].results.forEach(function (v, k) {
+                            if (v.archetypeId === 'openEHR-EHR-OBSERVATION.body_mass_index.v1') {
+                                var rounded = Math.round(v.value.magnitude * 100.0) / 100.0;
+                                bmiVal = rounded + ' ' + v.value.units;
+                            }
+                            else{
+                                if(v.archetypeId === 'openEHR-EHR-EVALUATION.gdl_result_details.v1'){
+                                    bmiDet = '<span class="bmi-details">' + v.value.value + '</span>';
+                                }
+                            }
+                        })
+                    }
+                }
+                $('.patient-bmi').html(bmiVal + bmiDet);
+            }
+        });
+    }
+
+    function getLabs() {
+        return $.ajax({
+            url: baseUrl + "/view/" + ehrId + "/labs",
+            type: 'GET',
+            headers: {
+                "Ehr-Session": sessionId
+            },
+            success: function (data) {
+
+                var html = "";
+
+                for (var i=0; i<data.length; i++){
+                    html += '<tr>';
+
+                    html += '<td>' + data[i].name + '</td>'+
+                        '<td>' + data[i].loinc + '</td>'+
+                        '<td>' + normalRange(data[i]) + '</td>'+
+                        '<td>' + checkValue(data[i]) + '</td>'+
+                        '<td>' + data[i].unit + '</td>'+
+                        '<td>' + formatDate(data[i].time, true) + '</td>';
+
+                    html += '</tr>';
+                }
+
+                $("#labResults").find("tbody").append(html);
+
+            }
+        });
+    }
+
+    function normalRange(item){
+
+        var range = "";
+        if(item.normal_max && item.normal_min){
+            range = item.normal_min + " - " + item.normal_max;
+        }
+        else{
+            if(item.normal_max){
+                range = "< " + item.normal_max;
+            }
+            else{
+                if(item.normal_min){
+                    range = "> " + item.normal_min;
+                }
+            }
+        }
+
+        return range;
+
+    }
+
+    function checkValue(item){
+
+        var value = item.value, range = false, cellValue, icon;
+
+        if(item.normal_max && item.normal_min){
+            if(value >= item.normal_min && value <= item.normal_max) range = true;
+            else{
+                if(value < item.normal_min) icon = "down";
+                else icon = "up";
+            }
+        }
+        else{
+            if(item.normal_max){
+                if(value <= item.normal_max) range = true;
+                else icon = "up";
+            }
+            else{
+                if(item.normal_min){
+                    if(value >= item.normal_min) range = true;
+                    else icon = "down";
+                }
+            }
+        }
+
+        if (range) cellValue = '<span class="normal">' + value + '</span>';
+        else  cellValue = '<span class="abnormal">' + value + '<i class="fa fa-chevron-circle-' + icon + '"></i></span>';
+
+        return cellValue;
+
+    }
+
     // Helper functions (dates)
 
     function getAge(dateString) {
@@ -528,18 +640,21 @@ $(document).ready(function () {
 
     // display page
     login().done(function () {
-        $.when(
-            patientData(),
-            bloodPressures(),
-            getWeight(),
-            getHeight(),
-            getSpo2(),
-            getTemperature(),
-            getPulse(),
-            getAllergies(),
-            getMedications(),
-            getProblems()
-        ).then(logout)
+        patientData().done(function() {
+            $.when(
+                bloodPressures(),
+                getWeight(),
+                getHeight(),
+                getBMI(),
+                getSpo2(),
+                getTemperature(),
+                getPulse(),
+                getAllergies(),
+                getMedications(),
+                getProblems(),
+                getLabs()
+            ).then(logout)
+        });
     });
 });
 

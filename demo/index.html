@@ -12,7 +12,7 @@
     <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet" type="text/css">
     <link href="css/font-awesome.css" rel="stylesheet">
 
-    <link href="http://cdn.oesmith.co.uk/morris-0.4.3.min.css" rel="stylesheet">
+    <link href="css/morris.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
@@ -49,15 +49,19 @@
                 <div class="row">
                     <div class="col-md-8 bordered">
                         <div class="row" style="min-height: 57px;">
-                            <div class="col-md-6 bordered centered">
+                            <div class="col-md-4 bordered centered" style="min-height: 67px;">
                                 <p>Age:</p>
                                 <div class="value patient-age-years"></div>
                             </div>
-                            <div class="col-md-6 centered">
+                            <div class="col-md-4 bordered centered" style="min-height: 67px;">
                                 <p>Weight:</p>
                                 <div class="value">
                                     <span class="weight-placeholder-value"></span> <span class="weight-placeholder-unit"></span>
                                 </div>
+                            </div>
+                            <div class="col-md-4 centered">
+                                <p>BMI:</p>
+                                <div class="value patient-bmi"></div>
                             </div>
                         </div>
                         <hr>
@@ -101,7 +105,7 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <img class="patient-height-image" src="img/body-blank-male.png" alt="Body">
+                        <img class="patient-height-image" src="img/body-placeholder.png" alt="Body">
                             <div class="patient-height-stats">
                                 <p>Height:</p>
                                 <div class="value">
@@ -122,6 +126,35 @@
                     </div>
                     <div class="panel-body" style="overflow: auto;">
                         <div id="timeline-example"></div>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="last-measurement">
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-info" style="width: 97%;">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Laboratory Results
+                            <span class="remove">
+                                <i class="glyphicon glyphicon-remove"></i>
+                            </span>
+                        </h3>
+                    </div>
+                    <div class="panel-body" style="height: auto;">
+                        <table id="labResults" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>LOINC</th>
+                                    <th>Normal Range</th>
+                                    <th>Value</th>
+                                    <th>Unit</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
                     </div>
                     <div class="panel-footer">
                         <div class="last-measurement">
@@ -249,8 +282,7 @@
                     <h3 class="panel-title">Problems</h3>
                 </div>
                 <div class="panel-body">
-                    <ul class="problems">
-                    </ul>
+                    <ul class="problems"></ul>
                 </div>
             </div>
         </div>
@@ -280,7 +312,7 @@
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
-<script src="http://cdn.oesmith.co.uk/morris-0.4.3.min.js"></script>
+<script src="js/morris.min.js"></script>
 <script src="js/app.js"></script>
 <script src="js/handlebars-v1.3.0.js"></script>
 <script src="js/timeline.js"></script>
