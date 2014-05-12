@@ -188,7 +188,7 @@
                 url: this.options.baseUrl + "/presentation",
                 data: JSON.stringify({
                     queryRequestData: {
-                        aql: "SELECT c FROM EHR[ehr_id/value='" + this.options.ehrId + "'] CONTAINS COMPOSITION c ORDER BY c/context/start_time DESC FETCH 12"
+                        aql: "SELECT c FROM EHR[ehr_id/value='" + this.options.ehrId + "'] CONTAINS COMPOSITION c ORDER BY c/context/start_time DESC FETCH 20"
                     }
                 }),
                 contentType: 'application/json',
