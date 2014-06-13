@@ -4,8 +4,8 @@ ehrscape.com examples
 Collection of examples to demonstrate the use of the ehrscape.com REST apis.
 
 Applications:
-* **demo**: sources to the demo app from the dev.ehrscape.com
-* **smart**: sources to the smart demo app from the dev.ehrscape.com. This includes
+* **demo**: sources to the demo apps from the dev.ehrscape.com
+* **smart**: sources to the smart demo apps from the dev.ehrscape.com. This includes
   copies of smart sample apps from https://github.com/chb/smart_sample_apps.
 
 Note: smart apps have been included as they are except for the SMART Pediatric Growth
