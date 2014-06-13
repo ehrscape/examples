@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+		<title>Flip EMR</title>
+
+        <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="bootflat/css/bootflat.css" />
+        <link rel="stylesheet" type="text/css" href="css/font-awesome.css" />
+        <link rel="stylesheet" type="text/css" href="css/bookblock.css" />
+
+		<!-- custom demo style -->
+		<link rel="stylesheet" type="text/css" href="css/flip.css" />
+        <link rel="stylesheet" type="text/css" href="css/pushy.css" />
+
+        <script src="js/modernizr.custom.js"></script>
+	</head>
+	<body>
+        <!-- Pushy Menu -->
+        <nav id="toc-menu" class="pushy pushy-left">
+            <ul></ul>
+        </nav>
+
+        <!-- Site Overlay -->
+        <div class="site-overlay"></div>
+
+        <!-- Content -->
+		<div id="container">
+			<div class="bb-custom-wrapper">
+				
+				<div id="bb-bookblock" class="bb-bookblock">
+					<div class="bb-item">
+						<div class="bb-custom-firstpage">
+							<h1>Mary Wilkinson<span>Patient Records</span></h1>
+                            <div class="logo"></div>
+                            <div class="cover-flip">&lt; Flip</div>
+						</div>
+					</div>
+                    <div class="bb-item">
+                        <div class="bb-custom-categories">
+                            <h2>Select one category to get started</h2>
+                            <h3>You can always change your selection later.</h3>
+                            <div id="catList"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="scrubber"></div>
+			</div>
+
+		</div><!-- /container -->
+
+        <script id="pagemarkup-template" type="text/x-handlebars-template">
+            <div class="bb-item">
+                <div class="bb-title">
+                    <span class="navigation">
+                        <span class="nav-toggle page-control"><i class="fa fa-bars"></i></span>
+                        <!--<span class="page-control bb-nav-prev"><i class="fa fa-angle-left"></i></span>
+                        <span class="page-control bb-nav-next"><i class="fa fa-angle-right"></i></span>
+                        <span class="page-control bb-nav-last"><i class="fa fa-angle-double-right"></i></span>-->
+                    </span>
+                    <h2>{{demographics}}</h2>
+                    <span class="navigation" style="text-align: right">
+                        <span class="page-control bb-nav-first"><i class="fa fa-chevron-left"></i></span>
+                    </span>
+                </div>
+                <nav class="nav-rect">
+                    <span class="prev bb-nav-prev">
+                        <i class="fa fa-angle-left"></i>
+                    </span>
+                    <span class="next bb-nav-next">
+                        <i class="fa fa-angle-right"></i>
+                    </span>
+                </nav>
+                <div class="bb-renderContent">
+                    <div class="row">
+                        <div class="left col-sm-6">
+                            <h3>{{title_left}}<span>As of: {{date_left}}</span></h3>
+                            {{{content_left}}}
+                        </div>
+                        <div class="col-sm-6">
+                            <h3>{{title_right}}<span>As of: {{date_right}}</span></h3>
+                            {{{content_right}}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </script>
+
+        <!-- Libraries -->
+
+        <script src="js/jquery-2.1.1.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="bootflat/js/icheck.min.js"></script>
+        <script src="js/jquery.touchSwipe-1.2.5.js"></script>
+        <script src="js/handlebars-v1.3.0.js"></script>
+        <script src="js/pushy.js"></script>
+
+        <script src="js/jquery.bookblock.js"></script> <!-- Modified -->
+
+        <!-- Custom JS -->
+
+        <script src="js/flip.js"></script>
+
+        <script>
+            var Page = (function() {
+
+            var config, init = function() {
+
+            config = {
+               $bookBlock : $( '#bb-bookblock' ),
+               $navNext : $( '.cover-flip, .bb-nav-next' ),
+               $navPrev : $( '.bb-nav-prev' ),
+               $navFirst : $( '.bb-nav-first' )//,
+               //$navLast : $( '.bb-nav-last' )
+            };
+
+            config.$bookBlock.bookblock( {
+               menuEl : $(".scrubber").hide()
+            });
+
+            initEvents();
+
+            },
+            initEvents = function() {
+
+            var $slides = config.$bookBlock.children();
+
+            // add navigation events
+            config.$navNext.on( 'click touchstart', function() {
+               config.$bookBlock.bookblock( 'next' );
+               return false;
+            } );
+
+            config.$navPrev.on( 'click touchstart', function() {
+               config.$bookBlock.bookblock( 'prev' );
+               return false;
+            } );
+
+            config.$navFirst.on( 'click touchstart', function() {
+               config.$bookBlock.bookblock( 'jump', 2 );
+               return false;
+            } );
+
+            /*config.$navLast.on( 'click touchstart', function() {
+               config.$bookBlock.bookblock( 'last' );
+               return false;
+            } );*/
+
+            // add keyboard events
+            $( document ).keydown( function(e) {
+               var keyCode = e.keyCode || e.which,
+                   arrow = {
+                       left : 37,
+                       up : 38,
+                       right : 39,
+                       down : 40
+                   };
+
+               switch (keyCode) {
+                   case arrow.left:
+                       config.$bookBlock.bookblock( 'prev' );
+                       break;
+                   case arrow.right:
+                       config.$bookBlock.bookblock( 'next' );
+                       break;
+               }
+            } );
+
+            config.$bookBlock.bookblock( 'menu' );
+            };
+
+            return { init : init };
+
+            })();
+        </script>
+
+        <script>
+
+            $('#bb-bookblock').flipRecords();
+
+        </script>
+    </body>
+</html>

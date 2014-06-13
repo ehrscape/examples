@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <title>Kako Ste?</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Loading Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Loading Styles -->
+    <link href="bootflat/css/bootflat.css" rel="stylesheet">
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet" type="text/css">
+    <link href="css/font-awesome.css" rel="stylesheet">
+
+    <!--<link rel="shortcut icon" href="images/favicon.ico">-->
+    <link rel="stylesheet" type="text/css" href="css/basic.css" />
+    <link rel="stylesheet" type="text/css" href="css/social.css" />
+    <script src="js/modernizr.custom.js"></script>
+
+    <!--[if lt IE 9]>
+    <script src="js/html5shiv.js"></script>
+    <script src="js/respond.min.js"></script>
+    <script src="js/xdate.js"></script>
+    <![endif]-->
+
+</head>
+<body>
+
+<main class="semi-zigzag">
+    <div class="container">
+        <div class="statusBox">
+            <div class="row">
+                <div class="col-sm-2">
+                    <div class="user-picture"></div>
+                </div>
+                <div class="col-sm-7">
+                    <textarea id="status-text" class="form-control" rows="3" placeholder="How are you feeling today Mary?"></textarea>
+                    <div class="status-actions">
+                        <button id="submitBt" class="btn btn-primary">Submit</button>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <form id="uploader" class="dropzone"></form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="container main-container">
+    <div class="row">
+        <div class="col-sm-12">
+            <ul class="timeline">
+                <li class="timeline-item">
+                    <time class="timeline-date" datetime="2014-04-08T07:17:11.000+02:00">
+                        <span>08-04-2014 13:09</span>
+                        <span>8-Apr</span>
+                    </time>
+                    <div class="timeline-picture"></div>
+                    <div class="timeline-label">
+                        <div class="timeline-title expanded">
+                            <h3>Mary Wilkinson</h3>
+                        </div>
+                        <div class="timeline-status">
+                            <div class="timeline-item-delete">
+                                <i class="fa fa-times"></i>
+                            </div>
+                            <p>My knee hurts...</p>
+                            <div class="attach">
+                                <i class="fa fa-paperclip"></i> Attachments:
+                                <div class="attach-item">
+                                    <a href="img/knee.jpg" target="_blank"><img class="attach-thumb" title="knee.jpg" src="img/knee.jpg"/>
+                                        <div class="filename">tree.jpg</div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-comments">
+                            <ul class="timeline-commentsList">
+                                <li>
+                                    <span class="doc-picture-thumbnail"></span>
+                                    <div class="user-info-comment">
+                                        <span class="doc-name-comment">Healthcare team</span>
+                                        <span class="user-date-comment"><time class="timeago" datetime="2014-04-10T09:24:17Z"></time></span>
+                                    </div>
+                                    <div class="user-content-comment">Please take a look here: <a href="http://goo.gl/IRMCtr" target="_blank">http://goo.gl/IRMCtr</a></div>
+                                </li>
+                            </ul>
+                            <div class="timeline-commentsInput row">
+                                <div class="col-sm-1 col-xs-1">
+                                    <div class="user-picture-thumbnail" style="top: -3px;"></div>
+                                </div>
+                                <div class="col-sm-11 col-xs-11">
+                                    <input type="text" class="form-control comments-input" placeholder="Leave a reply...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<a href="#top" id="smoothscroll" title="Back to top"></a>
+
+<script id="timeline-entry" type="text/x-handlebars-template">
+    <li class="timeline-item">
+        <time class="timeline-date" datetime="2014-04-08T07:17:11.000+02:00">
+            <span>{{time}}</span>
+            <span>{{timeAbbr}}</span>
+        </time>
+        <div class="timeline-picture"></div>
+        <div class="timeline-label">
+            <div class="timeline-title expanded">
+                <h3>Mary Wilkinson</h3>
+            </div>
+            <div class="timeline-status">
+                <div class="timeline-item-delete">
+                    <i class="fa fa-times"></i>
+                </div>
+                <p>{{{status}}}</p>
+            </div>
+            <div class="timeline-comments">
+                <ul class="timeline-commentsList">
+
+                </ul>
+                <div class="timeline-commentsInput row">
+                    <div class="col-sm-1 col-xs-1">
+                        <div class="user-picture-thumbnail" style="top: -3px;"></div>
+                    </div>
+                    <div class="col-sm-11 col-xs-11">
+                        <input type="text" class="form-control comments-input" placeholder="Leave a reply...">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </li>
+</script>
+
+<script id="comment-entry" type="text/x-handlebars-template">
+    <li>
+        <span class="user-picture-thumbnail"></span>
+        <div class="user-info-comment">
+            <span class="user-name-comment">Mary Wilkinson</span>
+            <span class="user-date-comment"><time class="timeago" datetime={{datetime}}></time></span>
+        </div>
+        <div class="user-content-comment">{{{comment}}}</div>
+        <div class="user-delete-comment"><i class="fa fa-times"></i></div>
+    </li>
+</script>
+
+<script src="js/jquery-1.11.0.min.js"></script>
+<script src="js/jquery-ui-1.10.4.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/dropzone.js"></script>
+<script src="js/handlebars-v1.3.0.js"></script>
+<script src="js/jquery.timeago.js"></script>
+<script src="js/social.js"></script>
+
+<script>
+
+    $(function() {
+
+        $('body').on('dragover drop', function(e){
+            e.preventDefault();
+        });
+
+        $('.timeline').socialStream();
+
+        var li =  $('.timeline').find('.timeline-item');
+
+        $('.timeline').data('plugin_socialStream').bindNewEvents(li);
+
+        $("time.timeago").timeago();
+
+        /* Scroll */
+
+        $(window).scroll(function(){
+            if ($(this).scrollTop() < 50) {
+                $('#smoothscroll').fadeOut();
+                if(!$('main').hasClass('semi-zigzag')){
+                    $('main').addClass('semi-zigzag');
+                }
+            } else {
+                $('#smoothscroll').fadeIn();
+                $('main').removeClass('semi-zigzag');
+            }
+        });
+
+        $('#smoothscroll').on('click', function(){
+            $('html, body').animate({scrollTop: 0}, 'fast');
+            return false;
+        });
+
+    });
+
+</script>
+</body>
+</html>

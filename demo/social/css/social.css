@@ -1,0 +1,499 @@
+/* General style */
+
+body{
+    background-color: #F5F7FA;
+    color: #333;
+}
+
+i{
+    -webkit-transition: color 0.5s ease;
+    -moz-transition: color 0.5s ease;
+    -o-transition: color 0.5s ease;
+    transition: color 0.5s ease;
+}
+
+textarea{
+    resize: none;
+}
+
+.modal-body{
+    padding: 15px;
+}
+
+/* Main */
+
+main{
+    position: fixed;
+    top:0;
+    height: 165px;
+    background-color: #E6E9ED;
+    width: 100%;
+    z-index: 2;
+    padding-top: 5px;
+}
+
+main::after {
+    position: absolute;
+    content: '';
+    pointer-events: none;
+}
+
+.semi-zigzag::after {
+    bottom: -25px;
+    z-index: 10;
+    background: inherit;
+    box-shadow: -50px 50px 0 #E6E9ED, 50px -50px 0 #E6E9ED;
+}
+
+.semi-zigzag::after {
+    left: 50%;
+    width: 50px;
+    height: 50px;
+    -webkit-transform: translateX(-50%) rotate(45deg);
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.halfcircle::after {
+    bottom: -50px;
+}
+
+.halfcircle::after {
+    left: 50%;
+    z-index: 10;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: inherit;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+}
+
+#span-attach{
+    margin-left: 10px;
+    color: #fff;
+}
+
+.statusBox{
+    padding: 5px 0;
+}
+
+#status-text{
+    margin-top: 7px;
+}
+
+.status-actions{
+    margin-top: 7px;
+    float: right;
+}
+
+.user-picture {
+    background: url('../img/female.png') center top no-repeat;
+    border: 3px solid #fff;
+    display: block;
+    height: 125px;
+    margin: 5px auto;
+    width: 125px;
+    border-radius: 50%;
+    -webkit-transition: all 0.2s ease-out;
+}
+
+.user-picture:hover{
+    border-radius: 0;
+}
+
+/* Timeline (status)*/
+
+.main-container{
+    margin-top: 150px;
+}
+
+.user-picture-thumbnail{
+    background: url('../img/female.png') center top no-repeat;
+    background-size: 50px 50px;
+    border: 2px solid #fff;
+    display: block;
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    position: absolute;
+    left: 12px;
+    top: 10px;
+}
+
+.doc-picture-thumbnail{
+    background: url('../img/doctor2.png') center center no-repeat;
+    background-size: 45px 60px;
+    border: 2px solid #fff;
+    display: block;
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    position: absolute;
+    left: 12px;
+    top: 10px;
+}
+
+.user-info-comment{
+    position: absolute;
+    left: 70px;
+    top: 7px;
+}
+
+.user-content-comment{
+    position: absolute;
+    left: 70px;
+    bottom: 7px;
+}
+
+.user-delete-comment{
+    position: absolute;
+    right: 10px;
+    top: 7px;
+    color: #CCD1D9;
+}
+
+.user-delete-comment:hover{
+    color: #3BAFDA;
+    cursor: pointer;
+}
+
+.user-name-comment{
+    font-weight: 600;
+    color: #3BAFDA;
+}
+
+.doc-name-comment{
+    font-weight: 600;
+    color: #333;
+}
+
+.user-date-comment{
+    color: #999;
+}
+
+.timeline-commentsInput{
+    position: relative;
+}
+
+.attach{
+    margin-top: 10px;
+    color: #999;
+    font-size: 0.9em;
+}
+
+.attach-item{
+    position: relative;
+    height: 45px;
+    display: inline-block;
+    margin-right: 25px;
+}
+
+.attach-item .filename{
+    position: absolute;
+    xbottom: 0;
+}
+
+.attach-thumb{
+    width: auto;
+    height: 30px;
+    margin: 0 10px;
+}
+
+
+/* Timeline */
+
+.timeline {
+    margin: 80px 0 0 0;
+    padding: 0;
+    list-style: none;
+    position: relative;
+}
+
+ul.timeline-commentsList, ul.timeline-commentsList li{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* The line */
+.timeline:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    background: #dcdfe3;
+    left: 25%;
+    margin-left: -10px;
+}
+
+/* The date/time */
+.timeline > li{
+    position: relative;
+}
+
+.timeline > li .timeline-date {
+    display: block;
+    width: 30%;
+    padding-right: 100px;
+    position: absolute;
+}
+
+.timeline > li .timeline-date span {
+    display: block;
+    text-align: right;
+}
+
+.timeline > li .timeline-date span:first-child {
+    font-size: 0.8em;
+    color: #BDC3C7;
+}
+
+.timeline > li .timeline-date span:last-child {
+    font-size: 1.8em;
+    color: #3BAFDA;
+    font-weight: 300;
+}
+
+.timeline > li:nth-child(odd) .timeline-date span:last-child {
+    xcolor: #6cbfee;
+}
+
+/* Right content */
+.timeline > li .timeline-label{
+    position: relative;
+    margin: 0 0 5% 30%;
+    border: none;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+
+.timeline > li .timeline-label .timeline-title {
+    padding: 1em;
+    background: #DCDFE3;
+    color: #797979;
+    line-height: 1.4;
+    -webkit-border-radius: 2px 2px 0 0;
+    -moz-border-radius: 2px 2px 0 0;
+    border-radius: 2px 2px 0 0;
+
+    -webkit-transition: background 0.3s ease;
+    -moz-transition: background 0.3s ease;
+    -o-transition: background 0.3s ease;
+    transition: background 0.3s ease;
+}
+
+.timeline > li .timeline-label .timeline-title h3 {
+    margin: 0;
+    font-weight: 400;
+    font-size: 1.5em;
+}
+
+.timeline > li .timeline-label .timeline-title:hover{
+    cursor: pointer;
+}
+
+.timeline > li .timeline-label .timeline-title:hover, .timeline > li .timeline-label .timeline-title.expanded{
+    background: #4FC1E9;
+    color: #fff;
+    text-shadow: 0 1px 0 rgba(0,0,0,.1);
+}
+
+.timeline > li .timeline-label .timeline-status{
+    background: #fff;
+    padding: 1.5em;
+    position: relative;
+}
+
+.timeline > li .timeline-label .timeline-status p{
+    margin: 0;
+}
+
+.timeline > li .timeline-label .timeline-status .timeline-item-delete{
+    position: absolute;
+    top: -45px;
+    right: 10px;
+    color: #3BAFDA;
+}
+
+.timeline > li .timeline-label .timeline-status .timeline-item-delete:hover{
+    color: #fff;
+    cursor: pointer;
+}
+
+
+.timeline > li .timeline-label .timeline-commentsInput{
+    padding: 1em;
+}
+
+/* The triangle */
+.timeline > li .timeline-label .timeline-title:before {
+    left: -20px;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+    border-width: 10px;
+    top: 10px;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.timeline > li .timeline-label .timeline-title.collapsed:before {
+    border-right-color: #DCDFE3;
+}
+
+.timeline > li .timeline-label .timeline-title.expanded:before, .timeline > li .timeline-label .timeline-title:hover:before {
+    border-right-color: #4FC1E9;
+}
+
+.timeline-comments{
+    background-color: rgba(79,193,233, 0.1);
+}
+
+.timeline-commentsList li:first-child{
+    border-top: 1px solid rgba(204,209,217,1);
+}
+
+.timeline-commentsList li{
+    position: relative;
+    height: 60px;
+    border-bottom: 1px solid rgba(204,209,217, 0.5);
+    background-color: #F5F7FA;
+}
+
+/* Timeline image */
+.timeline > li .timeline-picture {
+    width: 40px;
+    height: 40px;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    font-size: 1.4em;
+    line-height: 40px;
+    position: absolute;
+    color: #fff;
+    background: url('../img/female.png') center top no-repeat;
+    background-size: 50px 50px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 5px #dcdfe3;
+    text-align: center;
+    left: 25%;
+    top: 0;
+    margin: 0 0 0 -25px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Example Media Queries */
+@media screen and (max-width: 65.375em) {
+
+    .timeline > li .timeline-date span:last-child {
+        font-size: 1.5em;
+    }
+
+    .timeline > li .timeline-label .timeline-title h3 {
+        font-size: 1.5em;
+    }
+
+    .timeline > li .timeline-label .timeline-title {
+        padding: 1em;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .timeline:before {
+        display: none;
+    }
+
+    .timeline > li .timeline-date {
+        width: 100%;
+        position: relative;
+        padding: 0 0 20px 0;
+    }
+
+    .timeline > li .timeline-date span {
+        text-align: left;
+    }
+
+    .timeline > li .timeline-label {
+        margin: 0 0 30px 0;
+        padding: 1em;
+        font-weight: 400;
+        font-size: 95%;
+    }
+
+    .timeline > li .timeline-label {
+        padding: 0;
+    }
+
+    .timeline > li .timeline-label .timeline-title:before {
+        right: auto;
+        left: 15px;
+        top: -20px;
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+
+    .timeline > li .timeline-picture {
+        position: relative;
+        float: right;
+        left: auto;
+        margin: -55px 5px 0 0;
+    }
+
+    .dropzone{
+        margin-top: 50px;
+    }
+
+    main{
+        height: 420px;
+    }
+
+    .main-container {
+        margin-top: 350px;
+    }
+
+    main:after {
+        content: none;
+    }
+}
+
+/* Back to top */
+
+#smoothscroll {
+    height: 44px;
+    width: 44px;
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    text-indent:-9999px;
+    display:none;
+    background: url("../img/back-to-top.png");
+    -webkit-transition-duration: 0.4s;
+    -moz-transition-duration: 0.4s;
+    -o-transition-duration: 0.4s;
+    transition-duration: 0.4s;
+}
+
+#smoothscroll:hover {
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+    background: url("../img/back-to-top.png") no-repeat;
+}
+
