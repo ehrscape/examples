@@ -1,0 +1,93 @@
+<!--
+Copyright (c) 2014 Marand (marand.com)
+Author: Marko Pipan
+Licensed under the GPLv3 license:
+http://www.gnu.org/licenses/gpl.html
+-->
+<html>
+<head>
+    <!-- CodeMirror standalone  runmode -->
+    <script src="CodeMirror/addon/runmode/runmode-standalone.js"></script>
+    <!-- CodeMirror modes -->
+    <script src="CodeMirror/mode/aql/aql.js"></script>
+    <script src="CodeMirror/mode/javascript/javascript.js"></script>
+
+    <script src="aql-format.js"></script>
+
+    <link rel="stylesheet" href="CodeMirror/theme/ehrexplorer.css">
+
+    <script>
+        function formatAql() {
+            var formatter = new AqlFormatter();
+            var formatted = formatter.formatAql(document.getElementById("input").value);
+            formatter.highlightAql(formatted, document.getElementById("highlighted"));
+        }
+
+        function highlightJson() {
+            var formatter = new AqlFormatter();
+            formatter.highlightJson(document.getElementById("inputJson").value,
+                                    document.getElementById("highlightedJson"));
+        }
+    </script>
+</head>
+<body>
+<h1>AQL</h1>
+<textarea id="input" cols="100" rows="10">
+    select proc/time/value as dateTime, proc/description[at0001]/items[at0005]/value/value as comment, proc/description[at0001]/items[at0002]/value/value as procedureName,            proc/description[at0001]/items[at0002]/value/defining_code as ReadCode,             proc/description[at0001]/items[at0002]/value/mappings/target[terminology_id = 'SNOMED-CT'] as SnomedCode from EHR e contains COMPOSITION a contains ACTION proc[openEHR-EHR-ACTION.procedure.v1]
+</textarea>
+<button onclick="formatAql()">Format</button>
+<hr/>
+<pre id="highlighted" class="cm-s-ehrexplorer"></pre>
+
+<h1>JSON</h1>
+<textarea id="inputJson" cols="100" rows="10">
+    [
+      {
+        "dateTime": "2005-08-01T00:00:00",
+        "comment": null,
+        "procedureName": "Cryotherapy to lesion of skin NEC",
+        "ReadCode": {
+          "class": "CODE_PHRASE",
+          "terminology_id": {
+            "class": "TERMINOLOGY_ID",
+            "value": "READ2"
+          },
+          "code_string": "7G091"
+        },
+        "SnomedCode": {
+          "class": "CODE_PHRASE",
+          "terminology_id": {
+            "class": "TERMINOLOGY_ID",
+            "value": "SNOMED-CT"
+          },
+          "code_string": "302396003"
+        }
+      },
+      {
+        "dateTime": "2005-01-31T00:00:00",
+        "comment": null,
+        "procedureName": "Cryotherapy to lesion of skin NEC",
+        "ReadCode": {
+          "class": "CODE_PHRASE",
+          "terminology_id": {
+            "class": "TERMINOLOGY_ID",
+            "value": "READ2"
+          },
+          "code_string": "7G091"
+        },
+        "SnomedCode": {
+          "class": "CODE_PHRASE",
+          "terminology_id": {
+            "class": "TERMINOLOGY_ID",
+            "value": "SNOMED-CT"
+          },
+          "code_string": "302396003"
+        }
+      }
+    ]
+</textarea>
+<button onclick="highlightJson()">Highlight</button>
+<hr/>
+<pre id="highlightedJson" class="cm-s-ehrexplorer"></pre>
+</body>
+</html>

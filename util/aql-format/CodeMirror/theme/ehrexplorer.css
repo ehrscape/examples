@@ -1,0 +1,36 @@
+/*
+Copyright (c) 2014 Marand (marand.com)
+Author: Marko Pipan
+Licensed under the GPLv3 license:
+http://www.gnu.org/licenses/gpl.html
+*/
+
+.cm-s-ehrexplorer span.cm-meta {color: #FF1717;}
+.cm-s-ehrexplorer span.cm-keyword { font-weight: bold; color: #7F0055; }
+.cm-s-ehrexplorer span.cm-atom {color: #219;}
+.cm-s-ehrexplorer span.cm-number {color: #164;}
+.cm-s-ehrexplorer span.cm-def {color: #00f;}
+.cm-s-ehrexplorer span.cm-variable {color: black;}
+.cm-s-ehrexplorer span.cm-variable-2 {color: #0000C0;}
+.cm-s-ehrexplorer span.cm-variable-3 {color: #0000C0;}
+.cm-s-ehrexplorer span.cm-property {color: black;}
+.cm-s-ehrexplorer span.cm-operator {color: black;}
+.cm-s-ehrexplorer span.cm-comment {color: #3F7F5F;}
+.cm-s-ehrexplorer span.cm-string {color: green;}
+.cm-s-ehrexplorer span.cm-string-2 {color: #f50;}
+.cm-s-ehrexplorer span.cm-property {color: #0000ff;}
+.cm-s-ehrexplorer span.cm-error {color: #f00;}
+.cm-s-ehrexplorer span.cm-qualifier {color: #555;}
+.cm-s-ehrexplorer span.cm-builtin {color: #30a;}
+.cm-s-ehrexplorer span.cm-bracket {color: #cc7;}
+.cm-s-ehrexplorer span.cm-tag {color: #170;}
+.cm-s-ehrexplorer span.cm-attribute {color: #00c;}
+.cm-s-ehrexplorer span.cm-link {color: #219;}
+.cm-s-ehrexplorer span.cm-macro {color: blue; font-weight: bold;}
+.cm-s-ehrexplorer span.cm-aql-brackets {color: #6666ff;}
+.cm-s-ehrexplorer span.cm-whitespace {color: #164;}
+
+.cm-s-ehrexplorer .CodeMirror-matchingbracket {
+	border:1px solid gray;
+	color:black !important;;
+}
