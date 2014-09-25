@@ -11,6 +11,7 @@
             username: "username",
             password: "****",
             ehrId: "0737c232-0e4b-4f8b-a42e-ee3fa78a5dfa",
+            language: "en",
             $resultsTable: $("#historyForm"),
             $languageSelect: $("#language"),
             formEl: [
@@ -46,8 +47,6 @@
 
             this.getTemplate();
 
-            this.getCompositionsHistory();
-
             this.$element.on('touchstart click', function () {
 
                 self.getFormData();
@@ -58,13 +57,15 @@
 
         buildHistoryTable: function (data) {
 
+            this.updateTableHeader();
+
             var self = this, html = '';
 
             for (var i = 0; i < data.length; i++) {
 
                 html += "<tr>";
 
-                html += "<td>" + this.concatData(data[i].weight) + "</td><td>" + this.concatData(data[i].height) + "</td><td>" + this.concatData(data[i].bmi) + "</td><td>" + this.concatData(data[i].systolic) + "</td><td>" + this.concatData(data[i].diastolic) + "</td><td>" + data[i].position + "</td><td>" + this.concatData(data[i].rate) + "</td><td>" + data[i].rhythm + "</td><td>" + data[i].depth + "</td><td>" + self._formatDate(data[i].date) + "</td>";
+                html += "<td>" + this.concatData(data[i].weight) + "</td><td>" + this.concatData(data[i].height) + "</td><td>" + this.concatData(data[i].bmi) + "</td><td>" + this.concatData(data[i].systolic) + "</td><td>" + this.concatData(data[i].diastolic) + "</td><td>" + this.decode("position", data[i].position) + "</td><td>" + this.concatData(data[i].rate) + "</td><td>" + this.decode("rhythm", data[i].rhythm) + "</td><td>" + this.decode("depth", data[i].depth) + "</td><td>" + self._formatDate(data[i].date) + "</td>";
 
                 html += "</tr>";
 
@@ -72,13 +73,32 @@
 
             this.options.$resultsTable.find("tbody").html(html);
 
-            this.stopLoading(this.options.$resultsTable.parent());
-
         },
 
         concatData: function (data) {
 
             return (data.magnitude + " " + data.units);
+
+        },
+
+        decode: function (name, code) {
+
+            var term = "", language = this.options.language;
+
+            for (var i = 0; i < this.options.formEl.length; i++) {
+
+                if (this.options.formEl[i].id == name) {
+
+                    var list = this.options.formEl[i].data.inputs[0].list;
+
+                    for (var k = 0; k < list.length; k++) {
+                        if (list[k].value == code) term = list[k].localizedLabels[language];
+                    }
+                }
+
+            }
+
+            return term;
 
         },
 
@@ -138,10 +158,10 @@
                 "a_c/data[at0001]/events[at0002]/data[at0003]/items[at0004]/value as bmi, " +
                 "a_d/data[at0001]/events[at0006]/data[at0003]/items[at0004]/value as systolic, " +
                 "a_d/data[at0001]/events[at0006]/data[at0003]/items[at0005]/value as diastolic, " +
-                "a_d/data[at0001]/events[at0006]/state[at0007]/items[at0008]/value/value as position, " +
+                "a_d/data[at0001]/events[at0006]/state[at0007]/items[at0008]/value/defining_code/code_string as position, " +
                 "a_f/data[at0002]/events[at0003]/data[at0001]/items[at0004]/value as rate, " +
-                "a_g/data[at0001]/events[at0002]/data[at0003]/items[at0005]/value/value as rhythm, " +
-                "a_g/data[at0001]/events[at0002]/data[at0003]/items[at0016]/value/value as depth " +
+                "a_g/data[at0001]/events[at0002]/data[at0003]/items[at0005]/value/defining_code/code_string as rhythm, " +
+                "a_g/data[at0001]/events[at0002]/data[at0003]/items[at0016]/value/defining_code/code_string as depth " +
                 "from EHR e " +
                 "contains COMPOSITION a " +
                 "contains ( " +
@@ -158,7 +178,11 @@
                 type: 'GET',
                 success: function (res) {
 
-                    self.buildHistoryTable(res.resultSet);
+                    self.compositionsData = res.resultSet;
+
+                    self.buildHistoryTable(self.compositionsData);
+
+                    self.stopLoading(self.options.$resultsTable.parent());
 
                     self._closeSession(sessionId);
                 }
@@ -183,9 +207,19 @@
 
             this.templateData = response.webTemplate.tree.children;
 
-            this.setFormElements();
+            for (var i = 0; i < this.options.formEl.length; i++) {  //store data for each element
+
+                var field = this.options.formEl[i].path.split("|");
+
+                var dataAux = this.getChildrenByName(this.templateData, field[0]);
+
+                this.options.formEl[i].data = this.getDataByName(dataAux[0].children, field[1]); //[0] = any event
+
+            }
 
             this.setLabels();
+
+            this.getCompositionsHistory();
 
             this.initOtherEvents();
 
@@ -256,20 +290,6 @@
 
             }
 
-        },
-
-        getInputListByName: function (data, name) {
-            for (var i = 0; i < data.length; i++) {
-
-                if (data[i].name) {
-
-                    if (data[i].name == name) {
-
-                        return (data[i].input.list);
-
-                    }
-                }
-            }
         },
 
         getTemplate: function () {
@@ -385,59 +405,41 @@
 
         },
 
-        setFormElements: function () {
+        setLabels: function () {
+
+            var lang = this.options.language;
 
             for (var i = 0; i < this.options.formEl.length; i++) {
 
                 var field = this.options.formEl[i].path.split("|");
-
-                var dataAux = this.getChildrenByName(this.templateData, field[0]);
-
-                var list = this.getInputListByName(dataAux[0].children, field[1]);   // [0] = "any event"
-
-                if (this.options.formEl[i].type == "select") {  //build form select elements
-                    this.setSelectOptions(this.options.formEl[i].id, list);
-                    $("#" + this.options.formEl[i].id).selecter();
-                }
-                else { // set units
-                    var units = list[0].value;
-                    $("#" + this.options.formEl[i].id).next().html(units);
-                }
-
-            }
-        },
-
-        setLabels: function (language) {
-
-            var lang = language || 'en';
-
-            for (var i = 0; i < this.options.formEl.length; i++) {
-
-                var field = this.options.formEl[i].path.split("|");
-
-                var dataAux = this.getChildrenByName(this.templateData, field[0]);
 
                 //"One level up" label (blue headers)
                 if (this.options.formEl[i].auxLabel) this.setAuxiliaryLabel(this.options.formEl[i].id, field[0], lang);
 
-                var elData = this.getDataByName(dataAux[0].children, field[1]);   // [0] = "any event"
+                var el = $("#" + this.options.formEl[i].id),
+                    elData = this.options.formEl[i].data,
+                    elInputData = this.options.formEl[i].data.inputs;
 
                 var label = elData.localizedNames[lang];
 
                 if (this.options.formEl[i].type == "select") {
 
-                    $("#" + this.options.formEl[i].id).parent().siblings(".select-label").html(label);
+                    this.setSelectOptions(el, elInputData[0].list, lang); //build select
+
+                    el.parent().siblings(".select-label").html(label); // label
 
                 }
                 else {
 
-                    $("#" + this.options.formEl[i].id).prev().html(label);
+                    el.prev().html(label); // label
+
+                    var units = elInputData[1].list[0].value;
+
+                    el.next().html(units); //units
 
                 }
 
                 this.options.formEl[i].label = label;
-
-                this.updateTableHeader(lang);
 
             }
 
@@ -458,26 +460,41 @@
             langSelect.selecter({
                 callback: function (value) {
 
-                    self.setLabels(value);
+                    self.options.language = value;
+
+                    self.setLabels();
+
+                    self.buildHistoryTable(self.compositionsData);
 
                 }
             });
 
         },
 
-        setSelectOptions: function (id, list) {
+        setSelectOptions: function (id, list, language) {
 
-            var select = $("#" + id);
+            var select = id;
+
+            select.html('');
 
             for (var i = 0; i < list.length; i++) {
 
-                select.append('<option value="' + list[i].value + '">' + list[i].label + '</option>');
+                select.append('<option value="' + list[i].value + '">' + list[i].localizedLabels[language] + '</option>');
 
             }
 
+            if (select.closest(".selecter").length > 0) {
+                //check if selecter plugin is already initialized
+                select.selecter("destroy");
+                select.selecter();
+
+            }
+            else {
+                select.selecter();
+            }
         },
 
-        updateTableHeader: function (language) {
+        updateTableHeader: function () {
 
             var html = '<tr>';
 
@@ -487,7 +504,7 @@
 
             }
 
-            switch (language) {
+            switch (this.options.language) {
                 case 'en':
                     html += '<th>Date</th></tr>';
                     break;
