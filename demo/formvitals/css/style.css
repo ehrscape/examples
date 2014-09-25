@@ -1,0 +1,80 @@
+body{
+    background-color: #F1F2F6;
+}
+
+.container{
+    margin-top: 20px;
+}
+
+/* Style override */
+
+.panel-primary > .panel-heading {
+    color: #434a54;
+}
+
+.input-group-addon {
+    color: #434a54;
+    background-color: #E6E9ED;
+}
+
+.list-group .list-group-item:first-child{
+    border: none;
+    font-size: 16px;
+    color: #3BAFDA;
+}
+
+.text-dets{
+    margin: 5px 0 0 0;
+    font-size: 12px;
+}
+
+.select-label{
+    margin-bottom: 5px;
+}
+
+.obligatory-field{
+    border-color: #ED5565;
+}
+
+.panel-footer{
+    text-align: center;
+    background-color: #F5F7FA;
+}
+
+.panel-footer button{
+    width: 170px;
+}
+
+#templateId{
+    color: #fff;
+    font-size: 28px;
+    font-weight: 300;
+}
+
+#historyForm thead>tr>th {
+    color: #777;
+    font-weight: normal;
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+@media (max-width: 767px) {
+
+    #form-new-entity > .row:first-child .input-group{
+        margin-bottom: 10px;
+    }
+
+    #templateId{
+        margin-bottom: 8px;
+    }
+
+}
+

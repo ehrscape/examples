@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+    <title>Form</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootflat/css/bootflat.css">
+    <link rel="stylesheet" href="css/font-awesome.css">
+    <link rel="stylesheet" href="css/animate.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-sm-11">
+                                <h3 class="panel-title" id="templateId"></h3>
+                            </div>
+                            <div class="col-sm-1">
+                                <select id="language"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <form id="form-new-entity">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <span class="input-group-addon"></span>
+                                        <input id="weight" type="number" min="0" max="1000" class="form-control bmi-element">
+                                        <span class="input-group-addon"></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <span class="input-group-addon"></span>
+                                        <input id="height" type="number" min="0" max="1000" class="form-control bmi-element">
+                                        <span class="input-group-addon"></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="input-group">
+                                        <span class="input-group-addon"></span>
+                                        <input id="bmi" type="number" readonly class="form-control">
+                                        <span class="input-group-addon"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <ul class="list-group">
+                                        <li class="list-group-item"></li>
+                                        <li class="list-group-item">
+                                            <div class="input-group">
+                                                <span class="input-group-addon"></span>
+                                                <input id="systolic" type="number" min="0" max="1000" class="form-control">
+                                                <span class="input-group-addon"></span>
+                                            </div>
+                                            <div class="text-dets">Normal values: (140-80)</div>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <div class="input-group">
+                                                <span class="input-group-addon"></span>
+                                                <input id="diastolic" type="number" min="0" max="1000" class="form-control">
+                                                <span class="input-group-addon"></span>
+                                            </div>
+                                            <div class="text-dets">Normal values: (140-80)</div>
+                                        <li class="list-group-item">
+                                            <div class="select-label"></div>
+                                            <select id="position">
+                                            </select>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-sm-6">
+                                    <ul class="list-group">
+                                        <li class="list-group-item"></li>
+                                        <li class="list-group-item">
+                                            <div class="input-group">
+                                                <span class="input-group-addon"></span>
+                                                <input id="rate" type="number" min="0" class="form-control">
+                                                <span class="input-group-addon"></span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                    <ul class="list-group">
+                                        <li class="list-group-item"></li>
+                                        <li class="list-group-item">
+                                            <div class="select-label"></div>
+                                            <select id="rhythm"></select>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <div class="select-label"></div>
+                                            <select id="depth"></select>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="panel-footer">
+                        <button id="addForm" type="button" class="btn btn-primary"><i class="fa fa-plus"></i> ADD COMPOSITION</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">History</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table id="historyForm" class="table table-striped">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/jquery-2.1.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="bootflat/js/jquery.fs.selecter.min.js"></script>
+    <script src="js/bootstrap-growl.min.js"></script>
+    <script src="js/spin.min.js"></script>
+    <script src="js/jquery.spin.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        $(function() {
+
+            $("#addForm").terminologyEhrscape();
+
+        });
+    </script>
+
+</body>
+</html>
