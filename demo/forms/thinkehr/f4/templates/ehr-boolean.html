@@ -1,0 +1,93 @@
+<div
+        class="ehr-boolean ehr-line"
+        data-ehr-path="{{::model.getPath()}}"
+        data-ehr-name="{{::model.getName()}}"
+        ng-hide="model.getViewConfig().isHidden()"
+        ng-class="EhrLayoutHelper.computeEhrLineClass(model)">
+
+    <ehr-label ng-if="!suppressLabel" class="ehr-label-content" ng-class="EhrLayoutHelper.computeEhrLabelContentClass(model)">
+        {{model.labelFor(EhrContext.language)}}:
+    </ehr-label>
+    <div class="ehr-field-content">
+
+        <input
+                type="checkbox"
+                name="{{::booleanName()}}"
+                class="ehr-checkbox"
+                ng-model="booleanValue"
+                ng-model-options="{ getterSetter: true }"
+                ng-disabled="twoStateReadOnly()"
+                ng-class="computeFieldClass()"
+                ng-hide="model.getViewConfig().isHidden()"
+                ng-if="!model.isThreeState()"
+                i-check
+                >
+
+        <div class="ehr-radio-button-group" ng-if="model.isThreeState()" ng-hide="model.getViewConfig().isHidden()">
+            <div class="ehr-radio-button-column ehr-boolean-three-state-true-column"
+                 ng-style="columnStyle()"
+                 ng-class="computeFieldClass()"
+                    >
+                <label class="ehr-radio-label">
+                    <input
+                            type="radio"
+                            class="ehr-radio ehr-boolean-three-state ehr-boolean-true"
+                            name="ehr-rb-group-{{::booleanName()}}"
+                            ng-disabled="trueReadOnly()"
+                            ng-model="booleanValue"
+                            ng-model-options="{ getterSetter: true }"
+                            ng-value="true"
+                            i-check
+                            >
+                    <span class="fa fa-check"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="ehr-radio-button-group" ng-if="model.isThreeState()" ng-hide="model.getViewConfig().isHidden()">
+            <div class="ehr-radio-button-column ehr-boolean-three-state-false-column"
+                 ng-style="columnStyle()"
+                 ng-class="computeFieldClass()"
+                    >
+                <label class="ehr-radio-label">
+                    <input
+                            type="radio"
+                            class="ehr-radio ehr-boolean-three-state ehr-boolean-false"
+                            name="ehr-rb-group-{{::booleanName()}}"
+                            ng-disabled="falseReadOnly()"
+                            ng-model="booleanValue"
+                            ng-model-options="{ getterSetter: true }"
+                            ng-value="false"
+                            i-check
+                            >
+                    <span class="fa fa-times"></span>
+                </label>
+            </div>
+
+        </div>
+
+        <div class="ehr-radio-button-group" ng-if="model.isThreeState()" ng-hide="model.getViewConfig().isHidden()">
+            <div class="ehr-radio-button-column ehr-boolean-three-state-null-column"
+                 ng-style="columnStyle()"
+                 ng-class="computeFieldClass()"
+                    >
+                <label class="ehr-radio-label">
+                    <input
+                            type="radio"
+                            class="ehr-radio ehr-boolean-three-state ehr-boolean-null"
+                            name="ehr-rb-group-{{::booleanName()}}"
+                            ng-disabled="nullReadOnly()"
+                            ng-model="booleanValue"
+                            ng-model-options="{ getterSetter: true }"
+                            ng-value="null"
+                            i-check
+                            >
+                    <span class="fa fa-circle-o"></span>
+                </label>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

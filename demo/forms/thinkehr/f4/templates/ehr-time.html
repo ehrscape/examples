@@ -1,0 +1,29 @@
+<div
+        class="ehr-time ehr-line"
+        data-ehr-path="{{::model.getPath()}}"
+        data-ehr-name="{{::model.getName()}}"
+        ng-hide="model.getViewConfig().isHidden()"
+        ng-class="::EhrLayoutHelper.computeEhrLineClass(model)">
+
+    <ehr-label ng-if="!suppressLabel" class="ehr-label-content" ng-class="::EhrLayoutHelper.computeEhrLabelContentClass(model)">
+        {{::model.labelFor(EhrContext.language)}}:
+    </ehr-label>
+    <div class="ehr-field-content">
+
+        <div class="row">
+            <div class="col-sm-6">
+                <timepicker
+                        type="time"
+                        name="{{::timeName()}}"
+                        class="ehr-time-input"
+                        ng-model="timeObject"
+                        ng-readonly="model.getViewConfig().isReadOnly()"
+                        ng-class="::EhrLayoutHelper.computeFieldClass(model)"
+                        ng-hide="model.getViewConfig().isHidden()"
+                ></timepicker>
+            </div>
+        </div>
+
+    </div>
+
+</div>

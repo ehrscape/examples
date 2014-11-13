@@ -1,0 +1,18 @@
+<div
+        class="ehr-line"
+        data-ehr-path="{{::model.getPath()}}"
+        data-ehr-name="{{::model.getName()}}"
+        ng-hide="model.getViewConfig().isHidden()"
+        ng-class="::computeLineClass()">
+
+    <ehr-label ng-if="!suppressLabel" class="ehr-label-content" ng-class="::EhrLayoutHelper.computeEhrLabelContentClass(model)">
+        {{::model.labelFor(EhrContext.language)}}:
+    </ehr-label>
+    <div class="ehr-field-content">
+        <ehr-coded-text-combo ng-if="presentation() === thinkehr.f4.FieldPresentation.COMBOBOX"></ehr-coded-text-combo>
+        <ehr-coded-text-radio ng-if="presentation() === thinkehr.f4.FieldPresentation.RADIOS"></ehr-coded-text-radio>
+    </div>
+
+
+</div>
+

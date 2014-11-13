@@ -1,0 +1,27 @@
+<div
+        class="ehr-date-time ehr-line"
+        data-ehr-path="{{::model.getPath()}}"
+        data-ehr-name="{{::model.getName()}}"
+        ng-hide="model.getViewConfig().isHidden()"
+        ng-class="::EhrLayoutHelper.computeEhrLineClass(model)">
+
+    <ehr-label ng-if="!suppressLabel" class="ehr-label-content" ng-class="::EhrLayoutHelper.computeEhrLabelContentClass(model)">
+        {{::model.labelFor(EhrContext.language)}}:
+    </ehr-label>
+    <div class="ehr-field-content">
+
+        <datetimepicker
+                name="{{::dateTimeName()}}"
+                ng-model="dateTimeObject"
+                date-format="dd-MM-yyyy"
+                date-options="dateTimeOptions"
+                ng-readonly="model.getViewConfig().isReadOnly()"
+                ng-class="::EhrLayoutHelper.computeFieldClass(model)"
+                ng-hide="model.getViewConfig().isHidden()"
+                readonly-time="false">
+        </datetimepicker>
+
+
+    </div>
+
+</div>

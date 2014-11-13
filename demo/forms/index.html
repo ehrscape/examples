@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html data-ng-app="formsApp">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Form Renderer</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootflat/css/bootflat.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="thinkehr/f4/css/ehr-form.css">
+    <link rel="stylesheet" type="text/css" href="thinkehr/f4/css/ehr-form-layout.css">
+    <link rel="stylesheet" type="text/css" href="thinkehr/f4/css/ehr-form-default.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animate.css">
+
+    <script src="js/jquery-2.1.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="bootflat/js/jquery.fs.selecter.js"></script>
+    <script src="bootflat/js/icheck.min.js"></script>
+    <script src="angular/1.3.2/angular.js"></script>
+    <script src="angular/1.3.2/angular-resource.js"></script>
+    <script src="js/tmhDynamicLocale.js"></script>
+    <script src="angular/1.3.2/i18n/angular-locale_en-us.js"></script>
+    <script src="js/ui-bootstrap-custom-tpls-0.10.0.js"></script>
+    <script src="js/datetimepicker-tpls-0.11.js"></script>
+    <script src="js/bootstrap-growl.min.js"></script>
+
+    <script src="thinkehr/f4/thinkehr-f4-model.js"></script>
+    <script src="thinkehr/f4/thinkehr-f4-view-angular.js"></script>
+
+    <script src="app/demographics.js"></script>
+    <script src="app/app.js"></script>
+</head>
+<body>
+
+<nav class="navbar navbar-inverse navbar-custom" role="navigation">
+
+</nav>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Demographics</h3>
+                </div>
+                <div class="panel-body" data-ng-controller="demographicsController">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <div class="form-search search-only">
+                                <i class="search-icon glyphicon glyphicon-search"></i>
+                                <input type="text" class="form-control search-query" data-ng-model="searchString" data-ng-model-options="{debounce: 300}" placeholder="Search...">
+                                <ul class="typehead">
+                                    <li data-ng-repeat="i in party" data-ng-click="selectParty(i)" data-ng-bind-html="buildSuggestion(i) | highlight:searchString"></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <div class="demographics-label">Name</div>
+                            <div class="demographics-data">{{patient.name}}</div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="demographics-label">Sex</div>
+                            <div class="demographics-data">{{patient.sex}}</div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="demographics-label">Age</div>
+                            <div class="demographics-data">{{patient.age}}</div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="demographics-label">DOB</div>
+                            <div class="demographics-data">{{patient.dob}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="contentFormRenderer" data-ng-controller="AppCtrl as appCtrl">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Form selector</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-sm-5">
+                                <div class="demographics-label">Form</div>
+                                <select id="form-select" data-ng-model="currentFormIndex" data-ng-options="xid.name for xid in formsDataSource">
+                                    <option class="selecter-placeholder" value="">Select a form</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="demographics-label">Locale</div>
+                                <select id="locale-select" data-ng-model="currentLocale" pretty-select>
+                                    <option data-ng-repeat="item in appCtrl.AppConfig.locales" value="{{item}}" data-ng-bind="item"></option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="checkbox">
+                                    <input id="value-model-cb" type="checkbox" data-ng-model="appCtrl.showValueModel" i-check>
+                                    <label for="value-model-cb" id="value-model-label">Show model value</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="well">
+                    <div id="form-attach">
+                        <ehr-form model="appCtrl.formModel" ehr-context="appCtrl.EhrContext"
+                                  form-id="{{appCtrl.AppConfig.formName}}_{{appCtrl.AppConfig.formVersion}}"></ehr-form>
+                    </div>
+
+                    <div id="save-controls" data-ng-show="appCtrl.currentForm">
+                        <button id="save-btn" class="btn btn-primary" data-ng-click="appCtrl.saveValues()">Add Composition</button>
+                    </div>
+
+                    <div id="ehrValues" data-ng-show="appCtrl.showValueModel && appCtrl.currentForm">
+                        <hr>
+                        <div>
+                            <div class="demographics-label">Model value</div>
+                            <pre>{{appCtrl.valueModel | json}}</pre>
+                        </div>
+                    </div>
+
+                    <div id="no-form-text" data-ng-if="!appCtrl.currentForm">
+                        <span>No form to display selected, please choose one from the combo box above.</span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-default" data-ng-show="appCtrl.currentForm">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Last saved compositions</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table id="save-table" class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Save Time</th>
+                                <th>Composition ID</th>
+                                <th>Template</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr data-ng-repeat="c in appCtrl.compositions" data-ng-class="appCtrl.tableClass($even)">
+                                <td>{{c.startTime | date: 'medium'}}</td>
+                                <td class="uid"><a href="#" data-ng-click="appCtrl.openComposition($event)" data-composition-uid="{{c.uid}}">{{c.uid}}</a></td>
+                                <td>{{c.templateId}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

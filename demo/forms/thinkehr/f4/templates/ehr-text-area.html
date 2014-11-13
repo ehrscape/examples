@@ -1,0 +1,8 @@
+<textarea
+    class="ehr-text-input area form-control control-renderer"
+    rows="{{::rows()}}"
+    ng-readonly="model.getViewConfig().isReadOnly()"
+    ng-hide="model.getViewConfig().isHidden()"
+    ng-model="textValue"
+    ng-model-options="{ getterSetter: true }"
+    ng-class="::EhrLayoutHelper.computeFieldClass(model)"></textarea>

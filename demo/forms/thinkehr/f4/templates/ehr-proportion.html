@@ -1,0 +1,39 @@
+<div
+        class="ehr-proportion ehr-line"
+        data-ehr-path="{{::model.getPath()}}"
+        data-ehr-name="{{::model.getName()}}"
+        ng-hide="model.getViewConfig().isHidden()"
+        ng-class="::EhrLayoutHelper.computeEhrLineClass(model)">
+
+    <ehr-label ng-if="!suppressLabel" class="ehr-label-content" ng-class="::EhrLayoutHelper.computeEhrLabelContentClass(model)">
+        {{::model.labelFor(EhrContext.language)}}:
+    </ehr-label>
+    <div class="ehr-field-content">
+        <!--k-rebind="magnitudeOptions" Add this option for rebinding if kendo ever fixes the bug with TypeError on rebind -->
+        <!-- Then disable the precision watcher in the controller -->
+        <input
+                name="{{::numeratorName()}}"
+                type="number"
+                k-options="numeratorOptions"
+                class="ehr-number ehr-proportion ehr-numerator form-control control-renderer"
+                ng-class="::computeFieldClass()"
+                ng-readonly="model.getViewConfig().isReadOnly()"
+                ng-model="numerator"
+                >
+        <span class="ehr-proportion-separator" ng-if="::!fixedDenominator()">&nbsp;/&nbsp;</span>
+        <!-- Has to be ng-show, because ng-if causes problems with model binding, probably kendo-related -->
+        <input
+                name="{{::denominatorName()}}"
+                type="number"
+                k-options="denominatorOptions"
+                class="ehr-number ehr-proportion ehr-denominator form-control control-renderer"
+                ng-class="::computeFieldClass()"
+                ng-readonly="model.getViewConfig().isReadOnly()"
+                ng-model="denominator"
+                ng-show="::!fixedDenominator()"
+                >
+        <span class="ehr-percentage-sign" ng-if="::percentage()">&nbsp;&#37;</span>
+
+    </div>
+
+</div>

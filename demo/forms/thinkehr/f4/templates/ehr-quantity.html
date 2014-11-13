@@ -1,0 +1,64 @@
+<div
+        class="ehr-quantity ehr-line"
+        data-ehr-path="{{::model.getPath()}}"
+        data-ehr-name="{{::model.getName()}}"
+        ng-hide="model.getViewConfig().isHidden()"
+        ng-class="::EhrLayoutHelper.computeEhrLineClass(model)">
+
+    <ehr-label ng-if="!suppressLabel" class="ehr-label-content" ng-class="EhrLayoutHelper.computeEhrLabelContentClass(model)">
+        {{::model.labelFor(EhrContext.language)}}:
+    </ehr-label>
+    <div class="ehr-field-content">
+        <!--k-rebind="magnitudeOptions" Add this option for rebinding if kendo ever fixes the bug with TypeError on rebind -->
+        <!-- Then disable the precision watcher in the controller -->
+        <div class="row">
+            <div class="col-sm-3">
+                <input
+                        type="number"
+                        name="{{::magnitudeName()}}"
+                        k-options="magnitudeOptions"
+                        class="ehr-number form-control"
+                        ng-class="::EhrLayoutHelper.computeFieldClass(model)"
+                        ng-readonly="model.getViewConfig().isReadOnly()"
+                        ng-model="magnitude"
+                        />
+            </div>
+            <div class="col-sm-3">
+                <select
+                        name="{{::unitName()}}"
+                        class="ehr-combo ehr-unit"
+                        ng-if="presentation() === thinkehr.f4.FieldPresentation.COMBOBOX"
+                        ng-class="::EhrLayoutHelper.computeFieldClass(model)"
+                        ng-readonly="model.getViewConfig().isReadOnly()"
+                        ng-model="unitValue"
+                        ng-model-options="{ getterSetter: true }"
+                        ng-options="item.getValue() as item.getValue() for item in list()"
+                        pretty-select-form>
+                    <option value=""></option>
+                </select>
+            </div>
+            <div class="col-sm-6">
+                <div class="ehr-radio-button-group" ng-if="presentation() === thinkehr.f4.FieldPresentation.RADIOS">
+                    <div class="ehr-radio-button-column"
+                         ng-repeat="unit in ::list()"
+                         ng-class="::EhrLayoutHelper.computeFieldClass(model)">
+                        <label class="ehr-radio-label">
+                            <input
+                                    type="radio"
+                                    class="ehr-radio ehr-unit"
+                                    name="ehr-rb-group-{{::model.getUniqueId()}}"
+                                    ng-disabled="model.getViewConfig().isReadOnly()"
+                                    ng-model="unitValue"
+                                    ng-model-options="{ getterSetter: true }"
+                                    ng-value="::unit.getValue()"
+                                    i-check
+                                    >
+                            <span ng-bind="::unit.getLabel()"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

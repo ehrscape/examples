@@ -1,0 +1,117 @@
+.ehr-line {
+    display: flex;
+    flex-direction: row;
+    /*flex-wrap: nowrap;*/
+    justify-content: flex-start;
+    /*align-content: flex-start;*/
+    align-items: center;
+    align-content: flex-start;
+    margin-top: 10px;
+    margin-bottom: 10px;
+
+    /*border: 1px solid green;*/
+}
+
+.ehr-line.field-horizontal-align-left {
+    justify-content: flex-start;
+}
+
+.ehr-line.field-horizontal-align-center {
+    justify-content: center;
+}
+
+.ehr-line.field-horizontal-align-right {
+    justify-content: flex-end;
+}
+
+.ehr-line.field-vertical-align-top {
+    align-items: flex-start;
+}
+
+.ehr-line.field-vertical-align-middle {
+    align-items: center;
+}
+
+.ehr-line.field-vertical-align-bottom {
+    align-items: flex-end;
+}
+
+/* Column top to bottom */
+.ehr-line.line-top-to-bottom {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.ehr-line.line-top-to-bottom.field-horizontal-align-left {
+    align-items: flex-start;
+}
+
+.ehr-line.line-top-to-bottom.field-horizontal-align-center {
+    align-items: center;
+}
+
+.ehr-line.line-top-to-bottom.field-horizontal-align-right {
+    align-items: flex-end;
+}
+
+.ehr-line.line-top-to-bottom.field-vertical-align-top {
+    justify-content: flex-start;
+}
+
+.ehr-line.line-top-to-bottom.field-vertical-align-middle {
+    justify-content: center;
+}
+
+.ehr-line.line-top-to-bottom.field-vertical-align-bottom {
+    justify-content: flex-end;
+}
+
+.ehr-label-content {
+    display: flex;
+    flex: 1;
+    justify-content: flex-end;
+    text-align: right;
+    margin-right: 10px;
+}
+
+.ehr-field-content {
+    flex: 9;
+    justify-content: flex-start;
+}
+
+.ehr-line.field-horizontal-align-left .ehr-field-content {
+    flex: 9;
+    justify-content: flex-start;
+}
+
+.ehr-line.field-horizontal-align-center .ehr-field-content {
+    flex: 1 1 auto;
+    justify-content: center;
+}
+
+.ehr-line.field-horizontal-align-right .ehr-field-content {
+    flex: 0 1 auto;
+    justify-content: flex-end;
+}
+
+.ehr-label-content.label-horizontal-align-left {
+    justify-content: flex-start;
+}
+
+.ehr-label-content.label-horizontal-align-right {
+    justify-content: flex-end;
+}
+
+.ehr-label-content.label-vertical-align-top {
+    align-self: flex-start;
+}
+
+.ehr-label-content.label-vertical-align-middle {
+    align-self: center;
+}
+
+.ehr-label-content.label-vertical-align-bottom {
+    align-self: flex-end;
+}
+

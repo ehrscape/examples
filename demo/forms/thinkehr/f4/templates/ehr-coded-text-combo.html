@@ -1,0 +1,26 @@
+<!--<select kendo-combo-box class="ehr-combo" ng-model="codeValue" ng-model-options="{ getterSetter: true }"-->
+<!--ng-options="item.getValue() as item.getLabel() for item in model.getInputFor('code').getList()">-->
+<!--<option value="">&nbsp;</option>-->
+<!--</select>-->
+
+<div class="row">
+    <div class="col-sm-6">
+        <select
+                class="ehr-combo"
+                ng-class="::EhrLayoutHelper.computeFieldClass(model)"
+                ng-readonly="model.getViewConfig().isReadOnly()"
+                ng-hide="model.getViewConfig().isHidden()"
+                ng-model="codeValue"
+                ng-model-options="{ getterSetter: true }"
+                ng-options="item.getValue() as item.getLabel(EhrContext.language) for item in list()"
+                pretty-select-form
+                >
+            <option value=""> </option>
+            <!--<option ng-repeat="item in ::list()" value="{{::item.getValue()}}" ng-bind="item.getLabel(EhrContext.language)" on-last-repeat></option>-->
+            <!--<option ng-repeat="item in ::list()" value="{{::item.getValue()}}" ng-bind="item.getLabel(EhrContext.language)"></option>-->
+        </select>
+    </div>
+</div>
+
+
+

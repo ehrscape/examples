@@ -1,0 +1,39 @@
+<div
+        class="ehr-date ehr-line"
+        data-ehr-path="{{::model.getPath()}}"
+        data-ehr-name="{{::model.getName()}}"
+        ng-hide="model.getViewConfig().isHidden()"
+        ng-class="::EhrLayoutHelper.computeEhrLineClass(model)">
+
+    <ehr-label ng-if="!suppressLabel" class="ehr-label-content" ng-class="::EhrLayoutHelper.computeEhrLabelContentClass(model)">
+        {{::model.labelFor(EhrContext.language)}}:
+    </ehr-label>
+    <div class="ehr-field-content">
+
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="input-group">
+                    <input
+                            type="text"
+                            name="{{::dateName()}}"
+                            class="ehr-date-input form-control"
+                            ng-model="dateObject"
+
+                            ng-readonly="model.getViewConfig().isReadOnly()"
+                            ng-class="::EhrLayoutHelper.computeFieldClass(model)"
+                            ng-hide="model.getViewConfig().isHidden()"
+
+                            datepicker-popup="dd-MM-yyyy"
+                            is-open="dateObject.open"
+                            ng-click = "dateObject.open = true"
+                            datepicker-options="dateOptions"
+                            ng-required="true"
+                            >
+                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>

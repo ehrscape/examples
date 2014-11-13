@@ -1,0 +1,21 @@
+<div class="ehr-radio-button-group" ng-hide="model.getViewConfig().isHidden()">
+    <div class="ehr-radio-button-column"
+         ng-repeat="col in columns"
+         ng-style="::elementStyle()"
+         ng-class="::EhrLayoutHelper.computeFieldClass(model)"
+            >
+        <label class="ehr-radio-label" ng-repeat="itemIndex in col">
+            <input
+                    type="radio"
+                    class="ehr-radio"
+                    name="ehr_rb_group_{{::codedTextName()}}"
+                    ng-disabled="model.getViewConfig().isReadOnly()"
+                    ng-model="codeValue"
+                    ng-model-options="{ getterSetter: true }"
+                    ng-value="::list()[itemIndex].getValue()"
+                    i-check
+                    >
+            <span ng-bind="::list()[itemIndex].getLabel(EhrContext.language)"></span>
+        </label>
+    </div>
+</div>

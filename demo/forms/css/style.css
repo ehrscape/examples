@@ -1,0 +1,186 @@
+/* General Styles */
+
+html, body{
+    height:100%;
+}
+
+body{
+    background: #F1F2F6;
+}
+
+.navbar-custom{
+    border-radius: 0;
+    background: #434A54;
+    border: 0;
+}
+
+/* Demographics */
+
+.demographics-label{
+    text-transform: uppercase;
+    color: #999;
+    font-weight: 700;
+    letter-spacing: 0.0625em;
+}
+
+.demographics-data{
+    font-weight: 300;
+    font-size: 24px;
+}
+
+.form-search .search-query, .form-search .search-query:first-child, .form-search .search-query:last-child {
+    padding: 0 40px;
+}
+
+/* Autocomplete */
+
+.typehead{
+    display: none;
+    position: absolute;
+    top: 35px;
+    width: 100%;
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+    list-style: none;
+    font-size: 14px;
+    z-index: 100;
+}
+
+.typehead li{
+    position: relative;
+    display: block;
+    margin-bottom: -1px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-color: transparent;
+    border-top-color: #e6e9ed;
+    padding: 10px 15px;
+}
+
+.typehead li:hover {
+    background-color: #e6e9ed;
+    cursor: pointer;
+}
+
+.highlighted{
+    font-weight: 700;
+    color: #3BAFDA;
+}
+
+/* Form Selector */
+
+.well{
+    padding: 15px;
+}
+
+.panel-primary .selecter{
+    margin-top: 5px;
+}
+
+.right-align {
+    text-align: right;
+}
+
+.btn-circle {
+    border-radius: 50%;
+    padding: 8px 12px;
+}
+
+.checkbox{
+    margin-top: 25px;
+}
+
+pre{
+    margin: 5px 0 10px;
+}
+
+#save-controls{
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Select boxes */
+
+.selecter-item.placeholder {
+    display: none;
+}
+
+.selecter .selecter-selected{
+    min-height: 34px;
+}
+
+.selecter .selecter-item{
+    min-height: 33px;
+}
+
+/* Textarea*/
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+/* Date time pickers*/
+
+.btn-primary{
+    color: #fff !important;
+}
+
+table:not(.table) thead > tr> th{
+    color: #777;
+    text-transform: uppercase;
+    font-size: 12px;
+    line-height: 2;
+}
+
+.datetimepicker-wrapper {
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.datetimepicker-wrapper > .input-group {
+    margin-bottom: 0 !important;
+    width: 150px;
+}
+
+.datetimepicker-wrapper [ng-model=hours], [ng-model=minutes] {
+    width: 46px !important;
+}
+
+.datetimepicker-wrapper [ng-model=minutes] {
+    margin: 0 5px;
+}
+
+.dropdown-menu {
+    padding: 20px;
+    background-color: #F5F7FA;
+}
+
+.btn-group .btn-link {
+    border-left-color: #3BAFDA;
+}
+
+.btn-group .btn-link:first-child {
+    border-left-color: #3BAFDA;
+    border-radius: 0
+}
+
+.input-group-addon {
+    color: #434a54;
+    background-color: #E6E9ED;
+}

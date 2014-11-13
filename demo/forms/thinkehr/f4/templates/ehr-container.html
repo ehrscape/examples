@@ -1,0 +1,15 @@
+<div class="ehr-container" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}">
+    <div class="ehr-container-bar" ng-mouseenter="showControls(true)" ng-mouseleave="showControls(false)">
+
+        <span class="ehr-container-label" ng-if="!suppressLabel">{{::model.labelFor(EhrContext.language)}}</span>
+
+        <div class="ehr-container-controls" ng-if="::supportsMulti()" ng-show="::showControls()">
+            <button type="button" class="ehr-duplicate-container-btn btn btn-primary" ng-click="duplicateContainer()" ng-disabled="!duplicationEnabled()">+</button>
+            <button type="button" class="ehr-remove-container-btn btn btn-primary" ng-click="removeContainer()" ng-disabled="!removalEnabled()">-</button>
+        </div>
+    </div>
+
+    <ehr-recursive-element></ehr-recursive-element>
+
+
+</div>

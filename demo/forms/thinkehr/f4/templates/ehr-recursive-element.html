@@ -1,0 +1,25 @@
+<ehr-container ng-repeat-start="model in model.getChildModels()" ng-if="::model.isContainer()"></ehr-container>
+
+<div class="ehr-recursive-element-switch" ng-repeat-end ng-if="::!model.isContainer()" ng-switch on="::model.getRmType().toString()">
+    <ehr-coded-text id="{{::model.getUniqueId()}}" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}"
+                    ng-switch-when="DV_CODED_TEXT"></ehr-coded-text>
+    <ehr-quantity id="{{::model.getUniqueId()}}" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}"
+                  ng-switch-when="DV_QUANTITY"></ehr-quantity>
+    <ehr-text id="{{::model.getUniqueId()}}" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}" ng-switch-when="DV_TEXT"></ehr-text>
+    <ehr-proportion id="{{::model.getUniqueId()}}" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}"
+                    ng-switch-when="DV_PROPORTION"></ehr-proportion>
+    <ehr-date id="{{::model.getUniqueId()}}" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}"
+              ng-switch-when="DV_DATE"></ehr-date>
+    <ehr-time id="{{::model.getUniqueId()}}" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}"
+              ng-switch-when="DV_TIME"></ehr-time>
+    <ehr-date-time id="{{::model.getUniqueId()}}" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}"
+                   ng-switch-when="DV_DATE_TIME"></ehr-date-time>
+    <ehr-boolean id="{{::model.getUniqueId()}}" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}"
+                 ng-switch-when="DV_BOOLEAN"></ehr-boolean>
+    <ehr-ordinal id="{{::model.getUniqueId()}}" data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}"
+                 ng-switch-when="DV_ORDINAL"></ehr-ordinal>
+
+    <ehr-unknown data-ehr-path="{{::model.getPath()}}" data-ehr-name="{{::model.getName()}}" ng-switch-default></ehr-unknown>
+</div>
+
+

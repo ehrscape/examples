@@ -1,0 +1,42 @@
+/*ehr-form form {*/
+/*display: inline-block;    */
+/*}*/
+
+ehr-form form .ehr-container {
+    /*border: 1px solid red;*/
+}
+
+/*noinspection CssInvalidHtmlTagReference*/
+ehr-form,
+ehr-form form ehr-container,
+ehr-form form ehr-recursive-element,
+ehr-form form .ehr-radio-label {
+    display: block;
+}
+
+/*noinspection CssInvalidHtmlTagReference*/
+ehr-form form ehr-unknown,
+ehr-form form .ehr-radio-button-column {
+    display: inline-block;
+}
+
+/* Should be inline at some point, probably */
+ehr-form form .ehr-recursive-element-switch {
+    display: block;
+}
+
+ehr-form form .ehr-container-controls {
+    display: inline-block;
+}
+
+ehr-form form .ehr-radio-button-column {
+    float: left;
+}
+
+ehr-form form ehr-quantity .ehr-radio-button-group {
+    display: inline-block;
+}
+
+ehr-form form ehr-quantity .ehr-radio-button-column {
+    float: none;
+}

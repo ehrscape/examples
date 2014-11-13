@@ -1,0 +1,243 @@
+ehr-form form {
+    xfont-family: Arial, Helvetica, sans-serif;
+    xfont-size: 14px;
+}
+
+ehr-form form .ehr-line {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+ehr-form form .ehr-label * {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #777;
+    font-weight: 700;
+}
+
+ehr-form form .ehr-container-label {
+    font-size: 16px;
+}
+
+ehr-form form .ehr-radio-label {
+    /*font-size: 12px;*/
+    /*font-weight: bold;*/
+    /*color: #212119;*/
+}
+
+/* ehr-text */
+ehr-form form .ehr-text-input {
+    width: 450px;
+}
+
+ehr-form form .ehr-text-input.field-size-small {
+    width: 300px;
+}
+
+ehr-form form .ehr-text-input.field-size-medium {
+    width: 450px;
+}
+
+ehr-form form .ehr-text-input.field-size-large {
+    width: 100%;
+    min-width: 600px;
+}
+
+/* ehr-container */
+ehr-form form ehr-container {
+    margin: 0 0 20px 10px;
+    padding-left: 5px;
+    padding-right: 5px;
+    xborder-left: 2px solid #3BAFDA;
+}
+
+ehr-form form ehr-container .ehr-container-bar {
+        /*margin-top: 8px;*/
+    color: #3BAFDA;
+    margin-bottom: 8px;
+    padding: 5px 20px;
+    margin-left: -5px;
+    margin-right: -5px;
+    border-bottom: 1px solid #3BAFDA;
+    position: relative;
+}
+
+ehr-form form ehr-container .ehr-container-bar:before{
+    position: absolute;
+    font-family: FontAwesome;
+    content: "\f107";
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: inherit;
+    top: 6px;
+    left: 2px;
+    font-size: 16px;
+}
+
+ehr-form form ehr-container .ehr-container-bar .ehr-container-controls {
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+/* ehr-coded-text */
+ehr-form form .ehr-combo {
+    width: 450px;
+}
+
+ehr-form form .ehr-combo.field-size-small {
+    width: 350px;
+}
+
+ehr-form form .ehr-combo.field-size-medium {
+    width: 450px;
+}
+
+ehr-form form .ehr-combo.field-size-large {
+    width: 100%;
+    min-width: 600px;
+}
+
+ehr-form form .ehr-radio-button-column {
+    margin-right: 10px;
+}
+
+/* ehr-quantity */
+/* :not(input) because kendoui puts the size rather on the span surrounding the actual input */
+ehr-form form :not(input).ehr-combo.ehr-unit {
+    width: 100px;
+}
+
+ehr-form form :not(input).ehr-combo.ehr-unit.field-size-small {
+    width: 80px;
+}
+
+ehr-form form :not(input).ehr-combo.ehr-unit.field-size-medium {
+    width: 100px;
+}
+
+ehr-form form :not(input).ehr-combo.ehr-unit.field-size-large {
+    width: 49%;
+    min-width: 297px;
+}
+
+ehr-form form ehr-quantity :not(input).ehr-number {
+    width: 347px;
+}
+
+ehr-form form ehr-quantity :not(input).ehr-number.field-size-small {
+    width: 100px;
+}
+
+ehr-form form ehr-quantity :not(input).ehr-number.field-size-medium {
+    width: 347px;
+}
+
+ehr-form form ehr-quantity :not(input).ehr-number.field-size-large {
+    width: 49%;
+    min-width: 300px;
+}
+
+/* ehr-proportion */
+ehr-form form ehr-proportion .ehr-number.ehr-proportion.k-numerictextbox {
+    width: 215px;
+}
+
+ehr-form form ehr-proportion .ehr-number.ehr-proportion.k-numerictextbox.field-size-small {
+    width: 115px;
+}
+
+ehr-form form ehr-proportion .ehr-number.ehr-proportion.k-numerictextbox.field-size-medium {
+    width: 215px;
+}
+
+ehr-form form ehr-proportion .ehr-number.ehr-proportion.k-numerictextbox.field-size-large {
+    width: 49%;
+    min-width: 283px;
+}
+
+ehr-form form ehr-proportion .ehr-number.ehr-proportion.k-numerictextbox.ehr-fixed-denominator {
+    width: 450px;
+}
+
+ehr-form form ehr-proportion .ehr-number.ehr-proportion.k-numerictextbox.ehr-fixed-denominator.field-size-small {
+    width: 300px;
+}
+
+ehr-form form ehr-proportion .ehr-number.ehr-proportion.k-numerictextbox.ehr-fixed-denominator.field-size-medium {
+    width: 450px;
+}
+
+ehr-form form ehr-proportion .ehr-number.ehr-proportion.k-numerictextbox.ehr-fixed-denominator.field-size-large {
+    width: 98%;
+    min-width: 300px;
+}
+
+/* ehr-date */
+ehr-form form ehr-date .ehr-date-input {
+    width: 210px;
+}
+
+ehr-form form ehr-date .ehr-date-input.field-size-small {
+    width: 210px;
+}
+
+ehr-form form ehr-date .ehr-date-input.field-size-medium {
+    width: 450px;
+}
+
+ehr-form form ehr-date .ehr-date-input.field-size-large {
+    width: 98%;
+    min-width: 300px;
+}
+
+/* ehr-time */
+ehr-form form ehr-time .ehr-time-input {
+    width: 210px;
+}
+
+ehr-form form ehr-time .ehr-time-input.field-size-small {
+    width: 210px;
+}
+
+ehr-form form ehr-time .ehr-time-input.field-size-medium {
+    width: 450px;
+}
+
+ehr-form form ehr-time .ehr-time-input.field-size-large {
+    width: 98%;
+    min-width: 300px;
+}
+
+/* ehr-date-time */
+ehr-form form ehr-date-time .ehr-date-time-input {
+    width: 210px;
+}
+
+ehr-form form ehr-date-time .ehr-date-time-input.field-size-small {
+    width: 210px;
+}
+
+ehr-form form ehr-date-time .ehr-date-time-input.field-size-medium {
+    width: 450px;
+}
+
+ehr-form form ehr-date-time .ehr-date-time-input.field-size-large {
+    width: 98%;
+    min-width: 300px;
+}
+
+/* ehr-boolean */
+ehr-form form ehr-boolean .ehr-checkbox.ehr-checkbox-two-state.field-size-medium {
+    width: 450px;
+}
+
+ehr-form form ehr-boolean .ehr-checkbox.ehr-checkbox-two-state.field-size-large {
+    width: 98%;
+    min-width: 300px;
+}
+
+.ehr-field-content > input{
+    width: 400px;
+    display: inline-block;
+}
+
