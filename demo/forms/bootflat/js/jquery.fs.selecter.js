@@ -506,11 +506,12 @@ $.fn.shiftEmpty = function() {
 		if (!data.$selecter.hasClass("open")) {
 			var offset = data.$selecter.offset(),
 				bodyHeight = $body.outerHeight(),
+				scrollPixels = $body.scrollTop(),
 				optionsHeight = data.$itemsWrapper.outerHeight(true),
 				selectedOffset = (data.index >= 0) ? data.$items.eq(data.index).position() : { left: 0, top: 0 };
 
 			// Calculate bottom of document
-			if (offset.top + optionsHeight > bodyHeight) {
+			if (offset.top + optionsHeight > bodyHeight + scrollPixels) {
 				data.$selecter.addClass("bottom");
 			}
 
