@@ -1380,7 +1380,7 @@ thinkehr.f4.InputItem = thinkehr.f4.Object._extendM({
     getLabel: function (locale) {
         if (locale) {
             var l = this.localizedLabels[locale];
-            return l ? l : null;
+            return l ? l : this.label;
         }
 
         return this.label;
