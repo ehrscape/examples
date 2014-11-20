@@ -9,8 +9,6 @@
         {{::model.labelFor(EhrContext.language)}}:
     </ehr-label>
     <div class="ehr-field-content">
-        <!--k-rebind="magnitudeOptions" Add this option for rebinding if kendo ever fixes the bug with TypeError on rebind -->
-        <!-- Then disable the precision watcher in the controller -->
         <input
                 name="{{::numeratorName()}}"
                 type="number"
@@ -21,7 +19,6 @@
                 ng-model="numerator"
                 >
         <span class="ehr-proportion-separator" ng-if="::!fixedDenominator()">&nbsp;/&nbsp;</span>
-        <!-- Has to be ng-show, because ng-if causes problems with model binding, probably kendo-related -->
         <input
                 name="{{::denominatorName()}}"
                 type="number"

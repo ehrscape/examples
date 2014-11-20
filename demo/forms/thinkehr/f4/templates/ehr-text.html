@@ -9,7 +9,6 @@
         {{::model.labelFor(EhrContext.language)}}:
     </ehr-label>
     <div class="ehr-field-content">
-    <!--<textarea ng-model="textValue" ng-model-options="{ getterSetter: true }" rows="1" cols="30"></textarea>-->
         <ehr-text-field ng-if="::model.getViewConfig().getField().getPresentation() !== thinkehr.f4.FieldPresentation.TEXTAREA"></ehr-text-field>
         <ehr-text-area ng-if="::model.getViewConfig().getField().getPresentation() === thinkehr.f4.FieldPresentation.TEXTAREA"></ehr-text-area>
     </div>

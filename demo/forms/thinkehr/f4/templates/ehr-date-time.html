@@ -8,8 +8,8 @@
     <ehr-label ng-if="!suppressLabel" class="ehr-label-content" ng-class="::EhrLayoutHelper.computeEhrLabelContentClass(model)">
         {{::model.labelFor(EhrContext.language)}}:
     </ehr-label>
-    <div class="ehr-field-content">
 
+    <div class="ehr-field-content">
         <datetimepicker
                 name="{{::dateTimeName()}}"
                 ng-model="dateTimeObject"
@@ -20,8 +20,5 @@
                 ng-hide="model.getViewConfig().isHidden()"
                 readonly-time="false">
         </datetimepicker>
-
-
     </div>
-
 </div>

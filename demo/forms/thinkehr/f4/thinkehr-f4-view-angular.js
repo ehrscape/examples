@@ -339,10 +339,6 @@ if (!thinkehr.f4.ng) {
                 },
                 compile: function (element) {
                     return EhrRecursionHelper.compile(element, function (scope, iElement, iAttrs, controller, transcludeFn) {
-                        // Define your normal link function here.
-                        // Alternative: instead of passing a function,
-                        // you can also pass an object with
-                        // a 'pre'- and 'post'-link function.
                     });
                 }
             };
@@ -352,14 +348,6 @@ if (!thinkehr.f4.ng) {
             return {
                 restrict: "EA",
                 templateUrl: "thinkehr/f4/templates/ehr-recursive-element.html"
-                /*compile: function(element) {
-                 return EhrRecursionHelper.compile(element, function(scope, iElement, iAttrs, controller, transcludeFn){
-                 // Define your normal link function here.
-                 // Alternative: instead of passing a function,
-                 // you can also pass an object with
-                 // a 'pre'- and 'post'-link function.
-                 });
-                 }*/
             };
         });
 
@@ -1130,16 +1118,6 @@ if (!thinkehr.f4.ng) {
         return module;
     }
 
-    /*function createFormController(formModule, formModel) {
-     formModule.controller(thinkehr.f4.ng.CTRL_NAME, ['$scope', '$log', function ($scope, $log) {
-     $scope.$log = $log;
-     $scope.formModel = formModel;
-     $scope.formId = formModule.name;
-     $scope.thinkehr = thinkehr;
-     $scope.console = console;
-     }]);
-     }*/
-
     function getAngularDirective(model) {
         if (model.isContainer()) {
             return "thinkehr/f4/templates/ehr-container.html";
@@ -1151,6 +1129,5 @@ if (!thinkehr.f4.ng) {
     // Exports
     thinkehr.f4.ng.createFormModule = createFormModule;
     thinkehr.f4.ng.bootstrapModule = bootstrapModule;
-//    thinkehr.f4.ng.createFormController = createFormController;
     thinkehr.f4.ng.getDirective = getAngularDirective;
 })();
