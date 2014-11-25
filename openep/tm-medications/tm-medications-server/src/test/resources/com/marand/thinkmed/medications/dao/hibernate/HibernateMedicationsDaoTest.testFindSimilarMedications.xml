@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="../../../../../../../../../../../ispek-unitils/unitils/dataset_xsd/dataset.xsd">
+
+    <!--medication 1-->
+    <MEDICATION ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <MEDICATION_VERSION ID="1" VERSION="0" NAME="Medication 1" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"
+            MEDICATION_GENERIC_ID="1" ATC_CLASSIFICATION_ID="1111" MEDICATION_ID="1"/>
+    <MEDICATION_ROUTE_LINK ID="1" VERSION="0" MEDICATION_ID="1" ROUTE_ID="11" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+
+    <!--medication 2 (similar) -->
+    <MEDICATION ID="2" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="2" VERSION="0" NAME="Medication 2" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"
+            MEDICATION_GENERIC_ID="1" ATC_CLASSIFICATION_ID="1111" MEDICATION_ID="2"/>
+    <MEDICATION_ROUTE_LINK ID="2" VERSION="0" MEDICATION_ID="2" ROUTE_ID="11" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+
+    <!--medication 3 (different atc) -->
+    <MEDICATION ID="3" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="3" VERSION="0" NAME="Medication 3" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"
+            MEDICATION_GENERIC_ID="1" ATC_CLASSIFICATION_ID="2222" MEDICATION_ID="3"/>
+    <MEDICATION_ROUTE_LINK ID="3" VERSION="0" MEDICATION_ID="3" ROUTE_ID="11" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <MEDICATION_ROUTE_LINK ID="4" VERSION="0" MEDICATION_ID="3" ROUTE_ID="2" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+
+    <!--medication 4 (different custom group) -->
+    <MEDICATION ID="4" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="4" VERSION="0" NAME="Medication 4" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"
+            MEDICATION_GENERIC_ID="1" ATC_CLASSIFICATION_ID="1111" MEDICATION_ID="4"/>
+    <MEDICATION_ROUTE_LINK ID="5" VERSION="0" MEDICATION_ID="4" ROUTE_ID="11" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+
+    <!--medication 5 (different route) -->
+    <MEDICATION ID="5" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="5" VERSION="0" NAME="Medication 5" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"
+            MEDICATION_GENERIC_ID="1" ATC_CLASSIFICATION_ID="1111" MEDICATION_ID="5"/>
+    <MEDICATION_ROUTE_LINK ID="6" VERSION="0" MEDICATION_ID="5" ROUTE_ID="2" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+
+    <!--medication 6 (different generic) -->
+    <MEDICATION ID="6" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="6" VERSION="0" NAME="Medication 6" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"
+            MEDICATION_GENERIC_ID="2" ATC_CLASSIFICATION_ID="1111" MEDICATION_ID="6"/>
+    <MEDICATION_ROUTE_LINK ID="7" VERSION="0" MEDICATION_ID="6" ROUTE_ID="11" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+
+    <!--medication 7 (similar - route relation) -->
+    <MEDICATION ID="7" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="7" VERSION="0" NAME="Medication 7" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"
+            MEDICATION_GENERIC_ID="1" ATC_CLASSIFICATION_ID="1111" MEDICATION_ID="7"/>
+    <MEDICATION_ROUTE_LINK ID="8" VERSION="0" MEDICATION_ID="7" ROUTE_ID="1" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+
+    <!--medication 8 (no custom group) -->
+    <MEDICATION ID="8" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="8" VERSION="0" NAME="Medication 8" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"
+            MEDICATION_GENERIC_ID="1" ATC_CLASSIFICATION_ID="1111" MEDICATION_ID="8"/>
+    <MEDICATION_ROUTE_LINK ID="9" VERSION="0" MEDICATION_ID="8" ROUTE_ID="11" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+
+    <!--medication 9 (no custom group) -->
+    <MEDICATION ID="9" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="9" VERSION="0" NAME="Medication 9" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"
+            MEDICATION_GENERIC_ID="1" ATC_CLASSIFICATION_ID="1111" MEDICATION_ID="9"/>
+    <MEDICATION_ROUTE_LINK ID="10" VERSION="0" MEDICATION_ID="9" ROUTE_ID="11" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+
+    <!--generics-->
+    <MEDICATION_GENERIC ID="1" CODE="2" NAME="Generic 1"/>
+    <MEDICATION_GENERIC ID="2" CODE="2" NAME="Generic 2"/>
+
+    <!--Route-->
+    <MEDICATION_ROUTE ID="1" CODE="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <MEDICATION_ROUTE ID="2" CODE="2" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <MEDICATION_ROUTE ID="10" CODE="10" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <MEDICATION_ROUTE ID="11" CODE="11" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <MEDICATION_ROUTE_RELATION ID="1" VERSION="0" CHILD_ROUTE_ID="10" PARENT_ROUTE_ID="1" EFFECTIVE_START="-∞"
+            EFFECTIVE_END="+∞"/>
+    <MEDICATION_ROUTE_RELATION ID="2" VERSION="0" CHILD_ROUTE_ID="11" PARENT_ROUTE_ID="1" EFFECTIVE_START="-∞"
+            EFFECTIVE_END="+∞"/>
+
+    <!--atc classifications-->
+    <ATC_CLASSIFICATION ID="1" VERSION="0" NAME="ATC 1" CODE="C1" TOP_PARENT_ID="1"/>
+    <ATC_CLASSIFICATION ID="2" VERSION="0" NAME="ATC 2" CODE="C2" TOP_PARENT_ID="2"/>
+    <ATC_CLASSIFICATION ID="1111" VERSION="0" NAME="ATC 1111" CODE="C1111" TOP_PARENT_ID="1"/>
+    <ATC_CLASSIFICATION ID="2222" VERSION="0" NAME="ATC 2222" CODE="C2222" TOP_PARENT_ID="2"/>
+
+</dataset>

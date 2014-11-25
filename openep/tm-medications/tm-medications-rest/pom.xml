@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>tm-medications</artifactId>
+        <groupId>com.marand.thinkmed</groupId>
+        <version>2.1.3.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>tm-medications-rest</artifactId>
+    <name>Think!Med Medications (REST)</name>
+
+    <dependencies>
+
+        <!-- MAF -->
+
+        <dependency>
+            <groupId>com.marand.maf</groupId>
+            <artifactId>maf-spring-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.marand.maf</groupId>
+            <artifactId>maf-resteasy</artifactId>
+        </dependency>
+
+        <!-- Ispek -->
+
+        <dependency>
+            <groupId>com.marand.thinkmed</groupId>
+            <artifactId>tm-medications-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.marand.ispek</groupId>
+            <artifactId>ispek-rest</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.marand.ispek</groupId>
+                    <artifactId>ispek-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.marand.thinkmed</groupId>
+                    <artifactId>tm-gui-resources</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.marand.thinkmed</groupId>
+                    <artifactId>tm-themes-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.zefer</groupId>
+                    <artifactId>pd4ml.pro</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.zefer</groupId>
+                    <artifactId>pd4ml.pro.ss_css2</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- html ui -->
+        <dependency>
+            <groupId>com.marand.thinkmed</groupId>
+            <artifactId>tm-clinical-html-ui</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.marand.thinkmed</groupId>
+                    <artifactId>tm-themes-common</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.marand.thinkmed</groupId>
+            <artifactId>tm-html-ui-common</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.marand.thinkmed</groupId>
+                    <artifactId>tm-themes-common</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.marand.thinkmed</groupId>
+            <artifactId>tm-jquery-framework</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.marand.thinkmed</groupId>
+            <artifactId>tm-chaplinkstimeline-external</artifactId>
+        </dependency>
+
+        <!-- Spring -->
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
+
+        <!-- RESTEasy -->
+
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxb-provider</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-spring</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jsapi</artifactId>
+        </dependency>
+
+        <!-- JSP -->
+
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jstl</artifactId>
+        </dependency>
+
+        <!-- Unit Testing -->
+
+        <dependency>
+            <groupId>com.marand.thinkmed</groupId>
+            <artifactId>tm-core-server-test</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.marand.ispek.scheduling</groupId>
+                    <artifactId>ispek-scheduling-calendarapi-calsvci</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.marand.ispek.scheduling</groupId>
+                    <artifactId>ispek-scheduling-calendarapi-calsvc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.marand.ispek.scheduling</groupId>
+                    <artifactId>ispek-scheduling-calendarapi-mail</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.marand.ispek.scheduling</groupId>
+                    <artifactId>ispek-scheduling-calendarapi-calcorei</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.marand.ispek.scheduling</groupId>
+                    <artifactId>ispek-scheduling-calendarapi-calcore</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.marand.ispek.scheduling</groupId>
+                    <artifactId>ispek-scheduling-settings</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+    </dependencies>
+
+</project>

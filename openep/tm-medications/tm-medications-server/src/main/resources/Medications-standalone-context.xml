@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+        xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <context:property-placeholder
+        location="
+        classpath:medications-standalone.properties,
+        classpath:medications.properties,
+        classpath:password.properties"
+        ignore-unresolvable="true" file-encoding="UTF-8"/>
+
+    <import resource="classpath:/ac-service-request.xml"/>
+    <import resource="classpath:/ac-hibernate-datasource.xml"/>
+    <import resource="classpath:/ac-named-type-registry.xml"/>
+    <import resource="classpath:/ac-named-types-none.xml"/>
+    <import resource="classpath:/ac-hibernate-audit.xml"/>
+    <import resource="classpath:/ac-hibernate-events.xml"/>
+    <import resource="classpath:/ac-entity-context.xml"/>
+    <import resource="classpath:/ac-entity-auditing.xml"/>
+    <import resource="classpath:/ac-security.xml"/>
+    <import resource="classpath:/ac-default-user-details.xml"/>
+    <import resource="classpath:/ac-preferences-server.xml"/>
+    <import resource="classpath:/ac-core-services.xml"/>
+    <import resource="classpath:/ac-domain-permission-context.xml"/>
+    <import resource="classpath:/ac-openehr-server-no-advices.xml"/>
+    <import resource="classpath:/ac-ispek-openehr-server.xml"/>
+    <import resource="classpath:/ProcessService-context.xml"/>
+    <import resource="classpath:/MafDateRuleService-context.xml"/>
+    <import resource="classpath:/ac-tagging-context.xml"/>
+    <import resource="classpath:/ac-jetty.xml"/>
+    <import resource="classpath:/ac-jetty-connector.xml"/>
+
+
+    <bean id="remoteService" class="com.marand.maf.core.jboss.remoting.JBossRemotingProxyFactoryBean" abstract="true">
+        <property name="config">
+            <map>
+                <entry key="timeout" value="${service.invocation.timeout}"/>
+            </map>
+        </property>
+    </bean>
+
+
+    <util:list id="hibernatePackages">
+        <value>com.marand.maf.core.context.model</value>
+        <value>com.marand.maf.core.daterule.model.impl</value>
+        <value>com.marand.maf.core.hibernate.entity</value>
+        <value>com.marand.maf.core.prefs.model</value>
+        <value>com.marand.maf.core.security.auditing.model</value>
+        <value>com.marand.maf.core.security.auditing.xmltype.model</value>
+        <value>com.marand.maf.core.security.model</value>
+        <value>com.marand.maf.core.activity.model</value>
+        <value>com.marand.maf.core.server.mapping.model.impl</value>
+        <value>com.marand.thinkmed.medications.model.impl</value>
+    </util:list>
+
+
+    <!-- Swing REST -->
+    <bean class="com.marand.maf.spring.web.jetty.SpringWebAppProvider">
+        <property name="monitoredDirSpringResource" value="${jetty.monitored.location}"/>
+        <property name="extractWars" value="true"/>
+        <property name="scanInterval" value="0"/>
+        <property name="logUrlOnStart" value="true"/>
+        <property name="useFileMappedBuffer" value="false"/>
+        <property name="tempDir" value="${user.home}/tm-jetty"/>
+    </bean>
+
+
+    <!-- Disable dependency to automatic DB schema generation -->
+    <bean id="databaseSchemaVersionManager" class="java.lang.String"/>
+
+
+    <!-- BPM -->
+    <bean id="bpmService" parent="remoteService">
+        <property name="serviceInterface" value="com.marand.ispek.bpm.service.BpmService"/>
+        <property name="locatorURI" value="${service.url.bpm}"/>
+        <property name="remoteInvocationFactory" ref="bpmServerSecuredRemoteInvocationFactory"/>
+        <property name="advices">
+            <list merge="true">
+                <bean class="com.marand.maf.core.jboss.remoting.aop.RetryInvocationInterceptor"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="taskService" parent="remoteService">
+        <property name="serviceInterface" value="com.marand.ispek.bpm.service.TaskService"/>
+        <property name="locatorURI" value="${service.url.bpm}"/>
+        <property name="remoteInvocationFactory" ref="bpmServerSecuredRemoteInvocationFactory"/>
+        <property name="advices">
+            <list merge="true">
+                <bean class="com.marand.maf.core.jboss.remoting.aop.RetryInvocationInterceptor"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="bpmServerSecuredRemoteInvocationFactory" class="com.marand.maf.core.security.remoting.jboss.RunAsSecuredRemoteInvocationFactory">
+        <property name="username" value="${bpm.runas.username}"/>
+        <property name="password" value="${bpm.runas.password}"/>
+    </bean>
+
+</beans>

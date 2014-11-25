@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="../../../../../../../../../../../ispek-unitils/unitils/dataset_xsd/dataset.xsd">
+
+    <!--LEKADOL-->
+    <MEDICATION ID="1" VERSION="0"  EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"  NAME="Lekadol"
+            ATC_CLASSIFICATION_ID="1111" MEDICATION_GENERIC_ID="1" MEDICATION_ID="1"/>
+    <MEDICATION_TYPE ID="1" VERSION="0" MEDICATION_ID="1" TYPE="MEDICATION"/>
+    <MEDICATION_TYPE ID="2" VERSION="0" MEDICATION_ID="1" TYPE="ANTIBIOTIC"/>
+    <MEDICATION_CUSTOM_GROUP_MEMBER ID="1" VERSION="0" MEDICATION_ID="1" MEDICATION_CUSTOM_GROUP_ID="1"/>
+    <MEDICATION_CUSTOM_GROUP_MEMBER ID="2" VERSION="0" MEDICATION_ID="1" MEDICATION_CUSTOM_GROUP_ID="2"/>
+
+    <!--NALGESIN-->
+    <MEDICATION ID="2" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="2" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" NAME="Nalgesin 20 mg"
+            ATC_CLASSIFICATION_ID="1112" MEDICATION_GENERIC_ID="[null]" MEDICATION_ID="2"/>
+    <!--generics-->
+    <MEDICATION_GENERIC ID="1" CODE="P" NAME="Paracetamol"/>
+
+    <!--groups-->
+    <MEDICATION_CUSTOM_GROUP ID="1" VERSION="0" CODE="1" NAME="Paracetamol PEK" ORGANIZATIONAL_ENTITY_NAME="PEK"/>
+    <MEDICATION_CUSTOM_GROUP ID="2" VERSION="0" CODE="2" NAME="Paracetamol KOOKIT" ORGANIZATIONAL_ENTITY_NAME="KOOKIT"/>
+
+    <!--atc classifications-->
+    <ATC_CLASSIFICATION ID="1" VERSION="0" NAME="ATC 1" CODE="C1" TOP_PARENT_ID="1"/>
+    <ATC_CLASSIFICATION ID="1111" VERSION="0" NAME="ATC 1111" CODE="C1111" TOP_PARENT_ID="1"/>
+    <ATC_CLASSIFICATION ID="1112" VERSION="0" NAME="ATC 1112" CODE="C1112" TOP_PARENT_ID="1"/>
+
+</dataset>

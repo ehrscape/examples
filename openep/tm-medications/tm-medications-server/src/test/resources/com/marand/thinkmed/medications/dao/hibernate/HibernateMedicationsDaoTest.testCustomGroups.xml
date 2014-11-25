@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="../../../../../../../../../../../ispek-unitils/unitils/dataset_xsd/dataset.xsd">
+
+    <!--LEKADOL-->
+    <MEDICATION ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="1" VERSION="0" NAME="Lekadol" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" MEDICATION_ID="1"/>
+    <MEDICATION_CUSTOM_GROUP_MEMBER ID="1" VERSION="0" MEDICATION_ID="1" MEDICATION_CUSTOM_GROUP_ID="1"/>
+    <MEDICATION_CUSTOM_GROUP_MEMBER ID="2" VERSION="0" MEDICATION_ID="1" MEDICATION_CUSTOM_GROUP_ID="2"/>
+
+    <!--NALGESIN-->
+    <MEDICATION ID="2" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="2" VERSION="0" NAME="Nalgesin 20 mg" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" MEDICATION_ID="2"/>
+    <MEDICATION_CUSTOM_GROUP_MEMBER ID="3" VERSION="0" MEDICATION_ID="2" MEDICATION_CUSTOM_GROUP_ID="2"/>
+
+    <!--DALERON-->
+    <MEDICATION ID="3" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="3" VERSION="0" NAME="Daleron 500 mg" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" MEDICATION_ID="3"/>
+    <MEDICATION_CUSTOM_GROUP_MEMBER ID="4" VERSION="0" MEDICATION_ID="3" MEDICATION_CUSTOM_GROUP_ID="2"/>
+
+    <!--ASPIRIN-->
+    <MEDICATION ID="4" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" />
+    <MEDICATION_VERSION ID="4" VERSION="0" NAME="Aspirin 500 mg" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" MEDICATION_ID="4"/>
+    <MEDICATION_CUSTOM_GROUP_MEMBER ID="5" VERSION="0" MEDICATION_ID="4" MEDICATION_CUSTOM_GROUP_ID="3"/>
+
+    <!--groups-->
+    <MEDICATION_CUSTOM_GROUP ID="1" VERSION="0" CODE="1" NAME="Paracetamol PEK" ORGANIZATIONAL_ENTITY_NAME="PEK" SORT_ORDER="2"/>
+    <MEDICATION_CUSTOM_GROUP ID="2" VERSION="0" CODE="2" NAME="Paracetamol KOOKIT" ORGANIZATIONAL_ENTITY_NAME="KOOKIT" SORT_ORDER="1"/>
+    <MEDICATION_CUSTOM_GROUP ID="3" VERSION="0" CODE="2" NAME="Acet. kislina KOOKIT" ORGANIZATIONAL_ENTITY_NAME="KOOKIT" SORT_ORDER="[null]"/>
+
+</dataset>

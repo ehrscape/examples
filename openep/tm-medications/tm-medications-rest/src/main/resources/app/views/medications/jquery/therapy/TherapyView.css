@@ -1,0 +1,1141 @@
+/*
+ * Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+ *
+ * This file is part of Think!Med Clinical Medication Management.
+ *
+ * Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*------------------------------------------------------------------------------------------------------------*/
+.v-therapy-view {
+    /*font-family: ${font.family};*/
+    /*font-family: segoe ui, tahoma, arial, verdana, sans-serif;*/
+    /*font-size: 100%;*/
+    /*background: #ffffff;*/
+}
+
+.v-therapy-view .therapy-flow-grid-container .ui-jqgrid tr.jqgrow td {
+    white-space: normal;
+}
+
+.v-therapy-view .portlet-header .icon-add,
+.v-therapy-view .portlet-header .icon-print,
+.v-therapy-view .portlet-header .icon-sort-time-asc,
+.v-therapy-view .portlet-header .icon-sort-time-desc,
+.v-therapy-view .portlet-header .icon-sort-name-asc,
+.v-therapy-view .portlet-header .icon-sort-name-desc,
+.v-therapy-view .portlet-header .icon-reference-weight,
+.v-therapy-view .portlet-header .left-icon,
+.v-therapy-view .portlet-header .right-icon,
+.v-therapy-view .portlet-header .no-group-icon,
+.v-therapy-view .portlet-header .custom-group-icon,
+.v-therapy-view .edit-icon,
+.v-therapy-view .delete-icon,
+.v-therapy-view .confirm-icon,
+.v-therapy-view .timeline-icon,
+.v-therapy-view .flow-grid-icon {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .portlet-header .icon-add,
+.v-therapy-view .portlet-header .dropdown-menu > li > a:hover > .icon-add,
+.v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-add {
+    background-image: url('${context.path}/resources/images/icons/therapyAdd_24.png');
+}
+
+.v-therapy-view .portlet-header .icon-sort-time-asc,
+.v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-sort-time-asc,
+.v-therapy-view .portlet-header .dropdown-menu > li > a:hover > .icon-sort-time-asc {
+    background-image: url('${context.path}/resources/images/icons/sortUp_24.png');
+}
+
+.v-therapy-view .portlet-header .icon-sort-time-desc,
+.v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-sort-time-desc,
+.v-therapy-view .portlet-header .dropdown-menu > li > a:hover > .icon-sort-time-desc {
+    background-image: url('${context.path}/resources/images/icons/sortDown_24.png');
+}
+
+.v-therapy-view .portlet-header .icon-sort-name-asc,
+.v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-sort-name-asc,
+.v-therapy-view .portlet-header .dropdown-menu > li > a:hover > .icon-sort-name-asc {
+    background-image: url('${context.path}/resources/images/icons/sortByAlphabetUp_filter_24.png');
+}
+
+.v-therapy-view .portlet-header .icon-sort-name-desc,
+.v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-sort-name-desc,
+.v-therapy-view .portlet-header .dropdown-menu > li > a:hover > .icon-sort-name-desc {
+    background-image: url('${context.path}/resources/images/icons/sortByAlphabetDown_filter_24.png');
+}
+
+.v-therapy-view .portlet-header .icon-print,
+.v-therapy-view .portlet-header .dropdown-menu > li > a:hover > .icon-print,
+.v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-print {
+    background-image: url('${context.path}/resources/images/icons/print_24.png');
+}
+
+.v-therapy-view .portlet-header .icon-reference-weight {
+    background-image: url('${context.path}/resources/images/icons/weightReferenceAdd_24.png');
+}
+
+.v-therapy-view .portlet-header .left-icon {
+    background-image: url('${context.path}/resources/images/icons/arrowBold_Left_24.png');
+}
+
+.v-therapy-view .portlet-header .right-icon {
+    background-image: url('${context.path}/resources/images/icons/arrowBold_Right_24.png');
+}
+
+.v-therapy-view .portlet-header .no-group-icon {
+    background-image: url('${context.path}/resources/images/icons/viewByTimeDown_filter_24.png');
+}
+
+.v-therapy-view .portlet-header .custom-group-icon {
+    background-image: url('${context.path}/resources/images/icons/therapyApplication_24.png');
+}
+
+.v-therapy-view .timeline-icon {
+    background-image: url('${context.path}/resources/images/icons/timeLine_tab_24.png');
+}
+
+.v-therapy-view .flow-grid-icon {
+    background-image: url('${context.path}/resources/images/icons/list_24.png');
+}
+
+/* today-cell-item */
+.v-therapy-view .today-cell-item td {
+    height: auto !important;
+}
+
+.v-therapy-view table.today-cell-item td {
+    border-right: none;
+    border-bottom: none;
+}
+
+.v-therapy-view .today-cell-item .edit-icon {
+    background-image: url('${context.path}/resources/images/icons/edit_24.png');
+}
+
+.v-therapy-view .today-cell-item .delete-icon {
+    background-image: url('${context.path}/resources/images/icons/delete_24.png');
+}
+
+.v-therapy-view .today-cell-item .confirm-icon {
+    background-image: url('${context.path}/resources/images/icons/extend_24.png');
+}
+
+/* today-cell-item - control */
+.v-therapy-view .today-cell-item .control {
+    padding-right: 0;
+}
+
+.v-therapy-view .today-cell-item .control .control-inner {
+    height: 100%;
+    width: 150px;
+    float: left;
+}
+
+.v-therapy-view .today-cell-item .control .control-inner .icon_timing {
+    width: 16px;
+    height: 16px;
+    /*background:blue;*/
+    float: right;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 70%;
+}
+
+.v-therapy-view .today-cell-item .control .control-inner .icon_timing.suspend {
+    background-image: url('${context.path}/resources/images/icons/extend_24.png');
+}
+
+.v-therapy-view .icon_pills,
+.v-therapy-view .icon_infusion,
+.v-therapy-view .icon_injection,
+.v-therapy-view .icon_continuous_infusion,
+.v-therapy-view .icon_baseline_infusion,
+.v-therapy-view .icon_other_medication {
+    background-size: 100%;
+    width: 48px;
+    height: 48px;
+}
+
+.v-therapy-view .icon_pills {
+    background-image: url('${context.path}/resources/images/icons/therapyPill_48.png');
+}
+
+.v-therapy-view .icon_infusion {
+    background-image: url('${context.path}/resources/images/icons/therapyInfusion_48.png');
+}
+
+.v-therapy-view .icon_injection {
+    background-image: url('${context.path}/resources/images/icons/therapyInjection_48.png');
+}
+
+.v-therapy-view .icon_continuous_infusion {
+    background-image: url('${context.path}/resources/images/icons/therapyInfusionPermanent_48.png');
+}
+
+.v-therapy-view .icon_baseline_infusion {
+    background-image: url('${context.path}/resources/images/icons/therapyInfusionOM_48.png');
+}
+
+.v-therapy-view .icon_other_medication {
+    background-image: url('${context.path}/resources/images/icons/therapy_48.png');
+}
+
+.v-therapy-view .icon_warning {
+    background-size: 100%;
+    width: 16px;
+    height: 16px;
+    float: left;
+    background-image: url('${context.path}/resources/images/icons/warningCircleRed_status_16.png');
+}
+
+.v-therapy-view .today-cell-item .icon_reviewed, .therapy-timeline .icon_reviewed,
+.v-therapy-view .today-cell-item .icon_aborted, .therapy-timeline .icon_aborted,
+.v-therapy-view .today-cell-item .icon_suspended, .therapy-timeline .icon_suspended,
+.v-therapy-view .today-cell-item .icon_cancelled, .therapy-timeline .icon_cancelled,
+.v-therapy-view .today-cell-item .icon_late, .therapy-timeline .icon_late,
+.v-therapy-view .today-cell-item .icon_very_late, .therapy-timeline .icon_very_late {
+    background-size: 100%;
+    margin-top: -18px;
+    width: 16px;
+    height: 16px;
+}
+
+.v-therapy-view .today-cell-item .icon_reviewed, .therapy-timeline .icon_reviewed {
+    background-image: url('${context.path}/resources/images/icons/finish_status_16.png');
+    float: right;
+}
+
+.v-therapy-view .today-cell-item .icon_aborted, .therapy-timeline .icon_aborted {
+    background-image: url('${context.path}/resources/images/icons/deleteGrey_status_16.png');
+    float: right;
+}
+
+.v-therapy-view .today-cell-item .icon_suspended, .therapy-timeline .icon_suspended {
+    background-image: url('${context.path}/resources/images/icons/stop_status_16.png');
+    float: right;
+}
+
+.v-therapy-view .today-cell-item .icon_cancelled, .therapy-timeline .icon_cancelled {
+    background-image: url('${context.path}/resources/images/icons/cancel_status_16.png');
+    float: right;
+}
+
+.v-therapy-view .today-cell-item .icon_late, .therapy-timeline .icon_late {
+    background-image: url('${context.path}/resources/images/icons/warningYellow_status_16.png');
+    float: right;
+}
+
+.v-therapy-view .today-cell-item .icon_very_late, .therapy-timeline .icon_very_late {
+    background-image: url('${context.path}/resources/images/icons/warningRed_status_16.png');
+    float: right;
+}
+
+.v-therapy-view .today-cell-item .icon_changed,
+.therapy-timeline .timeline-groups-text .icon_changed {
+    background-image: url('${context.path}/resources/images/icons/change_status_16.png');
+    background-size: 100%;
+    width: 16px;
+    height: 16px;
+    float: left;
+}
+
+.v-therapy-view .icon_day_number {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #2aa4e5;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 16px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.v-therapy-view .icon_link {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #2aa4e5;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 16px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.v-therapy-view .basket-container-link {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #2aa4e5;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 15px;
+    min-width: 16px;
+    width: 16px !important;
+    text-align: center !important;
+}
+
+.v-therapy-view .cell-item .icon_day_number, .v-therapy-view .cell-item .icon_link {
+    text-align: center !important;
+    margin-right: 2px;
+    vertical-align: top;
+}
+
+/* cell-item */
+
+.v-therapy-view .cell-item td {
+    height: auto !important;
+}
+
+.v-therapy-view table.cell-item td {
+    border-right: none;
+    border-bottom: none;
+}
+
+/** medication info tooltip */
+.v-therapy-view .medication-details-card {
+    white-space: nowrap;
+}
+
+.v-therapy-view .medication-details-card .detail .strength-label {
+    text-align: right;
+    padding-left: 3px;
+}
+
+.v-therapy-view .medication-details-card .detail .ingredient-label {
+    padding-left: 3px;
+}
+
+.v-therapy-view .medication-details-card .detail .descriptive-ingredient-label {
+    padding-left: 3px;
+}
+
+/** order info tooltip */
+.v-therapy-view .today-cell-item .therapy-info-selector,
+.v-therapy-view .cell-item .therapy-info-selector {
+    position: absolute;
+    opacity: 0.01;
+    filter: alpha(opacity=1);
+    top: 0;
+    left: 0;
+    width: 26px;
+    height: 26px;
+    background: #cbd0ff url('${context.path}/resources/images/icons/information_24.png');
+    overflow: visible;
+    border: 1px solid #555;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .tooltip-order-card-info {
+    height: auto;
+}
+
+.v-therapy-view .similar-therapies-container {
+    border-left: 1px solid #cccccc;
+}
+
+.v-therapy-view .tooltip-order-card-info .current-order {
+
+}
+
+.v-therapy-view .tooltip-order-card-info .info-icon {
+    float: right;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-image: url('${context.path}/resources/images/icons/information_16.png');
+}
+
+.v-therapy-view .tooltip-order-card-info .divider {
+    margin-top: 2px;
+    border-top: 1px solid #cccccc;
+    margin-bottom: 5px;
+}
+
+.v-therapy-view .tooltip-order-card-info .header {
+    margin-top: 2px;
+    margin-bottom: 5px;
+}
+
+.v-therapy-view .tooltip-order-card-info .content .time,
+.v-therapy-view .tooltip-order-card-info .change-history .time {
+    width: 80px;
+}
+
+.v-therapy-view .tooltip-order-card-info .content .detail,
+.v-therapy-view .tooltip-order-card-info .change-history .detail {
+    padding-left: 5px;
+}
+
+.v-therapy-view .tooltip-order-card-info .change-history .detail {
+    padding-bottom: 10px;
+}
+
+.v-therapy-view .tooltip-order-card-info .content .detail .checkBox_on-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background: url('${context.path}/resources/images/icons/checkBox_on_small.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .tooltip-order-card-info .icon_day_number {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #2aa4e5;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 17px;
+    min-width: 18px;
+    text-align: center;
+    float: left;
+}
+
+.v-therapy-view .link_therapy_button_with_link::after {
+    content: 'L';
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #2aa4e5;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 17px;
+    min-width: 18px;
+    text-align: center;
+    float: right;
+    margin: 2px 0 0 5px;
+}
+
+.v-therapy-view .tooltip-order-card-info .icon_late,
+.v-therapy-view .tooltip-order-card-info .icon_very_late {
+    background-size: 100%;
+    width: 16px;
+    height: 16px;
+    float: left;
+}
+
+.v-therapy-view .tooltip-order-card-info .icon_late {
+    background-image: url('${context.path}/resources/images/icons/status_warningYellow_16.png');
+}
+
+.v-therapy-view .tooltip-order-card-info .icon_very_late {
+    background-image: url('${context.path}/resources/images/icons/status_warningRed_16.png');
+}
+
+.v-therapy-view .icon-delete,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-delete,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-delete {
+    background-image: url('${context.path}/resources/images/icons/delete_24.png');
+}
+
+.v-therapy-view .icon-suspend,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-suspend,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-suspend {
+    background-image: url('${context.path}/resources/images/icons/schedule_24.png');
+}
+
+.v-therapy-view .icon-suspend-all,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-suspend-all,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-suspend-all {
+    background-image: url('${context.path}/resources/images/icons/timeLine_tab_24.png');
+}
+
+.v-therapy-view .icon-copy,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-copy,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-copy {
+    background-image: url('${context.path}/resources/images/icons/copy_24.png');
+}
+
+.v-therapy-view .icon-edit-consecutive-days,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-edit-consecutive-days,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-edit-consecutive-days {
+    background-image: url('${context.path}/resources/images/icons/therapy_filter_24.png');
+}
+
+.v-therapy-view .icon-confirm,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-confirm,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-confirm {
+    background-image: url('${context.path}/resources/images/icons/extend_24.png');
+}
+
+.v-therapy-view .icon-edit,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-edit,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-edit {
+    background-image: url('${context.path}/resources/images/icons/edit_24.png');
+}
+
+.v-therapy-view .icon-save,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-save,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-save {
+    background-image: url('${context.path}/resources/images/icons/save_24.png');
+}
+
+.v-therapy-view .icon-add,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-add,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-add {
+    background-image: url('${context.path}/resources/images/icons/plus_24.png');
+}
+
+.v-therapy-view .icon-add-to-24,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-add-to-24,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-add-to-24 {
+    background-image: url('${context.path}/resources/images/icons/addTo_24.png');
+}
+
+.v-therapy-view .performer-container {
+    border-top: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .edit-consecutive-days-container {
+    padding: 8px;
+}
+
+/*********************/
+/*MEDICATION ORDERING*/
+/*********************/
+
+.v-therapy-view .medications-ordering-container .ordering-container .add-to-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .delete-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .show-days-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .conditions-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .add-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .edit-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .info-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .remove-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .update-icon,
+.v-therapy-view .fluid-balance-icon {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .medications-ordering-container .ordering-container .add-to-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .dropdown-menu > li > a:hover > .add-to-icon,
+.v-therapy-view .medications-ordering-container .ordering-container .dropdown-menu > .dropdown-submenu .add-to-icon {
+    background-image: url('${context.path}/resources/images/icons/addTo_24.png');
+}
+
+.v-therapy-view .medications-ordering-container .templates-container .icon-add-to,
+.v-therapy-view .medications-ordering-container .templates-container .dropdown-menu > li > a:hover > .icon-add-to,
+.v-therapy-view .medications-ordering-container .templates-container .dropdown-menu > .dropdown-submenu .icon-add-to {
+    background-image: url('${context.path}/resources/images/icons/addTo_24.png');
+}
+
+.v-therapy-view .medications-ordering-container .ordering-container .show-days-icon {
+    background-image: url('${context.path}/resources/images/icons/calendar_24.png');
+}
+
+.v-therapy-view .medications-ordering-container .ordering-container .conditions-icon {
+    background-image: url('${context.path}/resources/images/icons/warning_24.png');
+}
+
+.v-therapy-view .fluid-balance-icon {
+    background-image: url('${context.path}/resources/images/icons/balance_tab_24.png');
+}
+
+.v-therapy-view .medications-ordering-container .ordering-container .add-icon {
+    background-image: url('${context.path}/resources/images/icons/plus_16.png');
+}
+
+.v-therapy-view .medications-ordering-container .ordering-container .edit-icon {
+    background-image: url('${context.path}/resources/images/icons/edit_16.png');
+}
+
+.v-therapy-view .medications-ordering-container .ordering-container .remove-icon {
+    background-image: url('${context.path}/resources/images/icons/delete_16.png');
+}
+
+.v-therapy-view .medications-ordering-container .ordering-container .info-icon {
+    background-image: url('${context.path}/resources/images/icons/information_16.png');
+}
+
+.v-therapy-view .medications-ordering-container .ordering-container .update-icon {
+    background-image: url('${context.path}/resources/images/icons/update_16.png');
+}
+
+.v-therapy-view .medications-ordering-container .title-header {
+    background-color: #f6f6f6;
+    border-bottom: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .medications-ordering-container .ordering-container {
+    border-right: 1px solid #d6d6d6;
+    border-top: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .medications-ordering-container .basket-container {
+    border-top: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .medications-ordering-container .warnings-container {
+    border-top: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .medications-ordering-container .warnings-container .severity {
+    float: left;
+    background-repeat: no-repeat;
+    background-position: center top;
+    margin: 5px 5px 0;
+    width: 50px;
+    height: 35px;
+}
+
+.v-therapy-view .medications-ordering-container .warnings-container .severity span {
+    margin-top: 20px;
+    display: block;
+    text-align: center;
+    font-size: 8px;
+    font-weight: bold;
+}
+
+.v-therapy-view .medications-ordering-container .warnings-container .severity.high-icon {
+    background-image: url('${context.path}/resources/images/icons/status_warningRed_24.png');
+}
+
+.v-therapy-view .medications-ordering-container .warnings-container .severity.significant-icon {
+    background-image: url('${context.path}/resources/images/icons/warningYellow_status_24.png');
+}
+
+.v-therapy-view .medications-ordering-container .templates-container .tm-list .item,
+.v-therapy-view .medications-ordering-container .basket-container .tm-list .item {
+    padding: 0;
+}
+
+.v-therapy-view .medications-ordering-container .menu-icon {
+    background-image: url('${context.path}/resources/images/icons/arrowDown_16.png');
+    background-repeat: no-repeat;
+    width: 16px;
+    height: 16px;
+}
+
+.v-therapy-view .therapy-days-container .separator-container {
+    border-bottom: 1px solid #CFCFCF;
+}
+
+.v-therapy-view .pointer-cursor {
+    cursor: pointer;
+}
+
+.v-therapy-view .inactive {
+    color: #A1A0A0;
+    padding: 0;
+    top: 0;
+}
+
+.v-therapy-view .medications-ordering-container .panel-header.template-group-panel-header {
+    background-color: #f6f6f6;
+    border-top: 1px solid #E4E4E4;
+    border-bottom: 1px solid #E4E4E4;
+}
+
+.v-therapy-view .medications-ordering-container .panel-header.template-panel-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #ffffff;
+}
+
+.v-therapy-view .medications-ordering-container .panel-header.template-panel-header-selected {
+    background-color: #e0eff9;
+    border-bottom: 1px solid #ffffff;
+}
+
+.v-therapy-view .medications-ordering-container .panel-header.template-panel-header .template-bottom-border {
+    border-bottom: 1px solid #E4E4E4;
+}
+
+.v-therapy-view .medications-ordering-container .incomplete-therapy {
+    background-color: #fdf1d8;
+}
+
+.v-therapy-view .medications-ordering-container .incomplete-therapy {
+    background-color: #fdf1d8;
+}
+
+.v-therapy-view .medications-ordering-container .incomplete-therapy-icon {
+    background-image: url('${context.path}/resources/images/icons/change_status_16.png');
+    background-position: center top;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .medications-ordering-container .selected-therapy {
+    background-color: #e0eff9;
+}
+
+/*COMPLEX VARIABLE RATE PANE*/
+
+.v-therapy-view .variable-rate-pane .add-icon,
+.v-therapy-view .variable-rate-pane .remove-icon {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .variable-rate-pane .add-icon {
+    background-image: url('${context.path}/resources/images/icons/plus_16.png');
+}
+
+.v-therapy-view .variable-rate-pane .remove-icon {
+    background-image: url('${context.path}/resources/images/icons/delete_16.png');
+}
+
+/*********************/
+/*SIMPLE THERAPY EDIT*/
+/*********************/
+
+.v-therapy-view .simple-therapy-edit-container .show-days-icon,
+.v-therapy-view .simple-therapy-edit-container .info-icon,
+.v-therapy-view .simple-therapy-edit-container .conditions-icon,
+.v-therapy-view .simple-therapy-edit-container .remove-icon {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .simple-therapy-edit-container .show-days-icon {
+    background-image: url('${context.path}/resources/images/icons/calendar_24.png');
+}
+
+.v-therapy-view .simple-therapy-edit-container .conditions-icon {
+    background-image: url('${context.path}/resources/images/icons/warning_24.png');
+}
+
+.v-therapy-view .simple-therapy-edit-container .info-icon {
+    background-image: url('${context.path}/resources/images/icons/information_16.png');
+}
+
+.v-therapy-view .simple-therapy-edit-container .remove-icon {
+    background-image: url('${context.path}/resources/images/icons/delete_16.png');
+}
+
+/*********************/
+/*COMPLEX THERAPY EDIT*/
+/*********************/
+
+.v-therapy-view .complex-therapy-edit-container .show-days-icon,
+.v-therapy-view .complex-therapy-edit-container .add-icon,
+.v-therapy-view .complex-therapy-edit-container .info-icon,
+.v-therapy-view .complex-therapy-edit-container .update-icon,
+.v-therapy-view .complex-therapy-edit-container .conditions-icon,
+.v-therapy-view .complex-therapy-edit-container .remove-icon {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .complex-therapy-edit-container .show-days-icon {
+    background-image: url('${context.path}/resources/images/icons/calendar_24.png');
+}
+
+.v-therapy-view .complex-therapy-edit-container .conditions-icon {
+    background-image: url('${context.path}/resources/images/icons/warning_24.png');
+}
+
+.v-therapy-view .complex-therapy-edit-container .add-icon {
+    background-image: url('${context.path}/resources/images/icons/plus_16.png');
+}
+
+.v-therapy-view .complex-therapy-edit-container .remove-icon {
+    background-image: url('${context.path}/resources/images/icons/delete_16.png');
+}
+
+.v-therapy-view .complex-therapy-edit-container .info-icon {
+    background-image: url('${context.path}/resources/images/icons/information_16.png');
+}
+
+.v-therapy-view .complex-therapy-edit-container .update-icon {
+    background-image: url('${context.path}/resources/images/icons/update_16.png');
+}
+
+.v-therapy-view .medications-ordering-container .menu-icon {
+    background-image: url('${context.path}/resources/images/icons/more_16.png');
+    background-repeat: no-repeat;
+    width: 16px;
+    height: 16px;
+}
+
+.v-therapy-view .button-align-left {
+    text-align: left !important;
+}
+
+/*VARIABLE DOSE*/
+
+.v-therapy-view .variable-dose-pane .add-icon,
+.v-therapy-view .variable-dose-pane .remove-icon {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .variable-dose-pane .add-icon {
+    background-image: url('${context.path}/resources/images/icons/plus_16.png');
+}
+
+.v-therapy-view .variable-dose-pane .remove-icon {
+    background-image: url('${context.path}/resources/images/icons/delete_16.png')
+}
+
+/*UNIVERSAL SIMPLE*/
+
+.v-therapy-view .universal-simple-therapy-container .conditions-icon,
+.v-therapy-view .universal-simple-therapy-container .show-days-icon {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .universal-simple-therapy-container .show-days-icon {
+    background-image: url('${context.path}/resources/images/icons/calendar_24.png');
+}
+
+.v-therapy-view .universal-simple-therapy-container .conditions-icon {
+    background-image: url('${context.path}/resources/images/icons/warning_24.png');
+}
+
+/*UNIVERSAL COMPLEX*/
+
+.v-therapy-view .universal-complex-therapy-container .conditions-icon,
+.v-therapy-view .universal-complex-therapy-container .show-days-icon {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .universal-complex-therapy-container .show-days-icon {
+    background-image: url('${context.path}/resources/images/icons/calendar_24.png');
+}
+
+.v-therapy-view .universal-complex-therapy-container .conditions-icon {
+    background-image: url('${context.path}/resources/images/icons/warning_24.png');
+}
+
+.v-therapy-view .universal-complex-therapy-container .menu-icon {
+    background-image: url('${context.path}/resources/images/icons/arrowDown_16.png');
+    background-repeat: no-repeat;
+    width: 16px;
+    height: 16px;
+}
+
+/*TIMELINE */
+
+.v-therapy-view .therapy-timeline .menu-icon {
+    background-image: url('${context.path}/resources/images/icons/more_16.png');
+    background-repeat: no-repeat;
+    width: 16px;
+    height: 16px;
+}
+
+.v-therapy-view .therapy-timeline .task {
+    width: 22px;
+    height: 22px;
+    border: 1px solid;
+    border-radius: 5px;
+    margin-top: 22px;
+    margin-left: -11px;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    cursor: pointer;
+    float: left;
+}
+
+.v-therapy-view .therapy-timeline .task.PLANNED {
+    background-color: #2aa4e5;
+    border-color: #2aa4e5;
+}
+
+.v-therapy-view .therapy-timeline .task.FAILED {
+    background-color: #B9CEDA;
+    border-color: #B9CEDA;
+}
+
+.v-therapy-view .therapy-timeline .task.LATE {
+    background-color: #b22222;
+    border-color: #b22222;
+}
+
+.v-therapy-view .therapy-timeline .task.COMPLETED, .therapy-timeline .task.COMPLETED_EARLY, .therapy-timeline .task.COMPLETED_LATE {
+    background-color: #1CDF56;
+    border-color: #1CDF56;
+    color: #b22222;
+}
+
+.v-therapy-view .therapy-timeline .task.ADDITIONAL {
+    background-color: #84dfa2;
+    border-color: #84dfa2;
+    color: #b22222;
+}
+
+.v-therapy-view .therapy-timeline .task.DIFFERENT {
+    border-color: #b22222;
+    border-width: 2px;
+    width: 20px;
+    height: 20px;
+}
+
+.v-therapy-view .therapy-timeline .task.COMPLETED_EARLY {
+    border-color: #b22222;
+    border-width: 2px 6px 2px 2px;
+    width: 16px;
+    height: 20px;
+}
+
+.v-therapy-view .therapy-timeline .task.COMPLETED_LATE {
+    border-color: #b22222;
+    border-width: 2px 2px 2px 6px;
+    width: 16px;
+    height: 20px;
+}
+
+.v-therapy-view .therapy-timeline .task.DUE {
+    background-color: #F5F519;
+    border-color: #F5F519;
+}
+
+.v-therapy-view .therapy-timeline .task.INFUSION_SYRINGE_CHANGE {
+    background-size: 100%;
+    background-image: url('${context.path}/resources/images/icons/infusionSyringeChangeTransp_status_24.png');
+}
+
+.v-therapy-view .therapy-timeline .task.INFUSION_SYSTEM_CHANGE {
+    background-size: 100%;
+    background-image: url('${context.path}/resources/images/icons/infusionSystemChangeTransp_status_24.png');
+}
+
+.v-therapy-view .therapy-timeline .empty-task {
+    z-index: 10;
+}
+
+.v-therapy-view .therapy-timeline .timeline-event.duration-line {
+    height: 5px;
+    width: 100%;
+    margin-top: 16px;
+    z-index: 60;
+    background-color: #BDE3F8;
+}
+
+.v-therapy-view .therapy-timeline .timeline-event.when-needed-line {
+    margin-top: 16px;
+    z-index: 60;
+    border-top: 3px dotted #c9c4c4;
+    height: 15px;
+}
+
+.v-therapy-view .therapy-timeline .timeline-event.infusion-rate-label {
+    position: absolute;
+    top: -1px;
+    left: 10px;
+    padding-left: 1px;
+    padding-right: 1px;
+    z-index: 60;
+    background-color: #BDE3F8;
+}
+
+.v-therapy-view .therapy-timeline .timeline-event.workday-interval {
+    height: 200px;
+    width: 100%;
+    margin-top: -5px;
+    background-color: #ffffff;
+    z-index: 20;
+}
+
+.v-therapy-view .therapy-timeline .icon_pills {
+    background-image: url('${context.path}/resources/images/icons/therapyPill_48.png');
+}
+
+.v-therapy-view .therapy-timeline .icon_infusion {
+    background-image: url('${context.path}/resources/images/icons/therapyInfusion_48.png');
+}
+
+.v-therapy-view .therapy-timeline .icon_continuous_infusion {
+    background-image: url('${context.path}/resources/images/icons/therapyInfusionPermanent_48.png');
+}
+
+.v-therapy-view .therapy-timeline .icon_baseline_infusion {
+    background-image: url('${context.path}/resources/images/icons/therapyInfusionOM_48.png');
+}
+
+.v-therapy-view .therapy-timeline .icon_other_medication {
+    background-image: url('${context.path}/resources/images/icons/therapy_48.png');
+}
+
+.v-therapy-view .icon_prescription {
+    background-image: url('${context.path}/resources/images/icons/receiptOn_status_16.png');
+    /*background-image: url('${context.path}/resources/images/icons/finish_status_16.png');*/
+    background-size: 100%;
+    width: 16px;
+    height: 16px;
+    float: right;
+}
+
+/*chap-links timeline*/
+.v-therapy-view .therapy-timeline .timeline-content {
+    margin: 0;
+    background-color: #ececec;
+}
+
+.v-therapy-view .therapy-timeline div.timeline-axis {
+    background-color: #ffffff;
+    display: none;
+}
+
+.v-therapy-view .therapy-timeline .timeline-event-content {
+    overflow: visible;
+    margin: 0;
+}
+
+.v-therapy-view .therapy-timeline .timeline-event {
+    border: none;
+    background: none;
+    font-weight: normal;
+    z-index: 70;
+}
+
+.v-therapy-view .therapy-timeline .timeline-event.timeline-event-line {
+    display: none;
+}
+
+.v-therapy-view .therapy-timeline .timeline-event.timeline-event-dot {
+    border-width: 0;
+    border-radius: 0;
+}
+
+.v-therapy-view .therapy-timeline div.timeline-event-box {
+    border-width: 0;
+}
+
+.v-therapy-view .therapy-timeline-container .timeline-axis-grid {
+    z-index: 40;
+}
+
+.v-therapy-view .therapy-timeline-container .timeline-axis-grid-major {
+    z-index: 50;
+    border-color: #999898;
+    border-width: 2px;
+}
+
+.v-therapy-view .therapy-timeline .timeline-axis-text-major {
+    display: none;
+}
+
+.v-therapy-view .therapy-timeline .timeline-frame {
+    border: 0;
+}
+
+.v-therapy-view .therapy-timeline-container .axis-container .timeline-content {
+    border: 0;
+    margin-left: -1px;
+}
+
+.v-therapy-view .therapy-timeline-container .axis-container .timeline-frame {
+    border: 0;
+    border-left: 1px solid #bebebe;
+}
+
+.v-therapy-view .therapy-timeline .timeline-frame {
+    border: 0;
+}
+
+.v-therapy-view .therapy-timeline-container .timelines-container {
+    border-top: 1px solid #bebebe;
+}
+
+.v-therapy-view .therapy-timeline-container .timelines-container .tm-panel {
+    border-bottom: 1px solid #bebebe;
+}
+
+.v-therapy-view .therapy-timeline-container .panel-header {
+    min-height: 27px !important;
+    background-color: #f2f2f2;
+}
+
+.v-therapy-view .therapy-timeline div.timeline-currenttime {
+    z-index: 30;
+}
+
+.v-therapy-view .therapy-timeline div.timeline-groups-text {
+    padding: 0 5px 0 0;
+    margin: -1px 0 -1px -7px;
+}
+
+/*.v-therapy-view .therapy-timeline div.timeline-groups-text .layers-container {*/
+    /*cursor: default;*/
+/*}*/
+
+.v-therapy-view .therapy-timeline div.timeline-groups-text .aborted {
+    background-color: rgb(223, 223, 223);
+    margin: -4px 0 -6px 0;
+    padding: 4px 0 0 0;
+    border-right: 2px solid rgb(223, 223, 223);
+}
+
+.v-therapy-view .therapy-timeline .timeline-taks-menu {
+    background-color: white;
+    border: 1px solid black;
+    float: left;
+}
+
+.v-therapy-view .administration-card-bottom-border {
+    padding-bottom: 8px;
+}
+
+/* THERAPY DESCRIPTION */
+
+.v-therapy-view .TherapyDescription {
+    line-height: 18px;
+}
+
+.v-therapy-view .TextLabel, .v-therapy-view .TextHeading1 {
+    color: #1A71BD;
+}
+
+.v-therapy-view .TherapyDescription .Delimiter span {
+    display: none;
+}
+
+.v-therapy-view .TherapyDescription .Delimiter:after {
+    content: '\2013 \0020';
+    /*content: '\2022 \0020';*/
+    visibility: visible;
+    font-size: 15px;
+    color: #544642;
+}
+
+.v-therapy-view .TherapyDescription .Quantity {
+    white-space: nowrap;
+}
+
+.v-therapy-view .TherapyDescription .TherapyInterval {
+    display: none;
+}
+
+.v-therapy-view .basket-container .TherapyDescription .TherapyInterval {
+    display: inline;
+}
+
+.v-therapy-view .medications-tree-dialog .ui-dialog .ui-dialog-content {
+    padding: 0;
+}
+
+.medications-tree .dynatree-ico-cf span.dynatree-icon,
+.medications-tree .dynatree-ico-ef span.dynatree-icon {
+    background-position: 0 0;
+}
+
+.medications-tree .dynatree-ico-cf .dynatree-title,
+.medications-tree .dynatree-ico-ef .dynatree-title {
+    color: #A1A0A0;
+}
+
+.v-therapy-view .max-administrations-warning {
+    color: #b22222;
+}

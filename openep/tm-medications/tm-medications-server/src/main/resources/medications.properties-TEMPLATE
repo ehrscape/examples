@@ -1,0 +1,38 @@
+#################################################
+# Hosts
+#################################################
+ispek.server.host=localhost
+ispek.bpm.host=localhost
+
+
+#################################################
+# Jetty
+#################################################
+jetty.monitored.location=classpath:com/marand/thinkmed/app/demo
+
+
+#################################################
+# EHR
+#################################################
+ehrgate.url=http://thinkehr.marand.si:10778
+
+
+#################################################
+# FDB
+#################################################
+fdb.url=jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=10.99.8.95)(PORT=3825)))(CONNECT_DATA=(SERVICE_NAME=se11)))
+fdb.user=Ispek_fdbo
+fdb.password=ifo
+fdb.driver=oracle.jdbc.driver.OracleDriver
+fdb.showDebugInfo=false
+fdb.poolSize=30
+fdb.loadLimit=200
+
+
+#################################################
+# Database
+#################################################
+db.url=jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=10.99.8.95)(PORT=3825)))(CONNECT_DATA=(SERVICE_NAME=se11)))
+db.user=tm_app_med_sl
+db.password=tm_app_med_sl
+db.schema=tm_app_med_sl
