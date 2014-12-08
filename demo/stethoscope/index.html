@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html data-ng-app="digiscopeApp">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Stethoscope</title>
+    <link rel="stylesheet" href="css/jquery-ui/jquery-ui-1.10.3.custom.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootflat/css/bootflat.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/dropzone.css">
+    <link rel="stylesheet" href="css/jPushMenu.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animate.css">
+
+</head>
+<body>
+
+<nav class="navbar navbar-inverse no-radius" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="index.html">Stethoscope</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" data-ng-controller="medController">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Demographics</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-search search-only">
+                                <i class="search-icon glyphicon glyphicon-search"></i>
+                                <input type="text" class="form-control search-query" data-ng-model="searchString" data-ng-model-options="{debounce: 300}" placeholder="Search...">
+                                <ul class="typehead">
+                                    <li data-ng-repeat="i in party" data-ng-click="selectParty(i)" data-ng-bind-html="buildSuggestion(i) | highlight:searchString"></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <div class="demographics-label">Name</div>
+                            <div class="demographics-data">{{patient.name}}</div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="demographics-label">Sex</div>
+                            <div class="demographics-data">{{patient.sex}}</div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="demographics-label">Age</div>
+                            <div class="demographics-data">{{patient.age}}</div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="demographics-label">DOB</div>
+                            <div class="demographics-data">{{patient.dob}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="digiscope-content animate-show" data-ng-show="patient.ehrId">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Medical history</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div id="stethoscope-form">
+
+                                    <div id="medicalHistory" dynamic="htmlMH"></div>
+
+                                    <div>
+                                        <div class="row tooltip-demo">
+                                            <div class="col-sm-12">
+                                                <div class="form-wrapper">
+                                                    <div class="form-title"><i class="fa fa-angle-down"></i><span>Examination Findings</span></div>
+                                                    <br>
+                                                    <img id="ausc_img" src="media/images/layerview_torso_50.jpg" usemap="#regionsMap">
+
+                                                    <map name="regionsMap">
+
+                                                        <area class="area" shape="rect" coords="318,234,338,254" href="#!" ng-click="openFindings($event)" alt="Tricuspid" title="Tricuspid"/>
+
+                                                        <area class="area" shape="rect" coords="274,220,294,240" href="#!" ng-click="openFindings($event)" alt="Mitral" title="Mitral"/>
+
+                                                        <area class="area" shape="rect" coords="276,92,296,112" href="#!" ng-click="openFindings($event)" alt="Pulmonary" title="Pulmonary"/>
+
+                                                        <area class="area" shape="rect" coords="220,95,240,115" href="#!" ng-click="openFindings($event)" alt="Aortic" title="Aortic"/>
+
+                                                    </map>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <nav class="cbp-spmenu cbp-spmenu-vertical cbp-spmenu-right">
+                            <h3>{{activeArea}}</h3>
+                            <div class="container-fluid">
+                                <div dynamic="htmlFindings"></div>
+                                <hr>
+                                <p style="text-align: center;"><button id="cancelFinding" ng-click="closeFindings()" class="btn btn-normal" type="button"><i class="fa fa-close"></i> CLOSE</button></p>
+                            </div>
+                        </nav>
+                    </div>
+                    <div class="panel-footer">
+                        <button ng-click="saveComposition()" class="btn btn-warning" type="button"><i class="fa fa-upload"></i> SAVE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Last saved compositions</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table id="save-table" class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Save Time</th>
+                                <th>Composition ID</th>
+                                <th>Template</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr data-ng-repeat="c in compositions">
+                                <td>{{c.startTime | date: 'medium'}}</td>
+                                <td class="uid"><a href="#" data-ng-click="loadComposition($event)" data-composition-uid="{{c.uid}}">{{c.uid}}</a></td>
+                                <td>{{c.templateId}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/jquery-2.1.1.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="bootflat/js/jquery.fs.selecter.js"></script>
+
+<script src="angular/1.3.2/angular.js"></script>
+<script src="angular/1.3.2/angular-resource.js"></script>
+
+<script src="js/dropzone.min.js"></script>
+<script src="js/bootstrap-growl.min.js"></script>
+<script src="js/jPushMenu.js"></script>
+<script src="js/jquery.maphilight.js"></script>
+<script src="app/imagemap.js"></script>
+<script src="app/demographics.js"></script>
+<script src="app/app.js"></script>
+
+</body>
+</html>

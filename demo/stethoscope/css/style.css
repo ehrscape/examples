@@ -1,0 +1,214 @@
+/* General Styles */
+
+html, body{
+    height:100%;
+}
+
+body{
+    background: #F1F2F6;
+}
+
+.no-radius{
+    border-radius: 0;
+}
+
+audio{
+    width: 100%;
+}
+
+/* Demographics */
+
+.demographics-label{
+    text-transform: uppercase;
+    color: #999;
+    font-weight: 700;
+    letter-spacing: 0.0625em;
+    font-size: 12px;
+}
+
+.demographics-data{
+    font-weight: 300;
+    font-size: 20px;
+}
+
+.form-search .search-query, .form-search .search-query:first-child, .form-search .search-query:last-child {
+    padding: 0 40px;
+}
+
+/* Autocomplete */
+
+.search-query:focus {
+    border-color: #37BC9B;
+}
+
+.typehead{
+    display: none;
+    position: absolute;
+    top: 35px;
+    width: 100%;
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+    list-style: none;
+    font-size: 14px;
+    z-index: 100;
+}
+
+.typehead li{
+    position: relative;
+    display: block;
+    margin-bottom: -1px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-color: transparent;
+    border-top-color: #e6e9ed;
+    padding: 10px 15px;
+}
+
+.typehead li:hover {
+    background-color: #e6e9ed;
+    cursor: pointer;
+}
+
+.highlighted{
+    font-weight: 700;
+    color: #37BC9B;
+}
+
+/* Form */
+
+.form-wrapper{
+    margin: 10px 0;
+    padding: 0 20px;
+}
+
+.form-title{
+    position: relative;
+    color: #3BAFDA;
+    font-size: 16px;
+    border-bottom: 1px solid #3BAFDA;
+    padding: 5px 0;
+    cursor: pointer;
+}
+
+.form-title > span{
+    color: #3BAFDA;
+    padding-left: 20px;
+}
+
+.form-title > i{
+    position: absolute;
+    top: 8px;
+    left: 2px;
+}
+
+.form-wrapper .row{
+    margin: 10px 0;
+}
+
+.form-wrapper .row .right-align{
+    text-align: right;
+}
+
+.form-label{
+    text-transform: uppercase;
+    color: #999;
+    font-weight: 700;
+    letter-spacing: 0.0625em;
+    font-size: 12px;
+    padding-top: 9px;
+}
+
+.panel-footer {
+    background-color: #F5F7FA;
+    padding: 15px;
+    text-align: center;
+    xborder-top: 1px dashed #AAB2BD;
+}
+
+.selecter .selecter-selected{
+    min-height: 34px;
+}
+
+.selecter .selecter-item{
+    min-height: 33px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+.form-title{
+    cursor: pointer;
+}
+
+/* Font Awesome */
+.fa-rotate-45 {
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+/* DateTime Picker */
+
+.ui-datepicker .fa{
+    color: #333;
+}
+
+.ui-datepicker .fa:hover{
+    color: #3BAFDA;
+    background-color: transparent;
+    border-color: transparent;
+    cursor: pointer;
+}
+
+/* Image Map */
+
+.center-map {
+    margin: 0 auto;
+    width: 512px;
+}
+
+div.overlay {
+    opacity:    0.2;
+    background: #434A54;
+    width:      100%;
+    height:     100%;
+    z-index:    999;
+    top:        0;
+    left:       0;
+    position:   fixed;
+}
+
+/* Fade in effect */
+
+.animate-show {
+    opacity: 1;
+}
+
+.animate-show.ng-hide {
+    opacity: 0;
+    display: block!important;
+}
+
+.durationAnim{
+    -webkit-transition: all linear 0.5s;
+    transition: all linear 0.5s;
+}
