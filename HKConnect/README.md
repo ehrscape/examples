@@ -1,4 +1,4 @@
-#HKConnect
+#HKConnect: Access your data from Apple HealthKit in JSON or CSV format so you can combine with your existing health data
 
 ##Requirements
 
@@ -18,7 +18,7 @@ The project itself requires the CocoaPods dependency management software. To ins
 
 For more info, please consult the official [Getting Started](http://guides.cocoapods.org/using/getting-started.html) guide.
 
-After you have set up CocoaPods, navigate to the HKDemo directory and run:
+After you have set up CocoaPods, navigate to the HKConnect directory and run:
 
 	pod install
 
