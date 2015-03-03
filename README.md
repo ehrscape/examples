@@ -8,7 +8,7 @@ Applications:
 * **smart**: sources to the smart demo apps from the dev.ehrscape.com. This includes
   copies of smart sample apps from https://github.com/chb/smart_sample_apps.
 * **util**: sources to utilities - javascript AQL formatter and source highlighter
-* **HealthKit**: Access your data from Apple HealthKit in JSON or CSV format and combine it with your existing health data.
+* **HealthKit**: Access your data from Apple HealthKit in JSON or CSV format and combine with your existing health data.
 
 Note: smart apps have been included as they are except for the SMART Pediatric Growth
 Chart app where an additional percentile table from the UK-WHO growth charts project has been added.
