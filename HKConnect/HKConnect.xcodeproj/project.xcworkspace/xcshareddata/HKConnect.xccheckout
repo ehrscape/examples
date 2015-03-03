@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>BEF9F248-9711-4A32-9F26-00AE6C9733B6</string>
+	<key>IDESourceControlProjectName</key>
+	<string>HKConnect</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>125FF7C2C8FA743B54F273F4B601769A96D878F3</key>
+		<string>https://github.com/ehrscape/examples.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>HKConnect/HKConnect.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>125FF7C2C8FA743B54F273F4B601769A96D878F3</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/ehrscape/examples.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>125FF7C2C8FA743B54F273F4B601769A96D878F3</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>125FF7C2C8FA743B54F273F4B601769A96D878F3</string>
+			<key>IDESourceControlWCCName</key>
+			<string>examples</string>
+		</dict>
+	</array>
+</dict>
+</plist>
