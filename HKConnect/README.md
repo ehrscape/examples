@@ -1,4 +1,6 @@
-#HKConnect: Access your data from Apple HealthKit in JSON or CSV format so you can combine with your existing health data
+#HKConnect
+
+Access your data from Apple HealthKit in JSON or CSV format so you can combine with your existing health data
 
 ##Requirements
 
