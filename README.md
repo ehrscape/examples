@@ -1,14 +1,13 @@
-ehrscape.com examples
+Analyze GPS data
 ========
 
-Collection of examples to demonstrate the use of the ehrscape.com REST apis.
+The R package **analyzeGPS** offers functions for basic preparation and analysis of the GPS data: 
 
-Applications:
-* **demo**: sources to the demo apps from the dev.ehrscape.com
-* **smart**: sources to the smart demo apps from the dev.ehrscape.com. This includes
-  copies of smart sample apps from https://github.com/chb/smart_sample_apps.
-* **util**: sources to utilities - javascript AQL formatter and source highlighter
-* **HealthKit**: Access your data from Apple HealthKit in JSON or CSV format and combine with your existing health data.
+* **readGPS**: imports the GPS data in csv format into R data frame
+* **distanceGPS**: calculation of distance between two data points or vectors of data points
+* **speedGPS**: calculation of velocity between GPS data points
+* **accGPS**: calculation of acceleration between GPS data points
+* **gradeGPS**: calculation of grade or inclination between GPS data points.
 
 Note: smart apps have been included as they are except for the SMART Pediatric Growth
 Chart app where an additional percentile table from the UK-WHO growth charts project has been added.
