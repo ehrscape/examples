@@ -1,0 +1,12 @@
+Package: zephyrECG
+Type: Package
+Title: Parse and read ECG data from Zephyr BioHarness 3 device
+Version: 0.1
+Date: 2015-08-05
+Author: person("Emil", "Plesnik", email = "emil.plesnik@marand.si", role = c("aut", "cre"))
+Maintainer: Emil Plesnik <emil.plesnik@marand.si>
+Description: The package is designed to parse and read the data collected with the Zephyr BioHarness 3 (BH3) device.
+License: GNU AGPLv3
+LazyData: TRUE
+Suggests: knitr
+VignetteBuilder: knitr

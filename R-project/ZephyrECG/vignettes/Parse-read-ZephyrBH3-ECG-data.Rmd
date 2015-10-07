@@ -1,0 +1,188 @@
+---
+title: "Parse and read Zephyr BH3 ECG data"
+author: "Emil Plesnik, Marand d.o.o."
+date: "`r Sys.Date()`"
+toctitle: "Contents"
+output: 
+  rmarkdown::html_vignette:
+    css: custom.css
+    toc: TRUE
+vignette: >
+  %\VignetteIndexEntry{Parse and read Zephyr BH3 ECG data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+This is a short demonstration of how to parse ECG data acquired with the [Zephyr BioHarness 3 (BH3)](http://zephyranywhere.com/products/bioharness-3) monitor and how to import it into R with the use of the package `zephyrECG` and its functions `separate_bh3` and `read_ecg`.  
+The Zephyr BH3 monitor is able to save the acquired data locally or stream it to a remote location. The locally (on chip) saved data can be retrieved via data cable using the [Bioharness log downloader](http://zephyranywhere.com/zephyr-labs/development-tools), which sorts the acquired data into separate sessions (according to the timestamp of the recording start) and enables extraction of each session separately as csv files. However, the data stream recorded remotely isn't necesarily ordered in such an obvious way and it can happen that all recorded data is saved or parsed to the same file. In this case we have to separate it on our own by using the function `separate_bh3`, which parses the data from a common csv file to separate csv files corresponding to separate recording sessions. The resulting seprated files are not returned as data frames to the environment because that can caues problems with insufficient RAM when dealing with multiple long duration recordings (each > 1hr). 
+The ECG data files in csv format can be imported into R data frame by using the function `read_ecg`.  
+
+## Function `separate_bh3`
+
+The function `separate_bh3` is intended to parse and separate multiple sessions of ECG data recorded with the Zephyr BH3 monitor into separate csv files.  
+
+```{r, eval=FALSE}
+separate_bh3 <- function(NAME="filename") {
+
+  ecg_file <- NAME
+  # Extract directory name
+  ecg_directory_name <- dirname(ecg_file)
+
+  ecg <- read.csv(ecg_file, stringsAsFactors=FALSE)
+
+  # Determine number of different sessions in data file.
+  time_idx <- format(as.POSIXct(ecg$datetimems/1000, origin = "1970-01-01"), 
+                     "%Y_%m_%d-%H_%M_%S")
+  session_index <- c(1, which(diff(ecg$datetimems/1000) > 5) + 1)
+  ecg_file_name <- rep("", length(session_index))
+
+  # Export data of each session to separate csv files.
+  for (i in 1:length(session_index)) {
+    ecg_file_name[i] <- time_idx[session_index[i]]
+
+    if (i == length(session_index)) {
+      write.table(
+        ecg[session_index[i]:dim(ecg)[1],], 
+        file = paste(ecg_directory_name, "/", ecg_file_name[i], ".csv", sep=""),
+        sep = ",", 
+        row.names = FALSE, 
+        quote = FALSE
+      )
+    } else {
+      write.table(
+        ecg[session_index[i]:(session_index[i+1]-1),],
+        file = paste(ecg_directory_name, "/", ecg_file_name[i], ".csv", sep=""),
+        sep = ",", 
+        row.names = FALSE, 
+        quote = FALSE
+      )
+    }
+
+  }
+}
+```
+
+
+The input argument of the function is the character string of the exact location of the file we want to separate. 
+
+```{r}
+library(zephyrECG)
+NAME <- system.file("extdata", "myZephyrBH3Data.csv", package="zephyrECG")
+str(NAME)
+```
+
+The directory of the input file is preserved to enable writing the function output. The input file is imported using the `read.csv` function. 
+
+```{r}
+ecg_directory_name <- dirname(NAME)
+str(ecg_directory_name)
+```
+```{r, echo=FALSE, results='hide'}
+file.remove(dir(ecg_directory_name, full.names = TRUE, pattern = "[0-9].csv$"))
+```
+```{r}
+list.files(ecg_directory_name)
+ecg <- read.csv(NAME, stringsAsFactors=FALSE)
+str(ecg)
+```
+
+This is followed by determining the number of different recording sessions included in the input file. With the Zephyr BH3 monitor the ECG signal is recorded with the rate 250 samples per second (250 Hz). Therefore, a pause longer than 60 seconds (> 15000 samples) is considered as an indicator of separate sessions.  
+Firstly, vector of time indexes in format `"%Y_%m_%d-%H_%M_%S"` is created from the timestamp column of the imported ECG data.  
+Then indexes of separate sessions are determined by looking where the difference between timestamps exceeds 60 seconds. The first session begins with the first index, which is why `1` is inserted as the first element of the `session_index`. Locations of starts of the remaining sessions are determined by calculating differences between timestamps with the `diff` function and extracting those which are larger than 60 (seconds). Initial timestamps are written in miliseconds, which is why division with 1000 is needed. The extracted locations have to be corrected by adding 1 to transform the location of a certain distance to the location of the corresponding timestamp.  
+
+```{r}
+time_idx <- format(as.POSIXct(ecg$datetimems/1000, origin = "1970-01-01"), 
+                   "%Y_%m_%d-%H_%M_%S")
+str(time_idx)
+session_index <- c(1, which(diff(ecg$datetimems/1000) > 60) + 1)
+str(session_index)
+str(time_idx[session_index])
+```
+
+The function concludes by writing and saving the separated ECG data to corresponding csv files in the directory of the input file. The directory name was previously stored in `ecg_directory_name` variable. Vector `ecg_file_name` with empty character strings as elements is allocated before the writing `for` loop. The file writing process is performed with a `for` loop with number of repetitions equal to the length of `session_index`.  
+Elements of the `time_idx` vector created in the previous step are used as file names. Elements of `session_index` are used as indexes to extract elements from the initial `ecg` data frame for saving. The files are saved by using the `write.table` function, which requires the following input arguments: 
+
+- the object to be written. In our case the distinct part of the initial `ecg` data frame
+- character string, naming the file. In our case this is a character string giving the exact path and file name of the data to be saved. This was combined from the previously extracted directory name (`ecg_directory_name`) and the file names created in the first step of the `for` loop (`ecg_file_name`). 
+- the field separator string. In or case this was the comma. 
+- `row.names` (optional, default value is `TRUE`). In our case this is set to `FALSE` to prevent inserting an additional column for row numbering into the saved file. 
+- `quote` (optional, default value is `TRUE`). In our case this is set to `FALSE` to prevent surrounding character columns in the saved file with double quotes. 
+
+```{r, width=90}
+ecg_file_name <- rep("", length(session_index))
+
+# Export data of each session to separate csv files.
+for (i in 1:length(session_index)) {
+  ecg_file_name[i] <- time_idx[session_index[i]]
+
+  if (i == length(session_index)) {
+    write.table(
+      ecg[session_index[i]:dim(ecg)[1],], 
+      file = paste(ecg_directory_name, "/", ecg_file_name[i], ".csv", sep=""), 
+      sep = ",", 
+      row.names = FALSE, 
+      quote = FALSE
+    )
+  } else {
+    write.table(
+      ecg[session_index[i]:(session_index[i+1]-1),],
+      file = paste(ecg_directory_name, "/", ecg_file_name[i], ".csv", sep=""),
+      sep = ",", 
+      row.names = FALSE, 
+      quote = FALSE
+    )
+  }
+
+}
+
+list.files(ecg_directory_name)
+```
+
+## Function `read_ecg`
+
+The function `read_ecg` imports the ECG data stored in a csv file to a data frame in R. 
+
+```{r, eval=FALSE}
+read_ecg <- function(NAME="filename") {
+  ecg_file <- NAME
+  ecg <- read.csv(ecg_file, stringsAsFactors=FALSE)
+  if (length(ecg) == 2) {
+    names(ecg) <- c("datetimems", "measurement")
+  } else {
+    ecg <- ecg[, c(length(ecg) - 1, length(ecg))]
+    names(ecg) <- c("datetimems", "measurement")
+  }
+  return(ecg)
+}
+```
+
+The input argument of the function is the character string of the exact location of the csv file we want to import. 
+
+```{r}
+library(zephyrECG)
+NAME <- system.file("extdata", "myECGData.csv", package="zephyrECG")
+str(NAME)
+```
+
+The named csv file is then imported to the `ecg` data frame using the `read.csv` function. 
+
+```{r}
+ecg <- read.csv(NAME, stringsAsFactors=FALSE)
+```
+
+
+Before returning the data frame to the environment the function also selects and names the relevan columns of the imported data. The incoming data may have either two or more columns, depending on whether it was generated by the Bioharness log downloader or by parsing a data stream.  
+The Bioharness log downloader parses the acquired ECG data into two columns with the first column containing timestamps and the second column containing ECG sensor values. In this case there is no further subsetting of the `ecg` data frame, only column names are set to `"datetimems"` and `"measurement"`.  
+Data parsed from a data stream can have more than two columns, with additional columns containing meta data, e.g. device name, device address, etc. The timestamps and the ECG values are placed in the last two columns, respectively. Therfore, the `ecg` data frame is changed to a subset of its last two columns, which are also renamed to `"datetimems"` and `"measurement"`.  
+
+```{r}
+if (length(ecg) == 2) {
+  names(ecg) <- c("datetimems", "measurement")
+} else {
+  ecg <- ecg[, c(length(ecg) - 1, length(ecg))]
+  names(ecg) <- c("datetimems", "measurement")
+}
+```
+
