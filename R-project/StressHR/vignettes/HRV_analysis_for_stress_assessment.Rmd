@@ -1,0 +1,262 @@
+---
+title: "Heart rate variability analysis for stress assessment"
+author: "Emil Plesnik, Marand d.o.o."
+date: "`r Sys.Date()`"
+toctitle: "Contents"
+output: 
+  rmarkdown::html_vignette:
+    css: custom.css
+    toc: TRUE
+vignette: >
+  %\VignetteIndexEntry{Heart rate variability analysis for stress assessment}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+This vignette is a short demo of the functionalities of the `stressHR` package, which assesses mental stress based on heart rate. Heart beats and heart rate are previously detected from single-lead ECG signal by using the `heartBeat` package.  
+The `stressHR` package is comprised of `hrv_analyze` and `merge_hrv` functions. The `hrv_analyze` function executes the [heart rate variability (HRV)](https://en.wikipedia.org/wiki/Heart_rate_variability) on heart beat positions written in an ASCII file (`Rsec_data.txt`). The resulting data structure with HRV data is then forwarded to `merge_hrv` function, which merges the HRV data with the initial ECG data frame. 
+
+## Heart rate variability analysis
+
+The `hrv_analyze` function is used to perform the HRV analysis
+
+```{r, eval=FALSE}
+hrv_analyze <- function(NAME = "Rsec_data.txt")
+```
+
+where the string name of the ASCII file with heart beat positions in seconds in the ECG signal is the only input argument. The function uses the [`RHRV` package](http://rhrv.r-forge.r-project.org/) to calculate the parameters of the HRV analysis. Therefore, the output of the function is a RHRV structure, which is basically a list of results presented at the end of this section. 
+
+### Initialization and HR series preparation
+
+The function begins with initializing the `hrv_data` structure and enabling the verbose operation mode for additional information in the console
+
+```{r}
+library(RHRV)
+
+hrv_data <- CreateHRVData()
+hrv_data <- SetVerbose(hrv_data, TRUE)
+str(hrv_data)
+```
+
+In the next step the ASCII file with heart beat positions is loaded into `hrv_data`. Then the `BuildNIHR` function constructs both the R-to-R and instantaneous heart rate (HR) series. The instantaneous heart rate (HR) is refered to as the Non Interpolated Heart Rate (niHR) series.
+
+```{r}
+NAME <- system.file("extdata", "Rsec_data.txt", package="stressHR")
+hrv_data <- LoadBeatAscii(hrv_data, NAME, RecordPath = ".")
+hrv_data <- BuildNIHR(hrv_data)
+
+str(hrv_data)
+```
+
+A filtering operation must be carried out in order to eliminate outliers or spurious points present in the niHR time series with unacceptable physiological values. Outliers present in the series originate both from detecting an artifact as a heartbeat (RR interval too short) or not detecting a heartbeat (RR interval too large). In this case the outliers removal is both automatic and manual. The `FilterNIHR` function is used to automatically filter out all heart beats resulting in IHR more than 300 bpm. The `EditNIHR` function is used to manually filter out all other outliers. The result of filtering is displayed by the `PlotNIHR` function
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+# Filter the NIHR data to remove outliers
+hrv_data <- FilterNIHR(hrv_data, maxbpm = 300)
+
+# Manually remove outlier beats if any
+hrv_data <- EditNIHR(hrv_data)
+
+# Plot filtered NIHR
+PlotNIHR(hrv_data)
+```
+
+In order to be able to perform spectral analysis in the frequency domain, a uniformly sampled HR series is required. It may be constructed from the niHR series by using the `InterpolateNIHR` function, which uses linear (default) or spline interpolation. The frequency of interpolation may be specified. 4 Hz (the default value) is enough for most applications and also used in this case 
+
+```{r}
+# Create equally spaced ECG time series for spectral analysis
+hrv_data = RHRV::InterpolateNIHR (hrv_data, freqhr = 4)
+```
+
+If we plot and compare the non-interpolated and interpolated HR series we can observe that there are no differences in this case because there were no beats filtered out
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+PlotNIHR(hrv_data)
+PlotHR(hrv_data)
+```
+
+### Calculating spectrogram of HR series
+
+After the HR series is prepared [HRV analysis](https://en.wikipedia.org/wiki/Heart_rate_variability#HRV_analysis) can be performed. Among different possible methods, the time-domain and frequency-domain methods are most widely used. In our case we want to obtain information about the frequency spectrum of the HR series. Therefore, frequency-domain HRV analysis is performed by applying `CreateFreqAnalysis` and `CalculatePowerBand` functions. The `CreateFreqAnalysis` function is used to create a data analysis structure in the `hrv_data` structure. Several different analysis structures can be created, which are identified by unique numbers.  
+
+```{r}
+# Frequency domain analysis
+hrv_data = RHRV::CreateFreqAnalysis(hrv_data)
+```
+
+Before the analysis it is also important to determine the length of the HR series, which is used to select proper value for the `size` argument of the `CalculatePowerBand` function. The `size` argument determines the the size of (Hamming) window for calculating the spectrogram measured in seconds. Also important is the `shift` argument, which determines the displacement of window for calculating the spectrogram measured in seconds and is set to 1 second for all cases in this demo.   
+The length of the HR series `interval_estimate` is determined by the last element in the `Time` column of the `Beat` data frame created previously by the `BuildNIHR` function  in the `hrv_data` structure. The `size` and `shift` arguments are then determined accordingly. Ideally, in the case of long ECG recordings and (consequently) long HR series (longer than 1000 seconds) the `size` is set to 300 seconds (5 minutes), which needed to address the low-frequency (LF) components of the HRV spectral analysis^[[Duration and circumstances of ECG recording for HRV analysis](https://en.wikipedia.org/wiki/Heart_rate_variability#Duration_and_circumstances_of_ECG_recording)]. In case of shorter HR series, the window size is reduced reasonably and if the recording is too short, the analysis is stopped.
+In this example the value of the `size` argument is set to 30 seconds (beacause the value of `interval_estimate` is 120 seconds). After the `size` and `shift` arguments are set, the frequency power spectrum of the HR series is calculated with the `CalculatePowerBand` function using Fourier (STFT) transform (the `type` argument). 
+
+```{r}
+# Estimation of HR series duration in seconds
+interval_estimate <- ceiling(hrv_data$Beat$Time[length(hrv_data$Beat$Time)])
+interval_estimate
+
+if (interval_estimate >= 1000) {
+  size <- 300
+}
+if ((interval_estimate < 1000) && (interval_estimate >= 100)) {
+  size <- 30
+}
+if ((interval_estimate < 100) && (interval_estimate >= 10)) {
+  size <- 5
+}
+if (interval_estimate < 10) stop("The selected ECG interval is too short.")
+
+size
+
+shift <- 1
+
+hrv_data = RHRV::CalculatePowerBand(hrv_data,
+                                    indexFreqAnalysis = 1,
+                                    size, shift, type = "fourier" )
+
+str(hrv_data)
+```
+
+The `hrv_data` structure with the HR series and calculated frequency spectrum is the returned to the environment and later used by the `merge_hrv` function to determine and append stress information to the initial ECG data.
+
+```{r, eval=FALSE}
+return(hrv_data)
+```
+
+
+## Calculate stress
+
+The literature states the ratio of low- and high-frequency power band of the HR series (LF/HF) as appropriate for For assessing mental stress^[Malik, Marek, and A. John Camm. 2004. Dynamic electrocardiography. Elmsford, N.Y.: Futura. [Chapter 7: Heart Rate Variability: Stress and Psychiatric Conditions](http://psychology.uchicago.edu/people/faculty/cacioppo/jtcreprints/bc04.pdf)]. Mental stress is considered to be correlated with the [autonomic nervous system](https://en.wikipedia.org/wiki/Autonomic_nervous_system), which consists of the sympathetic ("fight or flight") and the parasympathetic ("rest and digest") branch. The parasympathetic activity (non-stressful) is a major contributor to the HF component and the symphatetic activity (stressful) is a contributor (not major!) to the LF component of the heart-rate series frequency spectrum^[[HRV components](https://en.wikipedia.org/wiki/Heart_rate_variability#Components_of_HRV)].
+Therefore, this ratio was used to calculate stress in this case with the `merge_hrv` function. The higher the value of LF/HF ratio, the higher the stress and vice-versa. The LF component is 
+Using the results of the spectral HRV analysis, stress is calculated (assessed) with the `merge_hrv` function, which adds columns `lf_hf` and `stress` to the initial ECG data frame. 
+
+```{r, eval=FALSE}
+merge_hrv <- function(data, hrv_data)
+```
+
+Input parameters for the `merge_hrv` are: 
+- `data`: initial data frame containing ECG and heart rate data,
+- `hrv_data`: HRVData structure ([RHRV package](http://rhrv.r-forge.r-project.org/)) containing data of HRV analysis. 
+
+Output of the function is the modified data frame `data` with new columns `lf_hf` and `stress` added. 
+
+The `merge_hrv` function begins by initializing the `lf_hf` column in the input data frame. 
+
+```{r}
+load(system.file("extdata", "ecg.Rda", package="stressHR"))
+options(digits = 14)
+
+head(ecg$time)
+data <- ecg
+data$lf_hf <- NA
+str(data)
+summary(data)
+```
+
+### Data synchronization
+
+To enable data merging, synchronization is required. Therefore, time vectors of the `hrv_data` and `data` need to be extracted and set to the same time units, which are miliseconds in this case. The time vector of the `hrv_data` is determined from the HR series. The elements HR series time vector correspond to the positions of the detected heart beats. To obtain the corresponding indexes in the ECG data, elements of the HR series time vector are first scaled to miliseconds (multiplication with 1000) from the first element in the `data` data frame (addition of the `data$time[1]` element) and then matched to the same element in the ECG time vector
+
+```{r}
+t_beat <- match((1000*hrv_data$Beat$Time + data$time[1]), data$time)
+str(t_beat)
+```
+
+The first and last heart beat positions from the `t_beat` vector are then used to create a milisecond time vector for the `hrv_data` (series of unix time stamps with milisecond precision). The connection to the initial ECG data is made by addressing the ECG time vector `data$time` with the indexes from `t_beat`. The sequence is incremented by 1 second which corresponds to the stepping used in HRV analysis. 
+
+```{r}
+time_hrv <- seq(data$time[t_beat[1]], data$time[tail(t_beat,1)], by = 1000)
+str(time_hrv)
+```
+
+The length of the `time_hrv` vector at this point is the same as the duration of the ECG recording (120 seconds). Result of HRV frequency analysis has 90 elements because the window size used for HRV analysis was 30 seconds and the stepping used was 1 second. However, length of the time vector has to match the number of elements returned by the HRV analysis. Therefore, the last "n" seconds of the `time_hrv` vector are discarded, where "n" is equal to the size of the time window used in HRV analysis (in this case 30)
+
+```{r}
+length(time_hrv) <- length(hrv_data$FreqAnalysis[[1]]$HRV)
+str(time_hrv)
+```
+
+Now we can locate timestamps in `data` which correspond to `time_hrv`. For this, we use a simple `for` loop, which will construct `time_data` vector of time stamps from the initial ECG data by extracting the positive matches of comparison between the `data$time` and `time_hrv` vectors. 
+
+```{r}
+time_data <- rep(0,length(time_hrv))
+for (i in 1:length(time_data)) {
+  time_data[i] <- tail(which((abs(data$time - time_hrv[i])) ==
+                               min(abs(data$time - time_hrv[i]))),1)
+}
+```
+
+### Calculating and adding stress data
+
+Once the time stamps for HRV data are in sync with ECG data, we can fill out the additional columns `lf_hf` and `stress`. The column `lf_hf` is completed in a `for` loop with itterations moving along `time_data`
+
+```{r}
+for (i in 1:length(time_data)) {
+  if (i == length(time_data)) {
+    data[time_data[i] : (time_data[i] + 500), "lf_hf"] <-
+      round(sapply(hrv_data$FreqAnalysis[[1]][6],
+                   function(m)
+                     rep(m[i], length(time_data[i] : (time_data[i] + 500))) ), 3)
+  } else {
+    data[time_data[i] : (time_data[i + 1] - 1), "lf_hf"] <-
+      round(sapply(hrv_data$FreqAnalysis[[1]][6],
+                   function(m)
+                     rep(m[i], length(time_data[i] : (time_data[i + 1] - 1))) ), 3)
+  }
+}
+```
+
+The loop uses indexes in `time_data` to address the proper lines in `data`. All lines for the `lf_hf` column in `data` are assigned the same value in a single iteration. This is achieved by `sapply` function that applies a user selected or defined function over elements of a list or a vector. In this case, the input for the `sapply` function is the  `LFHF` vector from the `hrv_data` structure stored in a list
+
+```{r}
+str(hrv_data$FreqAnalysis[[1]][6])
+```
+
+The function applied to the elements of this input list is defined as 
+
+```{r, eval=FALSE}
+function(m) rep(m[i], length(time_data[i] : (time_data[i + 1] - 1)))
+```
+
+It replicates the first element of the input vector with the number of repetitions corresponding to the difference between two consecutive elements of `time_data`. The `sapply` function applies the defined function consecutively on all elements of the input list. The output of the `sapply` function for a single iteration with `i <- 1` is a list with the same structure as the input list and the length equal to the difference between `time_data[i]` and `time_data[i+1]`
+
+```{r}
+i <- 1 
+test_one <- sapply(hrv_data$FreqAnalysis[[1]][6], 
+       function(m) rep(m[i], length(time_data[i] : (time_data[i + 1] - 1))) )
+str(test_one)
+
+# Length of the output list
+time_data[i + 1] - time_data[i]
+```
+
+The extracted values are rounded to the third decimal and then assigned to the corresponding lines of the `lf_hf` column in `data`. There is also the special case for the last iteration of the loop when there is no succeeding element. The number of elements to be written to the `lf_hf` column is set to 500 instead of the difference between elements of `time_data`. These elements are inserted from the `data[time_data[length(time_data)]]` onward (from the last index in `time_data` on). 
+
+```{r}
+summary(data)
+```
+
+Finally, the `stress` column is added to `data`. The `stress` column is determined by dividing the values from `lf_hf` into 9 equal intervals/classes using the `classIntervals` function from the `classInt` package. The `stress` column is also factorized. The higher the value of LF/HF ratio and class number in `stress`, the higher the stress and vice-versa. 
+
+```{r}
+stress <- classInt::classIntervals(data$lf_hf, n = 9, style = "equal")
+data$stress <- classInt::findCols(stress)
+data$stress <- as.factor(data$stress)
+
+summary(data)
+```
+
+Function concludes with returning the complemented `data` data frame. The factorized `stress` column can be used to indicate the stress according to the ECG signal. An example plot would be (the last section is black, because of windowing used in spectral HRC analysis)
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+library(ggplot2)
+library(RColorBrewer)
+
+ggplot() +
+  geom_line(data = data, aes(as.POSIXct(data$time/1000, origin = "1970-01-01"), ecg)) + 
+  geom_point(data = data, aes(as.POSIXct(data$time/1000, origin = "1970-01-01"), ecg, color = stress), size = 1.5) + 
+  scale_colour_manual(values = rev(brewer.pal(9,"Spectral"))) + 
+  xlab("Time (CEST)") + 
+  ylab("ECG [mV]")
+```
+

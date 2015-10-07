@@ -1,0 +1,15 @@
+Package: stressHR
+Type: Package
+Title: Mental stress assessment based on heart rate
+Version: 0.1
+Date: 2015-08-06
+Authors@R: person("Emil", "Plesnik", email = "emil.plesnik@marand.si", role = c("aut", "cre"))
+Maintainer: Emil Plesnik <emil.plesnik@marand.si>
+Description: The package assesses a persons mental stress based on detected heart beats from single-lead ECG signal. The input is the time series of detected heart beats, which is analyzed for heart rate variability (HRV). The LF/HF ratio, one of the results of HRV analysis, is used as indicator of mental stress.
+License: GNU AGPLv3
+LazyData: TRUE
+Imports:
+  RHRV,
+  classInt
+Suggests: knitr, ggplot2, RColorBrewer
+VignetteBuilder: knitr
