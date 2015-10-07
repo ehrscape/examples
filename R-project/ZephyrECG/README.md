@@ -5,6 +5,6 @@ The R package **zephyrECG** was designed to parse ECG data acquired with the Zep
 The package includes functions
 
 * `separate_bh3`:  parses and separates multiple sessions of ECG data recorded with the Zephyr BH3 monitor into separate csv files,
-* `read_ecg`: reads the signal and the output of `heart_beat` function and determines instant heart rates, their distribution and a basic histogram.
+* `read_ecg`: imports the ECG data stored in a csv file to a data frame in R.
 
 For more details on the usage of the package please refer to the included vignette. 
