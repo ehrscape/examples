@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Emil Plesnik, Marand d.o.o." />
+
+<meta name="date" content="2015-10-07" />
+
+<title>Annotate ECG signal with heart rate data</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amargin%2Dleft%3A210px%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Aposition%3A%20fixed%3B%0Aleft%3A%200%3B%0Atop%3A%2050px%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20200px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0Aoverflow%3Aauto%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0A%7D%0Apre%20%7B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">Annotate ECG signal with heart rate data</h1>
+<h4 class="author"><em>Emil Plesnik, Marand d.o.o.</em></h4>
+<h4 class="date"><em>2015-10-07</em></h4>
+</div>
+
+<div id="TOC">
+<h2 class="toctitle">Contents</h2>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#non-training-heart-rate-annotation">Non-training heart rate annotation</a></li>
+<li><a href="#training-heart-rate-annotation">Training heart rate annotation</a></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This is the third and last of the short tutorials on how to use the package <code>heartBeat</code> for heart beat detection from single-lead ECG signals. It presents in more detail the use and workflow of the <code>annotateHR</code> function</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">annotateHR &lt;-<span class="st"> </span>function(Rall, beat_matrix, data)</code></pre></div>
+<p>with input arguments:</p>
+<ul>
+<li><code>Rall</code>: data frame with information about (detected) heart beats with columns:
+<ul>
+<li><code>Rtrue_idx</code>: the indexes of R peaks in signal,</li>
+<li><code>Rtrue_sec</code>: the time moments of Rtrue_idx in seconds,</li>
+<li><code>RtoRext</code>: R-R intervals in number of samples (with the starting zero),</li>
+<li><code>RtoR_secext</code>: R-R intervals in seconds (with the starting zero),</li>
+</ul></li>
+<li><code>beat_matrix</code>: output of the <code>HRdistribution</code> function containing distribution of heart rate values,</li>
+<li><code>data</code>: data frame containing ECG, EEG and GPS measurements</li>
+</ul>
+<p>This function adds factorized code to ECG data points according to heart rate determined previously with functions <code>heart_beat</code> and <code>HRdistribution</code>. The factorized code is added in a new column <code>heartRate</code> to the input data frame with ECG data points and the updated data frame is returned as output of the function <code>annotateHR</code>. First, the column names of <code>beat_matrix</code> input data frame are checked whether the ECG recording was made during training or not.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># input data frame - in this case named &quot;data&quot;</span>
+<span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;data.Rda&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;heartBeat&quot;</span>))
+<span class="co"># data frame &quot;Rall&quot; with infromation about detected heart beats in &quot;data&quot;</span>
+<span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;Rall.Rda&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;heartBeat&quot;</span>))
+<span class="co"># data frame &quot;beat_matrix&quot; with heart rate information </span>
+<span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;beat_matrix.Rda&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;heartBeat&quot;</span>))
+
+<span class="kw">names</span>(beat_matrix)[<span class="dv">1</span>]</code></pre></div>
+<pre><code>## [1] &quot;ind_sub_60&quot;</code></pre>
+<p>The distributions for the non-training and training regime are different and consequently the annotation of the ECG data will be different. Therefore, operation of the function is directed by a simple <code>if</code> structure</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">if (<span class="kw">names</span>(beat_matrix)[<span class="dv">1</span>] !=<span class="st"> &quot;ind_recovery&quot;</span>) {
+  <span class="co"># Non-training heart rate annotation</span>
+} else {
+  <span class="co"># Training heart rate annotation</span>
+}</code></pre></div>
+</div>
+<div id="non-training-heart-rate-annotation" class="section level2">
+<h2>Non-training heart rate annotation</h2>
+<p>Firstly, the <code>heartRate</code> column of NA values is created for the input data frame <code>data</code></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data$heartRate &lt;-<span class="st"> </span><span class="ot">NA</span></code></pre></div>
+<p>This is followed by adding text annotations to ECG data points according to the current heart rate. Text annotations are very similar as used for the names of intervals used in the <code>HRdistribution</code> function: <code>sub 60</code>, <code>60-70</code>, <code>70-80</code>, …, <code>190-200</code>, <code>above 200</code>. The annotation is performed using the <code>do.call</code> function which constructs and executes a function call from a name or a function and a list of arguments to be passed to it. The function executed with <code>do.call</code> is the simple concatenate function <code>c</code>, used on a sequence of data points. The sequence of data points is obtained by using the <code>mapply</code> function which applies the <code>seq</code> function on a group of data points between two consecutive heart beats that correspond to the proper heart rate.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_sub_60]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_sub_60])],
+                 Rall$Rtrue_idx[beat_matrix$ind_sub_60 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_sub_60])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;sub 60&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_60_70]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_60_70])],
+                 Rall$Rtrue_idx[beat_matrix$ind_60_70 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_60_70])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;60-70&quot;</span>
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>( seq,
+                  Rall$Rtrue_idx[beat_matrix$ind_70_80]
+                  [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_70_80])],
+                  Rall$Rtrue_idx[beat_matrix$ind_70_80 +<span class="st"> </span><span class="dv">1</span>]
+                  [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_70_80])] -<span class="st"> </span><span class="dv">1</span>,
+                  <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;70-80&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_80_90]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_80_90])],
+                 Rall$Rtrue_idx[beat_matrix$ind_80_90 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_80_90])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;80-90&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_90_100]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_90_100])],
+                 Rall$Rtrue_idx[beat_matrix$ind_90_100 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_90_100])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;90-100&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>( seq,
+                  Rall$Rtrue_idx[beat_matrix$ind_100_110]
+                  [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_100_110])],
+                  Rall$Rtrue_idx[beat_matrix$ind_100_110 +<span class="st"> </span><span class="dv">1</span>]
+                  [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_100_110])] -<span class="st"> </span><span class="dv">1</span>,
+                  <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;100-110&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_110_120]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_110_120])],
+                 Rall$Rtrue_idx[beat_matrix$ind_110_120 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_110_120])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;110-120&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_120_130]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_120_130])],
+                 Rall$Rtrue_idx[beat_matrix$ind_120_130 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_120_130])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;120-130&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>( seq,
+                  Rall$Rtrue_idx[beat_matrix$ind_130_140]
+                  [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_130_140])],
+                  Rall$Rtrue_idx[beat_matrix$ind_130_140 +<span class="st"> </span><span class="dv">1</span>]
+                  [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_130_140])] -<span class="st"> </span><span class="dv">1</span>,
+                  <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;130-140&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>( seq,
+                  Rall$Rtrue_idx[beat_matrix$ind_140_150]
+                  [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_140_150])],
+                  Rall$Rtrue_idx[beat_matrix$ind_140_150 +<span class="st"> </span><span class="dv">1</span>]
+                  [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_140_150])] -<span class="st"> </span><span class="dv">1</span>,
+                  <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>))] &lt;-<span class="st"> &quot;140-150&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_150_160]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_150_160])],
+                 Rall$Rtrue_idx[beat_matrix$ind_150_160 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_150_160])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;150-160&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_160_170]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_160_170])],
+                 Rall$Rtrue_idx[beat_matrix$ind_160_170 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_160_170])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;160-170&quot;</span>
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_170_180]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_170_180])],
+                 Rall$Rtrue_idx[beat_matrix$ind_170_180 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_170_180])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>))] &lt;-<span class="st"> &quot;170-180&quot;</span>
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_180_190]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_180_190])],
+                 Rall$Rtrue_idx[beat_matrix$ind_180_190 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_180_190])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;180-190&quot;</span>
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_190_200]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_190_200])],
+                 Rall$Rtrue_idx[beat_matrix$ind_190_200 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_190_200])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;190-200&quot;</span>
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_above_200]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_above_200])],
+                 Rall$Rtrue_idx[beat_matrix$ind_above_200 +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_above_200])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;above 200&quot;</span></code></pre></div>
+<p>Then the <code>heartRate</code> column is factorized. The <code>NA</code> values need to excluded since the begining of the ECG data (till the second heart beat) isn’t annotated, because heart rate can be calculated only from the second heart beat on.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data$heartRate &lt;-<span class="st"> </span><span class="kw">factor</span>(data$heartRate, <span class="dt">exclude =</span> <span class="ot">NA</span>)</code></pre></div>
+<p>The factor levels need to be reordered (from alpha-numerical ordering to the desired order from sub-60 to above-200)</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data$heartRate &lt;-<span class="st"> </span><span class="kw">factor</span>(data$heartRate,
+                             <span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;sub 60&quot;</span>,<span class="st">&quot;60-70&quot;</span>,<span class="st">&quot;70-80&quot;</span>,<span class="st">&quot;80-90&quot;</span>,
+                                        <span class="st">&quot;90-100&quot;</span>,<span class="st">&quot;100-110&quot;</span>,<span class="st">&quot;110-120&quot;</span>,<span class="st">&quot;120-130&quot;</span>,
+                                        <span class="st">&quot;130-140&quot;</span>,<span class="st">&quot;140-150&quot;</span>,<span class="st">&quot;150-160&quot;</span>,<span class="st">&quot;160-170&quot;</span>,
+                                        <span class="st">&quot;170-180&quot;</span>,<span class="st">&quot;180-190&quot;</span>,<span class="st">&quot;above 200&quot;</span>))</code></pre></div>
+<p>Also, the instant heart rate column <code>ihr</code> is created to store the IHR information, which is calculated the same as in the function <code>HRdistribution</code>. The IHR data is inserted using a <code>for</code> loop</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data$ihr &lt;-<span class="st"> </span><span class="ot">NA</span>
+IHR &lt;-<span class="st"> </span><span class="kw">round</span>(<span class="dv">60</span>/Rall$RtoR_secext[-<span class="dv">1</span>])
+
+for (idx in <span class="dv">1</span>:<span class="kw">length</span>(IHR)) {
+  if (idx &lt;<span class="st"> </span><span class="kw">length</span>(IHR)){
+    data$ihr[Rall$Rtrue_idx[idx]:(Rall$Rtrue_idx[idx<span class="dv">+1</span>]-<span class="dv">1</span>)] &lt;-<span class="st"> </span>IHR[idx]
+  } else {
+    data$ihr[Rall$Rtrue_idx[idx]:<span class="kw">length</span>(data$ecg)] &lt;-<span class="st"> </span>IHR[idx]
+  }
+}</code></pre></div>
+</div>
+<div id="training-heart-rate-annotation" class="section level2">
+<h2>Training heart rate annotation</h2>
+<p>The procedure for annotation of training regime is the same as for the non-training regime, except that the interval limits and values and annotations are different.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data$heartRate &lt;-<span class="st"> </span><span class="ot">NA</span>
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_recovery]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_recovery])],
+                 Rall$Rtrue_idx[beat_matrix$ind_recovery +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_recovery])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;recovery&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_aerobic]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_aerobic])],
+                 Rall$Rtrue_idx[beat_matrix$ind_aerobic +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_aerobic])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;aerobic&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_anaerobic]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_anaerobic])],
+                 Rall$Rtrue_idx[beat_matrix$ind_anaerobic +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_anaerobic])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;anaerobic&quot;</span> 
+data$heartRate[
+  <span class="kw">do.call</span>(<span class="st">&quot;c&quot;</span>,
+          <span class="kw">mapply</span>(seq,
+                 Rall$Rtrue_idx[beat_matrix$ind_red]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_red])],
+                 Rall$Rtrue_idx[beat_matrix$ind_red +<span class="st"> </span><span class="dv">1</span>]
+                 [!<span class="kw">is.na</span>(Rall$Rtrue_idx[beat_matrix$ind_red])] -<span class="st"> </span><span class="dv">1</span>,
+                 <span class="dt">SIMPLIFY =</span> <span class="ot">FALSE</span>)
+          )] &lt;-<span class="st"> &quot;red&quot;</span> 
+
+<span class="co"># Create factors</span>
+data$heartRate &lt;-<span class="st"> </span><span class="kw">factor</span>(data$heartRate, <span class="dt">exclude =</span> <span class="ot">NA</span>)
+<span class="co"># Reorder factor levels</span>
+data$heartRate &lt;-<span class="st"> </span><span class="kw">factor</span>(data$heartRate,
+                         <span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;recovery&quot;</span>,<span class="st">&quot;aerobic&quot;</span>,<span class="st">&quot;anaerobic&quot;</span>,<span class="st">&quot;red&quot;</span>))
+
+data$ihr &lt;-<span class="st"> </span><span class="ot">NA</span>
+IHR &lt;-<span class="st"> </span><span class="kw">round</span>(<span class="dv">60</span>/Rall$RtoR_secext[-<span class="dv">1</span>])
+
+for (idx in <span class="dv">1</span>:<span class="kw">length</span>(IHR)) {
+  if (idx &lt;<span class="st"> </span><span class="kw">length</span>(IHR)){
+    data$ihr[Rall$Rtrue_idx[idx]:(Rall$Rtrue_idx[idx<span class="dv">+1</span>]-<span class="dv">1</span>)] &lt;-<span class="st"> </span>IHR[idx]
+  } else {
+    data$ihr[Rall$Rtrue_idx[idx]:<span class="kw">length</span>(data$ecg)] &lt;-<span class="st"> </span>IHR[idx]
+  }
+}</code></pre></div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

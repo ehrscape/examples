@@ -1,0 +1,217 @@
+---
+title: "Heart beat detection from single-lead ECG signal"
+author: "Emil Plesnik, Marand d.o.o."
+date: "`r Sys.Date()`"
+toctitle: "Contents"
+output: 
+  rmarkdown::html_vignette:
+    css: custom.css
+    toc: TRUE
+vignette: >
+  %\VignetteIndexEntry{Heart beat detection from single-lead ECG signal}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+This is the first of three short tutorials on how to use the package `heartBeat` for heart beat detection from single-lead ECG signals. The functions of the package are focused on the detection itself and it is asumed that the input ECG data is already preprocessed (parsed, imported, denoised, etc.). The ECG data is expected to be already loaded into a data frame and ready to use (for importing data recorded with Zephyr BioHarness 3 monitor, please see the package `zephyrECG`).  
+However, for example purposes there is a data sample prepared within this package in the folder `./inst/extdata`. It is a data frame saved in .Rda format which can be imported with the `load` function. The data is loaded directly into a data frame called `ecg`
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+load(system.file("extdata", "ecg.Rda", package="heartBeat"))
+str(ecg) 
+library(ggplot2)
+ggplot(data = ecg, aes(x = time, y = ecg)) + geom_line()
+```
+
+The data frame `ecg` has two columns:
+
+- `time`: UNIX timestamps with milisecond precision, 
+- `ecg`: ECG amplitudes (integer values). 
+
+Once the data is loaded, we can start the analysis by detecting the heart beats with the function `heart_beat`. Based on this detection heart rate and its distribution can be determined by the `HRdistribution` function for the entire recording. Finally, all ECG data points can be color coded (tagged) according to the heart rate by applying the function `annotateHR`.  
+Of course you can also analyze your own ECG data. It can be loaded in any way using any R compatible tools (e.g. the `zephyrECG` package) as long as it is  ordered in a two-column data frame with column names the same as described above. 
+This tutorial presents the workflow of the `heart_beat` function. 
+
+## Heart beat detection
+
+Heart beats are detected by performing wavelet analysis to the ECG data (time series) within the function `heart_beat` called with the following input arguments: 
+
+- data: Data frame with ECG data.
+- SampleFreq: The sampling frequency in Hz of ECG data. The default setting is 250 Hz.
+- thr: Fixed threshold value used to detect heart beats from wavelet coefficients. The default value is 9.   
+
+```{r, eval=FALSE}
+heart_beat <- function(data, SampleFreq = 250, thr = 9){...}
+```
+
+### Wavelet decomposition
+
+Within the function `heart_beat` the detection is performed using [discrete wavelet transform (DWT)](https://en.wikipedia.org/wiki/Discrete_wavelet_transform) of ECG signal. The DWT of a signal $x$ is calculated by passing it through a series of filters. The signal samples are simultaneously passed through a low pass filter and a high-pass filter. The outputs from the high-pass filter give the detail coefficients and the outputs from the low-pass filter give the approximation coefficients. However, since half the frequencies of the signal have now been removed, half the samples can be discarded according to Nyquist’s rule. The filter outputs are then subsampled by 2 which concludes one level of wavelet decomposition. This decomposition has halved the time resolution since only half of each filter output characterises the signal. However, each output has half the frequency band of the input so the frequency resolution has been doubled. This decomposition is repeated to further increase the frequency resolution and the approximation coefficients (output of low-pass filtering) decomposed with high and low pass filters and then down-sampled. 
+In our case 4-th level decomposition is determined using the [Daubechie wavelet](https://en.wikipedia.org/wiki/Daubechies_wavelet) "d4" as the mother wavelet.  
+The wavelet transform is calculated using the `dwt` function from the `wavelets` package. To ensure that the mentioned function is used the `RHRV` and `waveslim` packages are detached first (if loaded). Before performing wavelet transform, `NA` values are removed from the data and the time column is replaced with the column of row indexes of (non-NA) data samples. The data with removed `NA` values and corresponding indexes is sorted into a new data frame `df` with columns `idx` and `ecg`. 
+
+```{r, tidy=TRUE}
+SampleFreq <- 250
+thr <- 9 
+
+# 4-level decomposition is used with the Daubechie d4 wavelet.
+wavelet <- "d4"
+level <- 4L
+
+# If active detach packages RHRV and waveslim.
+
+if (!is.na(match('TRUE',search() == "package:RHRV"))) {
+  detach("package:RHRV", unload=TRUE)
+}
+if (!is.na(match('TRUE',search() == "package:waveslim"))) {
+  detach("package:waveslim", unload=TRUE)
+}
+
+df <- data.frame(matrix(NA, nrow = sum(!is.na(ecg$ecg)), ncol = 2))
+names(df) <- c("idx", "ecg")
+df$idx <- which(!is.na(ecg$ecg))
+df$ecg <- ecg$ecg[df$idx]
+
+str(df)
+
+X <- as.numeric(df$ecg)
+
+library(wavelets)
+ecg_wav <- dwt(X, filter=wavelet, n.levels=level, boundary="periodic", fast=TRUE)
+str(ecg_wav)
+```
+
+The result of `dwt` function is a discrete wavelet transform object `ecg_wav` with the detail and approximation coefficients stored as lists along with selected options and mother wavelet properties. Detail coefficients `W2` were selected for heart beat detection with fixed threshold. Below are the plots of detail coefficients `W1` - `W4` and the plots of approximation coefficients `V1` - `V4` to illustrate why this choice was made. 
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+oldpar <- par(mfrow = c(2,2), mar = c(4,4,1.5,1.5) + 0.1)
+plot(ecg_wav@W$W1, type = "l")
+plot(ecg_wav@W$W2, type = "l")
+plot(ecg_wav@W$W3, type = "l")
+plot(ecg_wav@W$W4, type = "l")
+par(oldpar)
+```
+
+The detail coefficients of the first level contain more noise than those of the second level, which was the single reason of choosing level 2 coefficients. Detail coefficients of the third and fourth level contain too much detail and are missing vital information about heart beats, which is why they are less appropriate for heart beat detection than level 2 coefficients.  
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+oldpar <- par(mfrow = c(2,2), mar = c(4,4,1.5,1.5) + 0.1)
+plot(ecg_wav@V$V1, type = "l")
+plot(ecg_wav@V$V2, type = "l")
+plot(ecg_wav@V$V3, type = "l")
+plot(ecg_wav@V$V4, type = "l")
+par(oldpar)
+```
+
+The plots of approxiation coefficients show, how the signal is gradually lossing in detail from `V1` to `V4` and that it is getting less appropriate for heart beat analysis along the way. 
+
+### Peak detection
+
+As mentioned, coefficients `W2` are used for heart beat detection. Heart beats are determined by detecting the [R points](https://en.wikipedia.org/wiki/Electrocardiography), maxima (or peaks) of the [QRS complexes](https://en.wikipedia.org/wiki/QRS_complex). Firstly, each data point is being checked if it is a local maximum (peak) and if it is greater than a preselected fixed threshold. Before going through the loop and checking these conditions, a vector of zeros `R` is pre-allocated for detected R peaks. The length of the pre-allocated vector is equal to the length of the ECG signal. All R peaks detected during the `for` loop are written to this vector as the index/location of detection. After detection is finished, all the (remained) zeros are deleted from the vector `R`. It's length is now equal to the number of detected R peaks/heart beats in the input ECG data
+
+```{r}
+# Coefficients of the second level of decomposition are used for R peak detection.
+x <- ecg_wav@W$W2
+
+# Empty vector for detected R peaks
+R <- matrix(0,1,length(x))
+
+# While loop for sweeping the L2 coeffs for local maxima.
+i <- 2
+while (i < length(x)-1) {
+  if ((x[i]-x[i-1]>=0) && (x[i+1]-x[i]<0) && x[i]>thr) {
+    R[i] <- i
+  }
+  i <- i+1
+}
+
+# Clear all zero values from R vector.
+R <- R[R!=0]
+str(R)
+```
+
+
+### Determining heart beats
+
+In total, 9 heart beats were detected, which seems correct according to the first figure. However, the indexes seem to be incorrect and to small. This is because the detection was performed on the level 2 detail coefficients. To remind, the number of samples is halved in each level, which means that number of samples in level 2 coefficients was halved twice (or divided by four in other words). Therefore, to obtain the equivalent indexes of samples in the input ECG data, the result in `R` has to be multiplied by 4 
+
+```{r}
+Rtrue <- R*4
+str(Rtrue)
+```
+
+It is possible that the properly scaled results can be off the real R peak mark for a few samples. That is why they are checked out on the input signal in a `for` loop. Each detected R peak is used as a center of a time window with width of 21 samples (84 ms), where the true local maximum is looked for. This gurantees that the real R peaks are found and used for later calculations of inter beat intervals. The line right after the `for` loop ensures that there are no duplicate heart beats. This code chunk is concluded by writing to vector `Rtrue_idx` the indexes corresponding to the detected heart beats from the ECG data frame `df` (because there may be differences if `NA` values are present in the input data). 
+
+```{r}
+# Checking results on the original signal
+for (k in 1:length(Rtrue)){
+  if (Rtrue[k] > 10){
+    Rtrue[k] <- Rtrue[k]-10+(which.max(X[(Rtrue[k]-10):(Rtrue[k]+10)]))-1
+  } else {
+    Rtrue[k] <- which.max(X[1:(Rtrue[k]+10)])
+  }
+}
+
+Rtrue <- unique(Rtrue)
+str(Rtrue)
+Rtrue_idx <- df$idx[Rtrue]
+str(Rtrue_idx)
+```
+
+With this the heart beat detection is complete. The remaining code of the function calculates the inter beat intervals, exact times of heart beats for a potential HRV analysis and prepares the final output. 
+
+### Calculate R-R intervals
+
+Inter beat intervals or R-R intervals are calculated from the indexes of the detected heart beats `Rtrue_idx`. The R-R intervals are calculated in number of samples (`RtoR`) as well as in seconds (`RtoR_sec`). 
+
+```{r, tidy=TRUE, fig.width=7, fig.height=5, fig.align='center'}
+# Determine R-R intervals in samples and seconds and average heart rate.
+RtoR <- Rtrue_idx[-1]-Rtrue_idx[1:length(Rtrue_idx)-1]
+str(RtoR)
+RtoR_sec <- (ecg$time[Rtrue_idx[-1]] -
+               ecg$time[Rtrue_idx[1:length(Rtrue_idx)-1]])/1000
+str(RtoR_sec)
+
+# Average heart rate of the input ECG signal
+avgHR = 60/mean(RtoR_sec)
+avgHR = as.integer(avgHR)
+avgHR
+
+# Plot the original signal together with results
+require(ggplot2)
+ggplot(data = ecg, aes(x = time, y = ecg)) + 
+  geom_line() + 
+  geom_point(data = ecg[Rtrue_idx,], aes(x = time, y = ecg), colour = "red", shape = 1, size = 3)
+
+```
+
+### Heart beat tachogram
+
+The function also prepares input data for (potential) HRV analysis, which can be performed with the [`RHRV` package](http://rhrv.r-forge.r-project.org/) in R. HRV analysis functions in `RHRV` package require the heart beat data to be written in an ASCII file as a tachogram (a time series of exact moments of heart beats in seconds). The heart beat tachogram is obtained from the `time` column of the `ecg` data frame as the elapsed time in seconds from the first sample. The heart beat tachogram is saved as single column ASCII file `Rsec_data` to the current work directory 
+
+```{r}
+# Write the information about detected R peaks to Rsec_data ascii file
+Rtrue_sec = (ecg$time[Rtrue_idx] - ecg$time[1])/1000;
+Rtrue_sec <- round(Rtrue_sec, 3)
+Rtrue_sec
+write(Rtrue_sec,"Rsec_data.txt", 1)
+```
+
+### Preparing and saving output
+
+Vectors `Rtrue_idx`, `Rtrue_sec`, `RtoRext`, `RtoR_secext` with information about the detected heart beats is merged into a data frame `Rall` which is exported as a text file `Rall_data.txt` to the current work directory. Vectors `RtoRext` and `RtoR_secext` are equal to `RtoR` and `RtoR_sec`, respectively. They are just padded with a leading zero to equalize their lengths with the lengths of `Rtrue_idx` and `Rtrue_sec` for data frame construction
+
+```{r}
+RtoRext <- c(0,RtoR)
+RtoR_secext <- c(0,RtoR_sec)
+Rall <- data.frame(Rtrue_idx,Rtrue_sec,RtoRext,RtoR_secext)
+str(Rall)
+```
+
+Finally, the function returns all the results together with the input data as a list
+
+```{r, eval=FALSE}
+return(list(signal = df, coeff = x, R = R, Rall = Rall))
+```

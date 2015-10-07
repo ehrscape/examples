@@ -1,0 +1,14 @@
+Package: heartBeat
+Type: Package
+Title: Heart beat detection in single lead ECG
+Version: 0.1
+Date: 2015-08-06
+Author: person("Emil", "Plesnik", email = "emil.plesnik@marand.si", role = c("aut", "cre"))
+Maintainer: Emil Plesnik <emil.plesnik@marand.si>
+Description: The package is designed to detect heart beats from single lead ECG signal. Wavelet decomposition and fixed thresholding of wavelel coefficients are used for detection. Package also enables annotation of signal samples with heart rate data and calculation of heart rate distribution.
+License: GNU AGPLv3
+LazyData: TRUE
+Imports:
+  wavelets
+Suggests: knitr, ggplot2
+VignetteBuilder: knitr
