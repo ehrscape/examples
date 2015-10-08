@@ -1,0 +1,14 @@
+Package: parseGPX
+Type: Package
+Title: Parse and load GPX files
+Version: 0.1
+Date: 2015-08-05
+Author: person("Emil", "Plesnik", email = "emil.plesnik@marand.si", role = c("aut", "cre"))
+Maintainer: Emil Plesnik <emil.plesnik@marand.si>
+Description: The package is designed to parse GPS data from GPX files. The parsed data is loaded into the R environmentcan and can be saved in csv format.
+License: GNU AGPLv3
+LazyData: TRUE
+Imports:
+  plotKML
+Suggests: knitr
+VignetteBuilder: knitr

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Emil Plesnik, Marand d.o.o." />
+
+<meta name="date" content="2015-08-20" />
+
+<title>Parsing GPX data to R data frame</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amargin%2Dleft%3A210px%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Aposition%3A%20fixed%3B%0Aleft%3A%200%3B%0Atop%3A%2050px%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20200px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0Aoverflow%3Aauto%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0A%7D%0Apre%20%7B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">Parsing GPX data to R data frame</h1>
+<h4 class="author"><em>Emil Plesnik, Marand d.o.o.</em></h4>
+<h4 class="date"><em>2015-08-20</em></h4>
+</div>
+
+<div id="TOC">
+<h2 class="toctitle">Contents</h2>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#function-parse_gpx">Function <code>parse_gpx</code></a><ul>
+<li><a href="#arguments">Arguments</a></li>
+<li><a href="#read-and-parse-data">Read and parse data</a></li>
+<li><a href="#format-conversion">Format conversion</a></li>
+<li><a href="#save-and-return-data">Save and return data</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This document introduces the usage of the package <code>parseGPX</code> for reading and parsing of GPX files containing GPS data.</p>
+<p>GPS data has become broadly available by integrating low-cost GPS chips into portable consumer devices. Consequently, there is an abundance of online and offline tools for GPS data visualization and analysis with R project being in the focus in this example.</p>
+<p>The data itself can be generated in several different file formats, such as txt, csv, xml, kml, gpx. Among these the <a href="http://www.topografix.com/gpx.asp">GPX data format</a> is ment to be the most universal intended for exchanging GPS data between programs, and for sharing GPS data with other users. Unlike many other data files, which can only be understood by the programs that created them, GPX files actually contain a description of what’s inside them, allowing anyone to create a program that can read the data within. Several R packages already exist with functions for reading and parsing of GPX data files, e.g. <code>plotKML</code>, <code>maptools</code>, <code>rgdal</code> with corresponding functions <code>readGPX</code>, <code>readGPS</code> and <code>readOGR</code>.</p>
+</div>
+<div id="function-parse_gpx" class="section level2">
+<h2>Function <code>parse_gpx</code></h2>
+<p>The presented package <code>parseGPX</code> contains the function <code>parse_gpx</code> to read, parse and optionally save GPS data</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">parse_gpx &lt;-<span class="st"> </span>function(<span class="dt">NAME=</span><span class="st">&quot;filename&quot;</span>, <span class="dt">writeData =</span> <span class="ot">FALSE</span>, <span class="dt">timeZone =</span> <span class="st">&quot;GMT&quot;</span>) {
+
+  gpx_file &lt;-<span class="st"> </span>NAME
+  <span class="co"># Extract file and directory names</span>
+  file_name &lt;-<span class="st"> </span><span class="kw">substr</span>(<span class="kw">basename</span>(gpx_file), <span class="dv">1</span>, <span class="kw">nchar</span>(<span class="kw">basename</span>(gpx_file))-<span class="dv">4</span>)
+  directory_name &lt;-<span class="st"> </span><span class="kw">dirname</span>(gpx_file)
+
+  <span class="co"># Read data</span>
+  gpx_data &lt;-<span class="st"> </span>plotKML::<span class="kw">readGPX</span>(<span class="dt">gpx.file =</span> gpx_file,
+                               <span class="dt">metadata =</span> <span class="ot">FALSE</span>,
+                               <span class="dt">bounds =</span> <span class="ot">FALSE</span>,
+                               <span class="dt">waypoints =</span> <span class="ot">FALSE</span>,
+                               <span class="dt">routes =</span> <span class="ot">FALSE</span>)
+  gpx_data &lt;-<span class="st"> </span>gpx_data[[<span class="dv">4</span>]][[<span class="dv">1</span>]][[<span class="dv">1</span>]]
+
+  <span class="co"># Convert date-time string to time data.</span>
+  gpxdatum &lt;-<span class="st"> </span><span class="kw">as.POSIXct</span>(gpx_data$time, <span class="dt">format =</span> <span class="st">&quot;%Y-%m-%dT%H:%M:%SZ&quot;</span>, <span class="dt">tz=</span><span class="st">&quot;GMT&quot;</span>)
+
+  if (timeZone !=<span class="st"> &quot;GMT&quot;</span>) {
+    <span class="kw">attributes</span>(gpxdatum)$tzone &lt;-<span class="st"> </span>timeZone
+  }
+
+  <span class="co"># Add time data column to gpx_data data frame</span>
+  gpx_data$tz_CEST &lt;-<span class="st"> </span>gpxdatum
+  <span class="co"># gpx_data &lt;- gpx_data[,c(&quot;lon&quot;, &quot;lat&quot;, &quot;ele&quot;, &quot;time&quot;, &quot;tz_CEST&quot;, &quot;speed&quot;)]</span>
+
+  <span class="co"># Convert numbers to type numeric</span>
+  if (<span class="kw">sum</span>(<span class="st">&quot;ele&quot;</span> ==<span class="st"> </span><span class="kw">names</span>(gpx_data)) &gt;<span class="st"> </span><span class="dv">0</span>) {
+    gpx_data$ele &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(gpx_data$ele)
+  }
+  if (<span class="kw">sum</span>(<span class="st">&quot;speed&quot;</span> ==<span class="st"> </span><span class="kw">names</span>(gpx_data)) &gt;<span class="st"> </span><span class="dv">0</span>) {
+    gpx_data$speed &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(gpx_data$speed)
+  }
+
+  if (writeData ==<span class="st"> </span><span class="ot">TRUE</span>) {
+    <span class="co"># Export data to csv file</span>
+    <span class="kw">write.table</span>(gpx_data,
+                <span class="dt">file =</span> <span class="kw">paste</span>(directory_name, <span class="st">&quot;/&quot;</span>, file_name, <span class="st">&quot;.csv&quot;</span>, <span class="dt">sep =</span> <span class="st">&quot;&quot;</span>),
+                <span class="dt">sep =</span> <span class="st">&quot;,&quot;</span>, <span class="dt">row.names =</span> <span class="ot">FALSE</span>, <span class="dt">quote =</span> <span class="ot">FALSE</span>)
+  }
+
+  <span class="kw">return</span>(gpx_data)
+}</code></pre></div>
+<p>The function <code>readGPX</code> from the package <code>plotKML</code> is used to read and parse GPX data. In general the GPX data format can contain data of several tracks, routes, waypoints and metadata. The <code>readGPX</code> function was designed to return a list of data frames (or a list of lists if there is more than one route, track). In the returned result all values except the longitude and latitude data are written as character strings. The presented package <code>parseGPX</code> with its function <code>parse_gpx</code> further processes the returned result of <code>readGPX</code> function so that only the first GPS track data along with possible meta data is returned in a data frame with longitude, latitude, elevation, speed and time values being either numeric or POSIXct (for time). The original time stamps and any potential additional data (e.g. course, source, number of satellites) are left unaltered and returned as a character strings.</p>
+<div id="arguments" class="section level3">
+<h3>Arguments</h3>
+<p>The input arguments of the <code>parse_gpx</code> function are:</p>
+<ul>
+<li><code>NAME</code>: The input argument NAME is the string path to the selected GPX file (gpx format). In this case it will be set as the path to the file “myGPXData.gpx”, which is part of the <code>parseGPX</code> package.</li>
+<li><code>writeData</code>: Write to disk flag. Default setting is <code>FALSE</code>. If set to <code>TRUE</code>, the parsed GPX data frame is saved as csv file to the same directory as the source GPX file. In this case it will be set to the default value.</li>
+<li><code>timeZone</code>: Time zone definition of the parsed data. Default value is “GMT”. For other possible values see <code>timezones</code> function in the <code>base</code> package. In this case it will be set to “Europe/Ljubljana”, which was the time zone during acquisition of sample data “myGPXData.gpx”.</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">NAME &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;myGPXData.gpx&quot;</span>, <span class="dt">package=</span><span class="st">&quot;parseGPX&quot;</span>)
+writeData &lt;-<span class="st"> </span><span class="ot">FALSE</span>
+timeZone &lt;-<span class="st"> &quot;Europe/Ljubljana&quot;</span></code></pre></div>
+</div>
+<div id="read-and-parse-data" class="section level3">
+<h3>Read and parse data</h3>
+<p>the data from the GPX file is read and parsed with the <code>readGPX</code> function of the <code>ploKML</code> package</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(plotKML)
+gpx_data &lt;-<span class="st"> </span><span class="kw">readGPX</span>(<span class="dt">gpx.file =</span> NAME, <span class="dt">metadata =</span> <span class="ot">FALSE</span>, <span class="dt">bounds =</span> <span class="ot">FALSE</span>, <span class="dt">waypoints =</span> <span class="ot">FALSE</span>, 
+    <span class="dt">routes =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<p>The output is presented as a list of metadata, bounds, waypoints, routes and tracks. Each list can be comprised of several sublists depending on the number of recordings combined in the same gpx file.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(gpx_data, <span class="dt">strict.width =</span> <span class="st">&quot;wrap&quot;</span>)</code></pre></div>
+<pre><code>## List of 5
+## $ metadata : logi FALSE
+## $ bounds : logi FALSE
+## $ waypoints: logi FALSE
+## $ tracks :List of 1
+## ..$ :List of 1
+## .. ..$ NA:'data.frame': 1394 obs. of 8 variables:
+## .. .. ..$ lon : num [1:1394] 15.9 15.9 15.9 15.9 15.9 ...
+## .. .. ..$ lat : num [1:1394] 46.4 46.4 46.4 46.4 46.4 ...
+## .. .. ..$ ele : chr [1:1394] &quot;260.70001220703125&quot; &quot;260.3999938964844&quot;
+##    &quot;260.1000061035156&quot; &quot;263.79998779296875&quot; ...
+## .. .. ..$ time : chr [1:1394] &quot;2015-02-26T06:33:49Z&quot;
+##    &quot;2015-02-26T06:33:54Z&quot; &quot;2015-02-26T06:33:58Z&quot; &quot;2015-02-26T06:34:08Z&quot;
+##    ...
+## .. .. ..$ course: chr [1:1394] &quot;165.0&quot; &quot;166.3&quot; &quot;165.2&quot; &quot;250.4&quot; ...
+## .. .. ..$ speed : chr [1:1394] &quot;3.0&quot; &quot;8.5&quot; &quot;7.75&quot; &quot;4.75&quot; ...
+## .. .. ..$ src : chr [1:1394] &quot;gps&quot; &quot;gps&quot; &quot;gps&quot; &quot;gps&quot; ...
+## .. .. ..$ sat : chr [1:1394] &quot;20&quot; &quot;20&quot; &quot;20&quot; &quot;20&quot; ...
+## $ routes : logi FALSE</code></pre>
+<p>The basic latitude, longitude and elevation data of most GPS sensors is usually written as a track. All tracks of a single recording are stored as separate lists in the <code>tracks</code> list of the <code>gpx_data</code> list. As mentioned, the <code>parse_gpx</code> function returns the data for the first track by extracting the first data frame from the <code>tracks</code> list of the <code>gpx_data</code> list</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gpx_data &lt;-<span class="st"> </span>gpx_data[[<span class="dv">4</span>]][[<span class="dv">1</span>]][[<span class="dv">1</span>]]
+<span class="kw">str</span>(gpx_data, <span class="dt">strict.width =</span> <span class="st">&quot;wrap&quot;</span>)</code></pre></div>
+<pre><code>## 'data.frame':    1394 obs. of  8 variables:
+## $ lon : num 15.9 15.9 15.9 15.9 15.9 ...
+## $ lat : num 46.4 46.4 46.4 46.4 46.4 ...
+## $ ele : chr &quot;260.70001220703125&quot; &quot;260.3999938964844&quot; &quot;260.1000061035156&quot;
+##    &quot;263.79998779296875&quot; ...
+## $ time : chr &quot;2015-02-26T06:33:49Z&quot; &quot;2015-02-26T06:33:54Z&quot;
+##    &quot;2015-02-26T06:33:58Z&quot; &quot;2015-02-26T06:34:08Z&quot; ...
+## $ course: chr &quot;165.0&quot; &quot;166.3&quot; &quot;165.2&quot; &quot;250.4&quot; ...
+## $ speed : chr &quot;3.0&quot; &quot;8.5&quot; &quot;7.75&quot; &quot;4.75&quot; ...
+## $ src : chr &quot;gps&quot; &quot;gps&quot; &quot;gps&quot; &quot;gps&quot; ...
+## $ sat : chr &quot;20&quot; &quot;20&quot; &quot;20&quot; &quot;20&quot; ...</code></pre>
+</div>
+<div id="format-conversion" class="section level3">
+<h3>Format conversion</h3>
+<p>Timestamps, longitude, latitude, elevation and speed are converted from character strings to POSIXct time format and numeric format. Time conversion is executed according to the input timeZone argument.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Convert date-time string to time data.</span>
+gpxdatum &lt;-<span class="st"> </span><span class="kw">as.POSIXct</span>(gpx_data$time, <span class="dt">format =</span> <span class="st">&quot;%Y-%m-%dT%H:%M:%SZ&quot;</span>, <span class="dt">tz=</span><span class="st">&quot;GMT&quot;</span>)
+
+if (timeZone !=<span class="st"> &quot;GMT&quot;</span>) {
+  <span class="kw">attributes</span>(gpxdatum)$tzone &lt;-<span class="st"> </span>timeZone
+}
+
+<span class="co"># Add time data column to gpx_data data frame</span>
+gpx_data$tz_CEST &lt;-<span class="st"> </span>gpxdatum
+
+<span class="co"># Convert numbers to type numeric</span>
+if (<span class="kw">sum</span>(<span class="st">&quot;ele&quot;</span> ==<span class="st"> </span><span class="kw">names</span>(gpx_data)) &gt;<span class="st"> </span><span class="dv">0</span>) {
+  gpx_data$ele &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(gpx_data$ele)
+}
+if (<span class="kw">sum</span>(<span class="st">&quot;speed&quot;</span> ==<span class="st"> </span><span class="kw">names</span>(gpx_data)) &gt;<span class="st"> </span><span class="dv">0</span>) {
+  gpx_data$speed &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(gpx_data$speed)
+}
+
+<span class="kw">str</span>(gpx_data, <span class="dt">strict.width =</span> <span class="st">&quot;wrap&quot;</span>)</code></pre></div>
+<pre><code>## 'data.frame':    1394 obs. of  9 variables:
+## $ lon : num 15.9 15.9 15.9 15.9 15.9 ...
+## $ lat : num 46.4 46.4 46.4 46.4 46.4 ...
+## $ ele : num 261 260 260 264 265 ...
+## $ time : chr &quot;2015-02-26T06:33:49Z&quot; &quot;2015-02-26T06:33:54Z&quot;
+##    &quot;2015-02-26T06:33:58Z&quot; &quot;2015-02-26T06:34:08Z&quot; ...
+## $ course : chr &quot;165.0&quot; &quot;166.3&quot; &quot;165.2&quot; &quot;250.4&quot; ...
+## $ speed : num 3 8.5 7.75 4.75 9.5 ...
+## $ src : chr &quot;gps&quot; &quot;gps&quot; &quot;gps&quot; &quot;gps&quot; ...
+## $ sat : chr &quot;20&quot; &quot;20&quot; &quot;20&quot; &quot;20&quot; ...
+## $ tz_CEST: POSIXct, format: &quot;2015-02-26 07:33:49&quot; &quot;2015-02-26 07:33:54&quot;
+##    ...</code></pre>
+</div>
+<div id="save-and-return-data" class="section level3">
+<h3>Save and return data</h3>
+<p>If the <code>writeData</code> flag is set to <code>TRUE</code>, the <code>gpx_data</code> data frame is saved as csv file to the same directory as the “myGPXData.gpx” file. The file name and directory path are determined from the <code>NAME</code> argument. The function is concluded by returning the <code>gpx_data</code> data frame.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">file_name &lt;-<span class="st"> </span><span class="kw">substr</span>(<span class="kw">basename</span>(NAME), <span class="dv">1</span>, <span class="kw">nchar</span>(<span class="kw">basename</span>(NAME))-<span class="dv">4</span>)
+directory_name &lt;-<span class="st"> </span><span class="kw">dirname</span>(NAME)
+
+if (writeData ==<span class="st"> </span><span class="ot">TRUE</span>) {
+  <span class="co"># Export data to csv file</span>
+  <span class="kw">write.table</span>(gpx_data,
+              <span class="dt">file =</span> <span class="kw">paste</span>(directory_name, <span class="st">&quot;/&quot;</span>, file_name, <span class="st">&quot;.csv&quot;</span>, <span class="dt">sep =</span> <span class="st">&quot;&quot;</span>),
+              <span class="dt">sep =</span> <span class="st">&quot;,&quot;</span>, <span class="dt">row.names =</span> <span class="ot">FALSE</span>, <span class="dt">quote =</span> <span class="ot">FALSE</span>)
+}
+
+<span class="kw">return</span>(gpx_data)</code></pre></div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
