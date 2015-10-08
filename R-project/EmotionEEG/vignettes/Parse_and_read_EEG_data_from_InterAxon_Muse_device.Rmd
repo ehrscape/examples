@@ -1,0 +1,167 @@
+---
+title: "Parse and read EEG data from InterAxon Muse device"
+author: "Emil Plesnik, Marand d.o.o."
+date: "`r Sys.Date()`"
+toctitle: "Contents"
+output: 
+  rmarkdown::html_vignette:
+    css: custom.css
+    toc: TRUE
+vignette: >
+  %\VignetteIndexEntry{Parse and read EEG data from InterAxon Muse device}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+The package `museEEG` is designed to parse and read the EEG data collected with the [InterAxon Muse device](http://www.choosemuse.com/). The device stores the acquired data directly in .muse format and the manufacturer offers a tool [MusePlayer](http://developer.choosemuse.com/research-tools/museplayer) that converts the .muse data to .csv format. The package is comprised of `read_eeg` function. 
+
+### Reading and parsing EEG data
+
+The `read_eeg` function reads a file in csv format acquired by MUSE hardware and sorts the EEG data in it into a data frame. The function is defined as 
+
+```{r, eval=FALSE}
+read_eeg <- function(NAME="filename")
+```
+
+The input argument is the string path to the selected EEG file in csv format (`NAME`). The original input file with Muse data includes many different (derived) parameters besides EEG data signal data. With the `read_eeg` function, a selection of available data is shaped into the output data frame. This selection includes: 
+
+- `time`: vector of unix timestamps in milisecond precision
+- `type`: indication of wether the signal is EEG, or alpha or beta band
+- `TP9`, `FP1`, `FP2`, `TP10`: EEG data from channels TP9, FP1, FP2, TP10
+- `fp1_fp2`: ratio of alpha and beta band data of channels FP1 and FP2 (in decibels). The EEG type should be ignored.
+- `fp1_beta_alpha`: ratio between beta and alpha band power of channel FP1 (in decibels).
+- `fp2_beta_alpha`: ratio between beta and alpha band power of channel FP2 (in decibels).
+
+### Read EEG data
+
+Below, the steps of `read_eeg` are presented in detail on a short (approx. 30 seconds long) Muse recording that is included in the package. 
+
+```{r}
+NAME <- system.file("extdata", "eeg_sample.csv", package="museEEG")
+NAME
+```
+
+In the first step, the csv file with the EEG data is imported into the `muse` data frame with the EEG data and all the additional parameters (e.g. absolute and relative values of EEG frequency bands (alpha - theta), fft coeficients, etc.). For this the `read.csv` function is used with the `header` and `stringsAsFactors` arguments set to `FALSE`, because the csv files of Muse data don't have the title line and to prevent unwanted factorizing of data written as strings. 
+
+```{r}
+muse_file <- NAME
+muse <- read.csv(muse_file, header=FALSE, stringsAsFactors=FALSE)
+str(muse, strict.width = "wrap", list.len = 20)
+```
+
+### Subsetting
+
+Each feature or parameter in `muse` is described by the second column `V2`. Because the parameters have different lengths, the number of columns of the data frame is determined by the parameter with most elements and all other are complemented with `NA` values. The EEG channels data is extracted by using the `subset` function which returns subset of the `muse` data frame for which the type in `V2` is matching EEG, alpha and beta absolute values 
+
+```{r}
+muse_sub <- subset(muse, (muse$V2 == " /muse/elements/alpha_absolute") |
+                     (muse$V2 == " /muse/elements/beta_absolute") | 
+                     (muse$V2 == " /muse/eeg"))
+str(muse_sub, strict.width = "wrap", list.len = 20)
+```
+
+The output of `subset` has the same number of variables and less rows than the `muse` input data frame. However, the subseted variables in `muse_sub` each have only 4 values for each sample time and the remaining variables are empty or containing only `NA` values. Therefore, only the first 6 columns of `muse_sub` are perserved, while all the rest are discarded. The remaining 6 columns in `muse_sub` represent the time stamp, type, channel TP9, channel FP1, channel FP2 and channel TP10, respectively. The variables are appropriately named and converted from strings to numeric vaules (they represent microvolts and Bels). 
+
+```{r}
+muse_sub <- muse_sub[,c(1:6)]
+names(muse_sub) <- c("time", "type", "TP9", "FP1", "FP2", "TP10")
+muse_sub[,1] <- as.numeric(muse_sub[,1])
+muse_sub[,3] <- as.numeric(muse_sub[,3])
+muse_sub[,4] <- as.numeric(muse_sub[,4])
+muse_sub[,5] <- as.numeric(muse_sub[,5])
+muse_sub[,6] <- as.numeric(muse_sub[,6])
+
+str(muse_sub, strict.width = "wrap")
+```
+
+Also the names in `type` variable are reasonably shortened and converted to factors for usability and simpler addressing
+
+```{r}
+muse_sub[which(muse_sub[,2] == " /muse/elements/alpha_absolute"),2] <- "alpha"
+muse_sub[which(muse_sub[,2] == " /muse/elements/beta_absolute"),2] <- "beta"
+muse_sub[which(muse_sub[,2] == " /muse/eeg"),2] <- "eeg"
+muse_sub[,2] <- as.factor(muse_sub[,2]) 
+
+str(muse_sub, strict.width = "wrap")
+```
+
+### Ratios of alpha and beta power bands
+
+Next, the `fp1_fp2`, `fp1_beta_alpha` and `fp2_beta_alpha` derived variables are calculated. The `fp1_fp2` is the ratio of alpha-alpha and beta-beta of channels FP1 and FP2. In other words, it is the ratio between the left and right alpha bands (result type is `alpha`) and the left and right beta bands (result type is `beta`).  
+The `fp1_beta_alpha` is the ratio between beta and alpha band power of channel FP1 and the `fp2_beta_alpha` is the ratio between beta and alpha band power of channel FP2. For these two variables it is important to consider the correct type of data. The type of the calculated ratios is `beta`. 
+Since the values of alpha ans beta power bands are given in Bels, the deciBel (dB) values of the described ratios are obtained as the differences multiplied by 10.  
+
+```{r}
+muse_sub$fp2_fp1 <- NA
+muse_sub$fp2_fp1[which(muse_sub[,2] == "alpha")] <-
+  10 * (muse_sub[which(muse_sub[,2] == "alpha"),5] -
+          muse_sub[which(muse_sub[,2] == "alpha"),4])
+muse_sub$fp2_fp1[which(muse_sub[,2] == "beta")] <-
+  10 * (muse_sub[which(muse_sub[,2] == "beta"),5] -
+          muse_sub[which(muse_sub[,2] == "beta"),4])
+
+muse_sub$fp1_beta_alpha <- NA
+muse_sub$fp1_beta_alpha[which(muse_sub[,2] == "beta")] <-
+  10 * (muse_sub[which(muse_sub[,2] == "beta"),4] -
+          muse_sub[which(muse_sub[,2] == "alpha"),4])
+muse_sub$fp2_beta_alpha <- NA
+muse_sub$fp2_beta_alpha[which(muse_sub[,2] == "beta")] <-
+  10 * (muse_sub[which(muse_sub[,2] == "beta"),5] -
+          muse_sub[which(muse_sub[,2] == "alpha"),5])
+
+str(muse_sub, strict.width = "wrap")
+```
+
+### Correction of EEG timing
+
+The function concludes with a correction of EEG timing. This is due to the fact that the BlueTooth transmission of the data packets causes that several EEG samples share the same time stamps. After this correction the time vector of the `muse_sub` data frame is a proper time series. The sampling frequency `f_sampling` is calculated by dividing the number of all EEG data points with the time difference between the last and first EEG data sample. A time stamp series with milisecond precision is created for EEG data between the first and last time stamp of EEG data with stepping defined as `1 / f_sampling`
+
+```{r}
+f_sampling <- length(which(muse_sub$type == "eeg")) /
+  (muse_sub$time[length(muse_sub$time)] - muse_sub$time[1])
+f_sampling
+
+test <- round(seq(muse_sub$time[1]*1000,
+                  muse_sub$time[length(muse_sub$time)] * 1000,
+                  by=1000/f_sampling))/1000 
+str(test) 
+
+muse_sub$time[which(muse_sub$type == "eeg")] <- test 
+str(muse_sub)
+```
+
+Visualization of sample EEG data
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+library(ggplot2)
+library(scales)
+muse_sub$timecest <- as.POSIXct(muse_sub$time, origin = "1970-01-01")
+
+ggplot(data=muse_sub[which(muse_sub$type == "eeg"),]) +
+  geom_line(aes(x=timecest,y=FP1)) +
+  xlab("Time [min:sec]") +
+  ylab("FP1 channel") +
+  scale_x_datetime(breaks=date_breaks(width = "10 sec"),
+                            minor_breaks=date_breaks(width = "1 sec"),
+                            labels=date_format("%M:%S")) +
+  annotate("text",  x=max(muse_sub$timecest), y = Inf,
+                    label = "FP1 channel", vjust=1, hjust=1)
+
+ggplot(data=muse_sub[which(muse_sub$type == "eeg"),]) +
+  geom_line(aes(x=timecest,y=FP2)) +
+  xlab("Time [min:sec]") +
+  ylab("FP2 channel") +
+  scale_x_datetime(breaks=date_breaks(width = "10 sec"),
+                            minor_breaks=date_breaks(width = "1 sec"),
+                            labels=date_format("%M:%S")) +
+  annotate("text",  x=max(muse_sub$timecest), y = Inf,
+                    label = "FP2 channel", vjust=1, hjust=1)
+```
+
+The data frame `muse_sub` is returned as output of the `read_eeg` function. 
+
+```{r, eval=FALSE}
+return(muse_sub)
+```

@@ -1,0 +1,12 @@
+Package: museEEG
+Type: Package
+Title: Parse and read EEG data from InterAxon Muse device
+Version: 0.1
+Date: 2015-08-06
+Authors@R: person("Emil", "Plesnik", email = "emil.plesnik@marand.si", role = c("aut", "cre"))
+Maintainer: Emil Plesnik <emil.plesnik@marand.si>
+Description: The package is designed to parse and read the EEG data collected with the InterAxon Muse device.
+License: GNU AGPLv3
+LazyData: TRUE
+Suggests: knitr, scales, ggplot2
+VignetteBuilder: knitr

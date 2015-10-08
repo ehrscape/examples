@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Emil Plesnik, Marand d.o.o." />
+
+<meta name="date" content="2015-09-21" />
+
+<title>Parse and read EEG data from InterAxon Muse device</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amargin%2Dleft%3A210px%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Aposition%3A%20fixed%3B%0Aleft%3A%200%3B%0Atop%3A%2050px%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20200px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0Aoverflow%3Aauto%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0A%7D%0Apre%20%7B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">Parse and read EEG data from InterAxon Muse device</h1>
+<h4 class="author"><em>Emil Plesnik, Marand d.o.o.</em></h4>
+<h4 class="date"><em>2015-09-21</em></h4>
+</div>
+
+<div id="TOC">
+<h2 class="toctitle">Contents</h2>
+<ul>
+<li><a href="#introduction">Introduction</a><ul>
+<li><a href="#reading-and-parsing-eeg-data">Reading and parsing EEG data</a></li>
+<li><a href="#read-eeg-data">Read EEG data</a></li>
+<li><a href="#subsetting">Subsetting</a></li>
+<li><a href="#ratios-of-alpha-and-beta-power-bands">Ratios of alpha and beta power bands</a></li>
+<li><a href="#correction-of-eeg-timing">Correction of EEG timing</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The package <code>museEEG</code> is designed to parse and read the EEG data collected with the <a href="http://www.choosemuse.com/">InterAxon Muse device</a>. The device stores the acquired data directly in .muse format and the manufacturer offers a tool <a href="http://developer.choosemuse.com/research-tools/museplayer">MusePlayer</a> that converts the .muse data to .csv format. The package is comprised of <code>read_eeg</code> function.</p>
+<div id="reading-and-parsing-eeg-data" class="section level3">
+<h3>Reading and parsing EEG data</h3>
+<p>The <code>read_eeg</code> function reads a file in csv format acquired by MUSE hardware and sorts the EEG data in it into a data frame. The function is defined as</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">read_eeg &lt;-<span class="st"> </span>function(<span class="dt">NAME=</span><span class="st">&quot;filename&quot;</span>)</code></pre></div>
+<p>The input argument is the string path to the selected EEG file in csv format (<code>NAME</code>). The original input file with Muse data includes many different (derived) parameters besides EEG data signal data. With the <code>read_eeg</code> function, a selection of available data is shaped into the output data frame. This selection includes:</p>
+<ul>
+<li><code>time</code>: vector of unix timestamps in milisecond precision</li>
+<li><code>type</code>: indication of wether the signal is EEG, or alpha or beta band</li>
+<li><code>TP9</code>, <code>FP1</code>, <code>FP2</code>, <code>TP10</code>: EEG data from channels TP9, FP1, FP2, TP10</li>
+<li><code>fp1_fp2</code>: ratio of alpha and beta band data of channels FP1 and FP2 (in decibels). The EEG type should be ignored.</li>
+<li><code>fp1_beta_alpha</code>: ratio between beta and alpha band power of channel FP1 (in decibels).</li>
+<li><code>fp2_beta_alpha</code>: ratio between beta and alpha band power of channel FP2 (in decibels).</li>
+</ul>
+</div>
+<div id="read-eeg-data" class="section level3">
+<h3>Read EEG data</h3>
+<p>Below, the steps of <code>read_eeg</code> are presented in detail on a short (approx. 30 seconds long) Muse recording that is included in the package.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">NAME &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;eeg_sample.csv&quot;</span>, <span class="dt">package=</span><span class="st">&quot;museEEG&quot;</span>)
+NAME</code></pre></div>
+<pre><code>## [1] &quot;C:/R/Work/museEEG/inst/extdata/eeg_sample.csv&quot;</code></pre>
+<p>In the first step, the csv file with the EEG data is imported into the <code>muse</code> data frame with the EEG data and all the additional parameters (e.g. absolute and relative values of EEG frequency bands (alpha - theta), fft coeficients, etc.). For this the <code>read.csv</code> function is used with the <code>header</code> and <code>stringsAsFactors</code> arguments set to <code>FALSE</code>, because the csv files of Muse data don’t have the title line and to prevent unwanted factorizing of data written as strings.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">muse_file &lt;-<span class="st"> </span>NAME
+muse &lt;-<span class="st"> </span><span class="kw">read.csv</span>(muse_file, <span class="dt">header=</span><span class="ot">FALSE</span>, <span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>)
+<span class="kw">str</span>(muse, <span class="dt">strict.width =</span> <span class="st">&quot;wrap&quot;</span>, <span class="dt">list.len =</span> <span class="dv">20</span>)</code></pre></div>
+<pre><code>## 'data.frame':    18563 obs. of  131 variables:
+## $ V1 : num 1.42e+09 1.42e+09 1.42e+09 1.42e+09 1.42e+09 ...
+## $ V2 : chr &quot; /muse/elements/raw_fft0&quot; &quot; /muse/elements/raw_fft1&quot; &quot;
+##    /muse/elements/raw_fft2&quot; &quot; /muse/elements/raw_fft3&quot; ...
+## $ V3 : chr &quot; 21.67107&quot; &quot; 24.765371&quot; &quot; 18.682999&quot; &quot; 24.506533&quot; ...
+## $ V4 : chr &quot; 26.700253&quot; &quot; 30.266417&quot; &quot; 23.56232&quot; &quot; 29.906038&quot; ...
+## $ V5 : chr &quot; 26.221638&quot; &quot; 26.237923&quot; &quot; 23.723951&quot; &quot; 28.795336&quot; ...
+## $ V6 : chr &quot; 27.805504&quot; &quot; 18.997297&quot; &quot; 22.061762&quot; &quot; 25.644644&quot; ...
+## $ V7 : chr &quot; 26.361446&quot; &quot; 12.983604&quot; &quot; 13.575578&quot; &quot; 20.130281&quot; ...
+## $ V8 : chr &quot; 21.551762&quot; &quot; 9.268732&quot; &quot; 10.573607&quot; &quot; 10.867702&quot; ...
+## $ V9 : num 13.53 10.36 9.51 9.77 NA ...
+## $ V10 : num 12.34 6.76 5.35 13.57 NA ...
+## $ V11 : chr &quot; 9.843936&quot; &quot; 9.776208&quot; &quot; 8.0879135&quot; &quot; 13.011974&quot; ...
+## $ V12 : chr &quot; 9.701899&quot; &quot; 14.362541&quot; &quot; 3.414631&quot; &quot; 12.570309&quot; ...
+## $ V13 : chr &quot; 5.870545&quot; &quot; 11.151609&quot; &quot; 2.2663603&quot; &quot; 10.412337&quot; ...
+## $ V14 : chr &quot; 9.319328&quot; &quot; 4.5954328&quot; &quot; 5.048014&quot; &quot; 6.14574&quot; ...
+## $ V15 : chr &quot; 8.119961&quot; &quot; 6.43512&quot; &quot; 3.2765212&quot; &quot; 8.376848&quot; ...
+## $ V16 : chr &quot; 3.6904578&quot; &quot; 8.592881&quot; &quot; -0.50741875&quot; &quot; 7.476821&quot; ...
+## $ V17 : chr &quot; 8.060724&quot; &quot; 5.9749303&quot; &quot; 0.8887181&quot; &quot; 4.608893&quot; ...
+## $ V18 : chr &quot; 8.360534&quot; &quot; 2.793673&quot; &quot; -0.7831017&quot; &quot; 7.273836&quot; ...
+## $ V19 : chr &quot; 1.7820944&quot; &quot; 0.90627354&quot; &quot; -6.167336&quot; &quot; 4.9218893&quot; ...
+## $ V20 : chr &quot; 7.2082696&quot; &quot; 1.3640586&quot; &quot; 1.8926748&quot; &quot; 6.0123925&quot; ...
+## [list output truncated]</code></pre>
+</div>
+<div id="subsetting" class="section level3">
+<h3>Subsetting</h3>
+<p>Each feature or parameter in <code>muse</code> is described by the second column <code>V2</code>. Because the parameters have different lengths, the number of columns of the data frame is determined by the parameter with most elements and all other are complemented with <code>NA</code> values. The EEG channels data is extracted by using the <code>subset</code> function which returns subset of the <code>muse</code> data frame for which the type in <code>V2</code> is matching EEG, alpha and beta absolute values</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">muse_sub &lt;-<span class="st"> </span><span class="kw">subset</span>(muse, (muse$V2 ==<span class="st"> &quot; /muse/elements/alpha_absolute&quot;</span>) |
+<span class="st">                     </span>(muse$V2 ==<span class="st"> &quot; /muse/elements/beta_absolute&quot;</span>) |<span class="st"> </span>
+<span class="st">                     </span>(muse$V2 ==<span class="st"> &quot; /muse/eeg&quot;</span>))
+<span class="kw">str</span>(muse_sub, <span class="dt">strict.width =</span> <span class="st">&quot;wrap&quot;</span>, <span class="dt">list.len =</span> <span class="dv">20</span>)</code></pre></div>
+<pre><code>## 'data.frame':    7880 obs. of  131 variables:
+## $ V1 : num 1.42e+09 1.42e+09 1.42e+09 1.42e+09 1.42e+09 ...
+## $ V2 : chr &quot; /muse/elements/alpha_absolute&quot; &quot;
+##    /muse/elements/beta_absolute&quot; &quot; /muse/eeg&quot; &quot; /muse/eeg&quot; ...
+## $ V3 : chr &quot; 0.0&quot; &quot; 0.0&quot; &quot; 822.4902&quot; &quot; 840.58496&quot; ...
+## $ V4 : chr &quot; 0.1615823&quot; &quot; 0.7709681&quot; &quot; 983.69824&quot; &quot; 957.37854&quot; ...
+## $ V5 : chr &quot; 0.1174871&quot; &quot; 0.5752194&quot; &quot; 723.7913&quot; &quot; 692.53674&quot; ...
+## $ V6 : chr &quot; 0.0&quot; &quot; 0.0&quot; &quot; 855.3898&quot; &quot; 901.4492&quot; ...
+## $ V7 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V8 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V9 : num NA NA NA NA NA NA NA NA NA NA ...
+## $ V10 : num NA NA NA NA NA NA NA NA NA NA ...
+## $ V11 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V12 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V13 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V14 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V15 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V16 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V17 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V18 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V19 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## $ V20 : chr &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+## [list output truncated]</code></pre>
+<p>The output of <code>subset</code> has the same number of variables and less rows than the <code>muse</code> input data frame. However, the subseted variables in <code>muse_sub</code> each have only 4 values for each sample time and the remaining variables are empty or containing only <code>NA</code> values. Therefore, only the first 6 columns of <code>muse_sub</code> are perserved, while all the rest are discarded. The remaining 6 columns in <code>muse_sub</code> represent the time stamp, type, channel TP9, channel FP1, channel FP2 and channel TP10, respectively. The variables are appropriately named and converted from strings to numeric vaules (they represent microvolts and Bels).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">muse_sub &lt;-<span class="st"> </span>muse_sub[,<span class="kw">c</span>(<span class="dv">1</span>:<span class="dv">6</span>)]
+<span class="kw">names</span>(muse_sub) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;time&quot;</span>, <span class="st">&quot;type&quot;</span>, <span class="st">&quot;TP9&quot;</span>, <span class="st">&quot;FP1&quot;</span>, <span class="st">&quot;FP2&quot;</span>, <span class="st">&quot;TP10&quot;</span>)
+muse_sub[,<span class="dv">1</span>] &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(muse_sub[,<span class="dv">1</span>])
+muse_sub[,<span class="dv">3</span>] &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(muse_sub[,<span class="dv">3</span>])
+muse_sub[,<span class="dv">4</span>] &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(muse_sub[,<span class="dv">4</span>])
+muse_sub[,<span class="dv">5</span>] &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(muse_sub[,<span class="dv">5</span>])
+muse_sub[,<span class="dv">6</span>] &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(muse_sub[,<span class="dv">6</span>])
+
+<span class="kw">str</span>(muse_sub, <span class="dt">strict.width =</span> <span class="st">&quot;wrap&quot;</span>)</code></pre></div>
+<pre><code>## 'data.frame':    7880 obs. of  6 variables:
+## $ time: num 1.42e+09 1.42e+09 1.42e+09 1.42e+09 1.42e+09 ...
+## $ type: chr &quot; /muse/elements/alpha_absolute&quot; &quot;
+##    /muse/elements/beta_absolute&quot; &quot; /muse/eeg&quot; &quot; /muse/eeg&quot; ...
+## $ TP9 : num 0 0 822 841 859 ...
+## $ FP1 : num 0.162 0.771 983.698 957.379 901.449 ...
+## $ FP2 : num 0.117 0.575 723.791 692.537 638.252 ...
+## $ TP10: num 0 0 855 901 928 ...</code></pre>
+<p>Also the names in <code>type</code> variable are reasonably shortened and converted to factors for usability and simpler addressing</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot; /muse/elements/alpha_absolute&quot;</span>),<span class="dv">2</span>] &lt;-<span class="st"> &quot;alpha&quot;</span>
+muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot; /muse/elements/beta_absolute&quot;</span>),<span class="dv">2</span>] &lt;-<span class="st"> &quot;beta&quot;</span>
+muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot; /muse/eeg&quot;</span>),<span class="dv">2</span>] &lt;-<span class="st"> &quot;eeg&quot;</span>
+muse_sub[,<span class="dv">2</span>] &lt;-<span class="st"> </span><span class="kw">as.factor</span>(muse_sub[,<span class="dv">2</span>]) 
+
+<span class="kw">str</span>(muse_sub, <span class="dt">strict.width =</span> <span class="st">&quot;wrap&quot;</span>)</code></pre></div>
+<pre><code>## 'data.frame':    7880 obs. of  6 variables:
+## $ time: num 1.42e+09 1.42e+09 1.42e+09 1.42e+09 1.42e+09 ...
+## $ type: Factor w/ 3 levels &quot;alpha&quot;,&quot;beta&quot;,..: 1 2 3 3 3 3 3 3 3 3 ...
+## $ TP9 : num 0 0 822 841 859 ...
+## $ FP1 : num 0.162 0.771 983.698 957.379 901.449 ...
+## $ FP2 : num 0.117 0.575 723.791 692.537 638.252 ...
+## $ TP10: num 0 0 855 901 928 ...</code></pre>
+</div>
+<div id="ratios-of-alpha-and-beta-power-bands" class="section level3">
+<h3>Ratios of alpha and beta power bands</h3>
+<p>Next, the <code>fp1_fp2</code>, <code>fp1_beta_alpha</code> and <code>fp2_beta_alpha</code> derived variables are calculated. The <code>fp1_fp2</code> is the ratio of alpha-alpha and beta-beta of channels FP1 and FP2. In other words, it is the ratio between the left and right alpha bands (result type is <code>alpha</code>) and the left and right beta bands (result type is <code>beta</code>).<br />
+The <code>fp1_beta_alpha</code> is the ratio between beta and alpha band power of channel FP1 and the <code>fp2_beta_alpha</code> is the ratio between beta and alpha band power of channel FP2. For these two variables it is important to consider the correct type of data. The type of the calculated ratios is <code>beta</code>. Since the values of alpha ans beta power bands are given in Bels, the deciBel (dB) values of the described ratios are obtained as the differences multiplied by 10.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">muse_sub$fp2_fp1 &lt;-<span class="st"> </span><span class="ot">NA</span>
+muse_sub$fp2_fp1[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;alpha&quot;</span>)] &lt;-
+<span class="st">  </span><span class="dv">10</span> *<span class="st"> </span>(muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;alpha&quot;</span>),<span class="dv">5</span>] -
+<span class="st">          </span>muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;alpha&quot;</span>),<span class="dv">4</span>])
+muse_sub$fp2_fp1[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;beta&quot;</span>)] &lt;-
+<span class="st">  </span><span class="dv">10</span> *<span class="st"> </span>(muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;beta&quot;</span>),<span class="dv">5</span>] -
+<span class="st">          </span>muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;beta&quot;</span>),<span class="dv">4</span>])
+
+muse_sub$fp1_beta_alpha &lt;-<span class="st"> </span><span class="ot">NA</span>
+muse_sub$fp1_beta_alpha[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;beta&quot;</span>)] &lt;-
+<span class="st">  </span><span class="dv">10</span> *<span class="st"> </span>(muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;beta&quot;</span>),<span class="dv">4</span>] -
+<span class="st">          </span>muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;alpha&quot;</span>),<span class="dv">4</span>])
+muse_sub$fp2_beta_alpha &lt;-<span class="st"> </span><span class="ot">NA</span>
+muse_sub$fp2_beta_alpha[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;beta&quot;</span>)] &lt;-
+<span class="st">  </span><span class="dv">10</span> *<span class="st"> </span>(muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;beta&quot;</span>),<span class="dv">5</span>] -
+<span class="st">          </span>muse_sub[<span class="kw">which</span>(muse_sub[,<span class="dv">2</span>] ==<span class="st"> &quot;alpha&quot;</span>),<span class="dv">5</span>])
+
+<span class="kw">str</span>(muse_sub, <span class="dt">strict.width =</span> <span class="st">&quot;wrap&quot;</span>)</code></pre></div>
+<pre><code>## 'data.frame':    7880 obs. of  9 variables:
+## $ time : num 1.42e+09 1.42e+09 1.42e+09 1.42e+09 1.42e+09 ...
+## $ type : Factor w/ 3 levels &quot;alpha&quot;,&quot;beta&quot;,..: 1 2 3 3 3 3 3 3 3 3 ...
+## $ TP9 : num 0 0 822 841 859 ...
+## $ FP1 : num 0.162 0.771 983.698 957.379 901.449 ...
+## $ FP2 : num 0.117 0.575 723.791 692.537 638.252 ...
+## $ TP10 : num 0 0 855 901 928 ...
+## $ fp2_fp1 : num -0.441 -1.957 NA NA NA ...
+## $ fp1_beta_alpha: num NA 6.09 NA NA NA ...
+## $ fp2_beta_alpha: num NA 4.58 NA NA NA ...</code></pre>
+</div>
+<div id="correction-of-eeg-timing" class="section level3">
+<h3>Correction of EEG timing</h3>
+<p>The function concludes with a correction of EEG timing. This is due to the fact that the BlueTooth transmission of the data packets causes that several EEG samples share the same time stamps. After this correction the time vector of the <code>muse_sub</code> data frame is a proper time series. The sampling frequency <code>f_sampling</code> is calculated by dividing the number of all EEG data points with the time difference between the last and first EEG data sample. A time stamp series with milisecond precision is created for EEG data between the first and last time stamp of EEG data with stepping defined as <code>1 / f_sampling</code></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f_sampling &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">which</span>(muse_sub$type ==<span class="st"> &quot;eeg&quot;</span>)) /
+<span class="st">  </span>(muse_sub$time[<span class="kw">length</span>(muse_sub$time)] -<span class="st"> </span>muse_sub$time[<span class="dv">1</span>])
+f_sampling</code></pre></div>
+<pre><code>## [1] 220.6206</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">test &lt;-<span class="st"> </span><span class="kw">round</span>(<span class="kw">seq</span>(muse_sub$time[<span class="dv">1</span>]*<span class="dv">1000</span>,
+                  muse_sub$time[<span class="kw">length</span>(muse_sub$time)] *<span class="st"> </span><span class="dv">1000</span>,
+                  <span class="dt">by=</span><span class="dv">1000</span>/f_sampling))/<span class="dv">1000</span> 
+<span class="kw">str</span>(test) </code></pre></div>
+<pre><code>##  num [1:7225] 1.42e+09 1.42e+09 1.42e+09 1.42e+09 1.42e+09 ...</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">muse_sub$time[<span class="kw">which</span>(muse_sub$type ==<span class="st"> &quot;eeg&quot;</span>)] &lt;-<span class="st"> </span>test </code></pre></div>
+<pre><code>## Warning in muse_sub$time[which(muse_sub$type == &quot;eeg&quot;)] &lt;- test: number of
+## items to replace is not a multiple of replacement length</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(muse_sub)</code></pre></div>
+<pre><code>## 'data.frame':    7880 obs. of  9 variables:
+##  $ time          : num  1.42e+09 1.42e+09 1.42e+09 1.42e+09 1.42e+09 ...
+##  $ type          : Factor w/ 3 levels &quot;alpha&quot;,&quot;beta&quot;,..: 1 2 3 3 3 3 3 3 3 3 ...
+##  $ TP9           : num  0 0 822 841 859 ...
+##  $ FP1           : num  0.162 0.771 983.698 957.379 901.449 ...
+##  $ FP2           : num  0.117 0.575 723.791 692.537 638.252 ...
+##  $ TP10          : num  0 0 855 901 928 ...
+##  $ fp2_fp1       : num  -0.441 -1.957 NA NA NA ...
+##  $ fp1_beta_alpha: num  NA 6.09 NA NA NA ...
+##  $ fp2_beta_alpha: num  NA 4.58 NA NA NA ...</code></pre>
+<p>Visualization of sample EEG data</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(ggplot2)
+<span class="kw">library</span>(scales)
+muse_sub$timecest &lt;-<span class="st"> </span><span class="kw">as.POSIXct</span>(muse_sub$time, <span class="dt">origin =</span> <span class="st">&quot;1970-01-01&quot;</span>)
+
+<span class="kw">ggplot</span>(<span class="dt">data=</span>muse_sub[<span class="kw">which</span>(muse_sub$type ==<span class="st"> &quot;eeg&quot;</span>),]) +
+<span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">x=</span>timecest,<span class="dt">y=</span>FP1)) +
+<span class="st">  </span><span class="kw">xlab</span>(<span class="st">&quot;Time [min:sec]&quot;</span>) +
+<span class="st">  </span><span class="kw">ylab</span>(<span class="st">&quot;FP1 channel&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_x_datetime</span>(<span class="dt">breaks=</span><span class="kw">date_breaks</span>(<span class="dt">width =</span> <span class="st">&quot;10 sec&quot;</span>),
+                            <span class="dt">minor_breaks=</span><span class="kw">date_breaks</span>(<span class="dt">width =</span> <span class="st">&quot;1 sec&quot;</span>),
+                            <span class="dt">labels=</span><span class="kw">date_format</span>(<span class="st">&quot;%M:%S&quot;</span>)) +
+<span class="st">  </span><span class="kw">annotate</span>(<span class="st">&quot;text&quot;</span>,  <span class="dt">x=</span><span class="kw">max</span>(muse_sub$timecest), <span class="dt">y =</span> <span class="ot">Inf</span>,
+                    <span class="dt">label =</span> <span class="st">&quot;FP1 channel&quot;</span>, <span class="dt">vjust=</span><span class="dv">1</span>, <span class="dt">hjust=</span><span class="dv">1</span>)</code></pre></div>
+<p><img src="data:image/png;base64,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" title alt style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(<span class="dt">data=</span>muse_sub[<span class="kw">which</span>(muse_sub$type ==<span class="st"> &quot;eeg&quot;</span>),]) +
+<span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">x=</span>timecest,<span class="dt">y=</span>FP2)) +
+<span class="st">  </span><span class="kw">xlab</span>(<span class="st">&quot;Time [min:sec]&quot;</span>) +
+<span class="st">  </span><span class="kw">ylab</span>(<span class="st">&quot;FP2 channel&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_x_datetime</span>(<span class="dt">breaks=</span><span class="kw">date_breaks</span>(<span class="dt">width =</span> <span class="st">&quot;10 sec&quot;</span>),
+                            <span class="dt">minor_breaks=</span><span class="kw">date_breaks</span>(<span class="dt">width =</span> <span class="st">&quot;1 sec&quot;</span>),
+                            <span class="dt">labels=</span><span class="kw">date_format</span>(<span class="st">&quot;%M:%S&quot;</span>)) +
+<span class="st">  </span><span class="kw">annotate</span>(<span class="st">&quot;text&quot;</span>,  <span class="dt">x=</span><span class="kw">max</span>(muse_sub$timecest), <span class="dt">y =</span> <span class="ot">Inf</span>,
+                    <span class="dt">label =</span> <span class="st">&quot;FP2 channel&quot;</span>, <span class="dt">vjust=</span><span class="dv">1</span>, <span class="dt">hjust=</span><span class="dv">1</span>)</code></pre></div>
+<p><img src="data:image/png;base64,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" title alt style="display: block; margin: auto;" /></p>
+<p>The data frame <code>muse_sub</code> is returned as output of the <code>read_eeg</code> function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">return</span>(muse_sub)</code></pre></div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
