@@ -19,6 +19,9 @@
 
 package com.marand.thinkmed.medications;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * @author Mitja Lapajne
  */
@@ -26,7 +29,13 @@ public enum MedicationAdditionalInstructionEnum
 {
   HEPARIN_05,
   HEPARIN_1,
-  ADJUST_TO_FLUID_BALANCE;
+  ADJUST_TO_FLUID_BALANCE,
+  BEFORE_MEAL,
+  AFTER_MEAL;
+
+  public static final Set<MedicationAdditionalInstructionEnum> HEPARIN = EnumSet.of(HEPARIN_05, HEPARIN_1);
+  public static final Set<MedicationAdditionalInstructionEnum> APPLICATION_PRECONDITION =
+      EnumSet.of(BEFORE_MEAL, AFTER_MEAL);
 
   public static String getFullString(final MedicationAdditionalInstructionEnum additionalInstructionEnum)
   {

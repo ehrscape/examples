@@ -1,0 +1,19 @@
+<div>
+    <button type="button"
+            title="{{::'confirm.and.create.new.supply' | tmDictionaryTermFilter}}"
+            data-ng-click="positionFormDialog($event); maskData.showResupplyForm = !maskData.showResupplyForm;"
+            class="btn btn-default grid_chooser_btn supply_action_btn icon-confirm_and_extend"
+            ng-if="dataItem.supplyInDays && dataItem.taskType !== 'DISPENSE_MEDICATION'">
+    </button>
+    <button type="button"
+            title="{{::'confirm' | tmDictionaryTermFilter}}"
+            data-ng-click="confirmTask()"
+            data-ng-disabled="maskData.disabled"
+            data-ng-if="!dataItem.supplyInDays || dataItem.taskType === 'DISPENSE_MEDICATION'"
+            class="btn btn-default grid_chooser_btn supply_action_btn icon-confirm">
+    </button>
+    <div ng-if="maskData.showResupplyForm">
+        <resupply-form item="dataItem" form-position="maskData.formPosition" form-mode="1"
+                       show-resupply-form="maskData.showResupplyForm"></resupply-form>
+    </div>
+</div>

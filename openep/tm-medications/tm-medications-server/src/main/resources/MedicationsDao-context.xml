@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+<?xml version="1.0" encoding="UTF-8"?><!--
   ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
   ~
   ~ This file is part of Think!Med Clinical Medication Management.
@@ -19,22 +18,26 @@
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <!-- DAOs-->
 
     <bean id="medicationsDao" class="com.marand.thinkmed.medications.dao.hibernate.HibernateMedicationsDao">
         <property name="sessionFactory" ref="hibernateSessionFactory"/>
         <property name="catalogDao" ref="catalogDao"/>
-        <property name="catalogMapper" ref="catalogIdentityDoMapper"/>
         <property name="doseFormDtoMapper" ref="doseFormDtoMapper"/>
         <property name="medicationsBo" ref="medicationsBo"/>
         <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
     </bean>
 
-    <bean id="ehrMedicationsDao" class="com.marand.thinkmed.medications.dao.openehr.OpenEhrMedicationsDao">
-        <property name="ehrSession" ref="ehrSession"/>
-        <property name="catalogDao" ref="catalogDao"/>
+    <bean id="medicationsOpenEhrDao" class="com.marand.thinkmed.medications.dao.openehr.MedicationsOpenEhrDao"/>
+
+    <bean id="medicationsValueHolder" class="com.marand.thinkmed.medications.valueholder.MedicationsValueHolder" parent="valueHolder">
+        <property name="medicationsDao" ref="medicationsDao"/>
+    </bean>
+
+    <bean id="medicationRoutesValueHolder" class="com.marand.thinkmed.medications.valueholder.MedicationRoutesValueHolder" parent="valueHolder">
+        <property name="medicationsDao" ref="medicationsDao"/>
     </bean>
 
     <!-- Mappers -->

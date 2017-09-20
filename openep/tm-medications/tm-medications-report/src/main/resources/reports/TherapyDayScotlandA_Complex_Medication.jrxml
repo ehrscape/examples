@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.2.2.final using JasperReports Library version 6.2.2  -->
+<!-- 2016-05-24T10:13:01 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TherapyDayA_Complex_Medication" pageWidth="786" pageHeight="539" orientation="Landscape" columnWidth="786" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="com.marand.ispek.common.Dictionary" whenResourceMissingType="Key" uuid="8d713aa8-1f3a-4536-a167-162361f93792">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<template><![CDATA[$P{initData}.getStylesDir() + "TherapyDay_Styles.jrtx"]]></template>
+	<parameter name="initData" class="com.marand.ispek.print.jasperreports.IspekJasperReportInitData" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.ispek.print.jasperreports.SampleIspekJRDataSourceFactory.createInitData()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="therapyConsecutiveDay" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["99"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="baselineInfusionDisplay" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="medication" class="com.marand.thinkmed.medications.dto.MedicationDto">
+		<fieldDescription><![CDATA[medication]]></fieldDescription>
+	</field>
+	<field name="quantityDisplay" class="java.lang.String">
+		<fieldDescription><![CDATA[quantityDisplay]]></fieldDescription>
+	</field>
+	<variable name="medicationElement" class="java.lang.Boolean">
+		<variableExpression><![CDATA[$F{medication}.getMedicationType() != com.marand.thinkmed.medications.MedicationTypeEnum.SOLUTION]]></variableExpression>
+	</variable>
+	<detail>
+		<band height="16">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="dataNormal" stretchType="RelativeToBandHeight" x="228" y="1" width="60" height="14" uuid="3e15d5e9-c76f-4716-850b-15cec1b3d74f"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="1" rightPadding="2"/>
+				<textElement>
+					<font isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{quantityDisplay}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="dataCenter" stretchType="RelativeToBandHeight" isPrintRepeatedValues="false" x="1" y="1" width="32" height="14" isPrintInFirstWholeBand="true" uuid="51465f61-9416-45cb-98cc-7bacb5a9f215"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="1" rightPadding="2"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$P{therapyConsecutiveDay}
++ ($P{baselineInfusionDisplay} == null || $P{baselineInfusionDisplay}.isEmpty()
+    ? ""
+    : '\n' + $P{baselineInfusionDisplay})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="data" stretchType="RelativeToBandHeight" x="33" y="1" width="195" height="14" uuid="52c85481-cb61-4094-85ec-1527142e486c"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="1" rightPadding="2"/>
+				<textElement markup="html">
+					<font isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getMedicationDisplay($F{medication})]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement positionType="FixRelativeToBottom" x="33" y="15" width="252" height="1" uuid="a49e1d60-9925-4401-be3c-de59155c5813"/>
+				<graphicElement>
+					<pen lineWidth="0.25" lineColor="#666666"/>
+				</graphicElement>
+			</line>
+		</band>
+	</detail>
+</jasperReport>

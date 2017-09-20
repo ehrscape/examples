@@ -20,11 +20,13 @@
 package com.marand.thinkmed.medications.mapper;
 
 import java.util.ArrayList;
+import javax.annotation.Nonnull;
 
+import com.google.common.base.Preconditions;
 import com.marand.openehr.medications.tdo.MedicationActionAction;
 import com.marand.openehr.medications.tdo.MedicationAdministrationComposition;
-
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction;
+import com.marand.thinkmed.medications.business.util.MedicationsEhrUtils;
 
 /**
  * @author Klavdij Lapajne
@@ -36,20 +38,24 @@ public class InstructionToAdministrationMapper
   }
 
   public static void map(
-      final MedicationInstructionInstruction instruction,
-      final MedicationAdministrationComposition administrationComposition)
+      @Nonnull final MedicationInstructionInstruction instruction,
+      @Nonnull final MedicationAdministrationComposition administrationComposition)
   {
-    administrationComposition.setMedicationDetail(new MedicationAdministrationComposition.MedicationDetailSection());
-    administrationComposition.getMedicationDetail().setMedicationAction(new ArrayList<MedicationActionAction>());
+    Preconditions.checkNotNull(instruction, "instruction must not be null");
+    Preconditions.checkNotNull(administrationComposition, "administrationComposition must not be null");
 
-    for (final MedicationInstructionInstruction.OrderActivity orderActivity : instruction.getOrder())
-    {
-      final MedicationActionAction medicationAction = new MedicationActionAction();
-      medicationAction.setMedicine(orderActivity.getMedicine());
-      medicationAction.setIngredientsAndForm(orderActivity.getIngredientsAndForm());
-      medicationAction.setStructuredDose(orderActivity.getStructuredDose());
-      medicationAction.setAdministrationDetails(orderActivity.getAdministrationDetails());
-      administrationComposition.getMedicationDetail().getMedicationAction().add(medicationAction);
-    }
+    administrationComposition.setMedicationDetail(new MedicationAdministrationComposition.MedicationDetailSection());
+    administrationComposition.getMedicationDetail().setMedicationAction(new ArrayList<>());
+
+    final MedicationInstructionInstruction.OrderActivity orderActivity =
+        MedicationsEhrUtils.getRepresentingOrderActivity(instruction);
+
+    final MedicationActionAction medicationAction = new MedicationActionAction();
+    medicationAction.setMedicine(orderActivity.getMedicine());
+    medicationAction.setIngredientsAndForm(orderActivity.getIngredientsAndForm());
+    medicationAction.setStructuredDose(orderActivity.getStructuredDose()); //is overriden by actual dose (except for infusions)
+    medicationAction.setAdministrationDetails(orderActivity.getAdministrationDetails());
+
+    administrationComposition.getMedicationDetail().getMedicationAction().add(medicationAction);
   }
 }

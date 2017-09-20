@@ -20,7 +20,7 @@
 package com.marand.thinkmed.medications.dto;
 
 import com.marand.maf.core.data.object.NamedIdentityDto;
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.JsonSerializable;
 import com.marand.thinkmed.medications.MedicationRouteTypeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -30,6 +30,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class MedicationRouteDto extends NamedIdentityDto implements JsonSerializable
 {
   private MedicationRouteTypeEnum type;
+  private boolean unlicensedRoute;
+  private BnfMaximumDto bnfMaximumDto;
+  private boolean discretionary;
 
   public MedicationRouteTypeEnum getType()
   {
@@ -41,9 +44,44 @@ public class MedicationRouteDto extends NamedIdentityDto implements JsonSerializ
     this.type = type;
   }
 
+  public boolean isUnlicensedRoute()
+  {
+    return unlicensedRoute;
+  }
+
+  public void setUnlicensedRoute(final boolean unlicensedRoute)
+  {
+    this.unlicensedRoute = unlicensedRoute;
+  }
+
+  public BnfMaximumDto getBnfMaximumDto()
+  {
+    return bnfMaximumDto;
+  }
+
+  public void setBnfMaximumDto(final BnfMaximumDto bnfMaximumDto)
+  {
+    this.bnfMaximumDto = bnfMaximumDto;
+  }
+
+  public boolean isDiscretionary()
+  {
+    return discretionary;
+  }
+
+  public void setDiscretionary(final boolean discretionary)
+  {
+    this.discretionary = discretionary;
+  }
+
   @Override
   protected void appendToString(final ToStringBuilder tsb)
   {
-    tsb.append("type", type);
+    tsb
+        .append("type", type)
+        .append("unlicensedRoute", unlicensedRoute)
+        .append("bnfMaximumDto", bnfMaximumDto)
+        .append("discretionary", discretionary)
+    ;
   }
 }

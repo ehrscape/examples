@@ -19,6 +19,9 @@
 
 package com.marand.thinkmed.medications.dto;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.marand.thinkmed.medications.MedicationOrderFormType;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -87,6 +90,24 @@ public abstract class SimpleTherapyDto extends TherapyDto
   public void setQuantityDisplay(final String quantityDisplay)
   {
     this.quantityDisplay = quantityDisplay;
+  }
+
+  @Override
+  public boolean isNormalInfusion()
+  {
+    return false;
+  }
+
+  @Override
+  public List<MedicationDto> getMedications()
+  {
+    return Collections.singletonList(medication);
+  }
+
+  @Override
+  public Long getMainMedicationId()
+  {
+    return medication == null ? null : medication.getId();
   }
 
   @Override

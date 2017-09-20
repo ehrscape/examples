@@ -27,17 +27,20 @@ import com.marand.openehr.medications.tdo.AdministrationDetailsCluster;
 import com.marand.openehr.medications.tdo.IngredientsAndFormCluster;
 import com.marand.openehr.medications.tdo.MedicationActionAction;
 import com.marand.openehr.medications.tdo.MedicationAdministrationComposition;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster.TimingCluster;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster.TimingCluster.DayOfWeek;
 import com.marand.openehr.medications.tdo.MedicationOrderComposition;
 import com.marand.openehr.medications.tdo.StructuredDoseCluster;
 import com.marand.openehr.util.DataValueUtils;
-import com.marand.thinkmed.api.organization.data.KnownClinic;
+import com.marand.thinkehr.util.ConversionUtils;
 import com.marand.thinkmed.medications.AdministrationTypeEnum;
 import com.marand.thinkmed.medications.DosingFrequencyTypeEnum;
 import com.marand.thinkmed.medications.MedicationActionEnum;
-import com.marand.thinkmed.medications.business.impl.MedicationsEhrUtils;
+import com.marand.thinkmed.medications.business.util.MedicationsEhrUtils;
 import com.marand.thinkmed.medications.dto.RoundsIntervalDto;
 import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
 import org.openehr.jaxb.rm.DvCount;
 import org.openehr.jaxb.rm.DvIdentifier;
 import org.openehr.jaxb.rm.DvText;
@@ -53,10 +56,6 @@ import static com.marand.openehr.medications.tdo.AdministrationDetailsCluster.In
 import static com.marand.openehr.medications.tdo.IngredientsAndFormCluster.IngredientCluster;
 import static com.marand.openehr.medications.tdo.IngredientsAndFormCluster.IngredientCluster.IngredientQuantityCluster;
 import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster.TimingCluster;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster.TimingCluster.DayOfWeek;
 
 /**
  * @author Mitja Lapajne
@@ -178,7 +177,7 @@ public class MedicationsTestUtils
       final String quantityNumeratorUnit,
       final Double quantityDenominator,
       final String quantityDenominatorUnit,
-      final String routeCode,
+      final Long routeId,
       final String routeName,
       final String doseFormCode,
       final String doseFormName)
@@ -190,7 +189,7 @@ public class MedicationsTestUtils
     }
 
     final AdministrationDetailsCluster medicationAdministration = new AdministrationDetailsCluster();
-    medicationAdministration.setRoute(Collections.singletonList(DataValueUtils.getLocalCodedText(routeCode, routeName)));
+    medicationAdministration.setRoute(Collections.singletonList(DataValueUtils.getLocalCodedText(String.valueOf(routeId), routeName)));
     orderActivity.setAdministrationDetails(medicationAdministration);
     final StructuredDoseCluster doseAmount = new StructuredDoseCluster();
     orderActivity.setStructuredDose(doseAmount);
@@ -233,6 +232,21 @@ public class MedicationsTestUtils
       final Integer daysFrequency,
       final DayOfWeek... daysOfWeek)
   {
+    return buildMedicationTimingCluster(
+        dailyCount, doseInterval, numberOfAdministration, timingDescription, start, stop, daysFrequency, false, daysOfWeek);
+  }
+
+  public static MedicationTimingCluster buildMedicationTimingCluster(
+      final Long dailyCount,
+      final Integer doseInterval,
+      final Integer numberOfAdministration,
+      final DosingFrequencyTypeEnum timingDescription,
+      final DateTime start,
+      final DateTime stop,
+      final Integer daysFrequency,
+      final boolean variableDose,
+      final DayOfWeek... daysOfWeek)
+  {
     final MedicationTimingCluster medicationTiming = new MedicationTimingCluster();
     final TimingCluster timing = new TimingCluster();
     medicationTiming.setTiming(timing);
@@ -241,10 +255,52 @@ public class MedicationsTestUtils
       final DvCount count = new DvCount();
       count.setMagnitude(dailyCount);
       timing.setDailyCount(count);
+      if (!variableDose)
+      {
+        if (dailyCount == 1)
+        {
+          timing.getTime().add(buildDvTime(start.getHourOfDay(), start.getMinuteOfHour()));
+        }
+        else if (dailyCount == 2)
+        {
+          timing.getTime().add(buildDvTime(8, 0));
+          timing.getTime().add(buildDvTime(20, 0));
+        }
+        else if (dailyCount == 3)
+        {
+          timing.getTime().add(buildDvTime(8, 0));
+          timing.getTime().add(buildDvTime(13, 0));
+          timing.getTime().add(buildDvTime(20, 0));
+        }
+        else if (dailyCount == 4)
+        {
+          timing.getTime().add(buildDvTime(8, 0));
+          timing.getTime().add(buildDvTime(13, 0));
+          timing.getTime().add(buildDvTime(17, 0));
+          timing.getTime().add(buildDvTime(21, 0));
+        }
+        else if (dailyCount == 5)
+        {
+          timing.getTime().add(buildDvTime(0, 0));
+          timing.getTime().add(buildDvTime(8, 0));
+          timing.getTime().add(buildDvTime(12, 0));
+          timing.getTime().add(buildDvTime(16, 0));
+          timing.getTime().add(buildDvTime(20, 0));
+        }
+        else
+        {
+          throw new IllegalArgumentException("Test data not set for daily count: " + dailyCount);
+        }
+      }
     }
     if (doseInterval != null)
     {
       timing.setInterval(DataValueUtils.getDuration(0, 0, 0, doseInterval, 0, 0));
+      if (!variableDose)
+      {
+        final HourMinuteDto hourMinuteDto = new HourMinuteDto(start.getHourOfDay(), start.getMinuteOfHour());
+        timing.getTime().add(buildDvTime(hourMinuteDto));
+      }
     }
     if (numberOfAdministration != null)
     {
@@ -255,6 +311,29 @@ public class MedicationsTestUtils
     if (timingDescription != null)
     {
       medicationTiming.setTimingDescription(DataValueUtils.getText(DosingFrequencyTypeEnum.getFullString(timingDescription)));
+     if (!variableDose)
+     {
+       if (timingDescription == DosingFrequencyTypeEnum.MORNING)
+       {
+         timing.getTime().add(buildDvTime(8, 0));
+       }
+       else if (timingDescription == DosingFrequencyTypeEnum.EVENING)
+       {
+         timing.getTime().add(buildDvTime(21, 0));
+       }
+       else if (timingDescription == DosingFrequencyTypeEnum.NOON)
+       {
+         timing.getTime().add(buildDvTime(12, 0));
+       }
+       else if (timingDescription == DosingFrequencyTypeEnum.ONCE_THEN_EX)
+       {
+         timing.getTime().add(buildDvTime(start.getHourOfDay(), start.getMinuteOfHour()));
+       }
+       else
+       {
+         throw new IllegalArgumentException("Test data not set for timingDescription: " + timingDescription);
+       }
+     }
     }
     if (daysOfWeek != null)
     {
@@ -309,10 +388,13 @@ public class MedicationsTestUtils
     composition.setMedicationDetail(medicationDetail);
     composition.getMedicationDetail().getMedicationAction().add(new MedicationActionAction());
 
+
     final ObjectVersionId uid = new ObjectVersionId();
     uid.setValue(uidValue);
     composition.setUid(uid);
     final MedicationActionAction medicationActionAction = composition.getMedicationDetail().getMedicationAction().get(0);
+    final AdministrationDetailsCluster administrationDetails = new AdministrationDetailsCluster();
+    medicationActionAction.setAdministrationDetails(administrationDetails);
     if (actionTime != null)
     {
       medicationActionAction.setTime(DataValueUtils.getDateTime(actionTime));
@@ -331,8 +413,7 @@ public class MedicationsTestUtils
       composition.setComposer(composerPartyIdentified);
     }
 
-    medicationActionAction.setStructuredDose(
-        MedicationsEhrUtils.buildStructuredDose(doseNumerator, doseNumeratorUnit, null, null, null));
+    medicationActionAction.setStructuredDose(MedicationsEhrUtils.buildStructuredDose(doseNumerator, doseNumeratorUnit));
     medicationActionAction.setIsmTransition(new IsmTransition());
     medicationActionAction.getIsmTransition().setCareflowStep(medicationActionEnum.getCareflowStep());
     medicationActionAction.getIsmTransition().setCurrentState(medicationActionEnum.getCurrentState());
@@ -342,36 +423,18 @@ public class MedicationsTestUtils
     }
     medicationActionAction.getReason().get(0).setValue(AdministrationTypeEnum.getFullString(administrationTypeEnum));
     medicationActionAction.setComment(DataValueUtils.getText(comment));
+    medicationActionAction.setAdministrationDetails(new AdministrationDetailsCluster());
+
     return composition;
-  }
-
-  public static class TestClinicProvider implements KnownClinic.ValuesProvider
-  {
-    @Override
-    public KnownClinic[] allValues()
-    {
-      return TestingKnownClinicEnum.values();
-    }
-  }
-
-  public enum TestingKnownClinicEnum implements KnownClinic
-  {
-    PEK,
-    KOOKIT;
-
-    @Override
-    public String code()
-    {
-      return null;
-    }
   }
 
   public static DvTime buildDvTime(final HourMinuteDto hourMinute)
   {
-    final DvTime dvTime = new DvTime();
-    final String isoTime =
-        ISODateTimeFormat.time().print(new DateTime(2000, 1, 1, hourMinute.getHour(), hourMinute.getMinute()));
-    dvTime.setValue(isoTime);
-    return dvTime;
+    return buildDvTime(hourMinute.getHour(), hourMinute.getMinute());
+  }
+
+  public static DvTime buildDvTime(final int hour, final int minute)
+  {
+    return ConversionUtils.toDvTime(new DateTime(2000, 1, 1, hour, minute).toLocalTime());
   }
 }

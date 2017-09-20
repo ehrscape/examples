@@ -22,8 +22,8 @@ package com.marand.thinkmed.medications.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.marand.maf.core.JsonSerializable;
-import com.marand.maf.core.data.object.VersionalIdentityDo;
+import com.marand.thinkmed.api.core.JsonSerializable;
+import com.marand.maf.core.data.object.VersionalIdentityDto;
 import com.marand.thinkmed.medications.TherapyTemplateTypeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -31,13 +31,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * @author Mitja Lapajne
  */
 
-public class TherapyTemplateDto extends VersionalIdentityDo implements JsonSerializable
+public class TherapyTemplateDto extends VersionalIdentityDto implements JsonSerializable
 {
   private String name;
   private TherapyTemplateTypeEnum type;
-  private Long userId;
-  private Long departmentId;
-  private Long patientId;
+  private String userId;
+  private String careProviderId;
+  private String patientId;
   private List<TherapyTemplateElementDto> templateElements = new ArrayList<>();
 
   public String getName()
@@ -60,32 +60,32 @@ public class TherapyTemplateDto extends VersionalIdentityDo implements JsonSeria
     this.type = type;
   }
 
-  public Long getUserId()
+  public String getUserId()
   {
     return userId;
   }
 
-  public void setUserId(final Long userId)
+  public void setUserId(final String userId)
   {
     this.userId = userId;
   }
 
-  public Long getDepartmentId()
+  public String getCareProviderId()
   {
-    return departmentId;
+    return careProviderId;
   }
 
-  public void setDepartmentId(final Long departmentId)
+  public void setCareProviderId(final String careProviderId)
   {
-    this.departmentId = departmentId;
+    this.careProviderId = careProviderId;
   }
 
-  public Long getPatientId()
+  public String getPatientId()
   {
     return patientId;
   }
 
-  public void setPatientId(final Long patientId)
+  public void setPatientId(final String patientId)
   {
     this.patientId = patientId;
   }
@@ -108,7 +108,7 @@ public class TherapyTemplateDto extends VersionalIdentityDo implements JsonSeria
         .append("name", name)
         .append("type", type)
         .append("userId", userId)
-        .append("organizationalEntityId", departmentId)
+        .append("careProviderId", careProviderId)
         .append("patientId", patientId)
         .append("templateElements", templateElements);
   }

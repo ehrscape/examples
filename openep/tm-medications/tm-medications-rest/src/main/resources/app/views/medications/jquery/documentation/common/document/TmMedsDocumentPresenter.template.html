@@ -1,0 +1,18 @@
+<div class="document-presenter" ng-switch="vm.getDocument().getDocumentType()" data-tm-flex-layout="column"
+     data-justify-content="flex-start" data-align-items="stretch">
+    <tm-meds-eer-prescription-document class="therapy-document-container" ng-switch-when="EER_PRESCRIPTION"
+                                       data-tm-flex-item="0 0 auto" data-document="vm.getDocument()"
+                                       data-read-only="vm.isReadOnly()">
+    </tm-meds-eer-prescription-document>
+    <tm-meds-mental-health-document class="therapy-document-container" ng-switch-when="T3"
+                                       data-tm-flex-item="0 0 auto" data-document="vm.getDocument()">
+    </tm-meds-mental-health-document>
+    <tm-meds-mental-health-document class="therapy-document-container" ng-switch-when="T2"
+                                       data-tm-flex-item="0 0 auto" data-document="vm.getDocument()">
+    </tm-meds-mental-health-document>
+    <tm-meds-external-eer-prescription-document class="therapy-document-container" ng-switch-when="EXTERNAL_EER_PRESCRIPTION"
+                                                data-tm-flex-item="0 0 auto" data-document="vm.getDocument()">
+    </tm-meds-external-eer-prescription-document>
+    <div ng-switch-default class="therapy-document-container">Document type not supported.
+    </div>
+</div>

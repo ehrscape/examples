@@ -3,7 +3,7 @@ package com.marand.thinkmed.fdb.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.JsonSerializable;
 
 /**
  * @author Mitja Lapajne
@@ -12,9 +12,10 @@ public class FdbScreeningDto implements JsonSerializable
 {
   private List<Integer> ScreeningModules = new ArrayList<>();
   private FdbPatientDto PatientInformation;
-  private List<FdbTerminologyDto> Allergens = new ArrayList<>();
-  private List<FdbTerminologyDto> CurrentDrugs = new ArrayList<>();
-  private List<FdbTerminologyDto> ProspectiveDrugs = new ArrayList<>();
+  private List<FdbTerminologyDto> Conditions = new ArrayList<>();
+  private List<FdbTerminologyWithConceptDto> Allergens = new ArrayList<>();
+  private List<FdbTerminologyWithConceptDto> CurrentDrugs = new ArrayList<>();
+  private List<FdbTerminologyWithConceptDto> ProspectiveDrugs = new ArrayList<>();
   private boolean CheckAllDrugs;
   private boolean ValidateInput;
   private FdbNameValue MinimumConditionAlertSeverity;
@@ -40,32 +41,42 @@ public class FdbScreeningDto implements JsonSerializable
     this.PatientInformation = PatientInformation;
   }
 
-  public List<FdbTerminologyDto> getAllergens()
+  public List<FdbTerminologyDto> getConditions()
+  {
+    return Conditions;
+  }
+
+  public void setConditions(final List<FdbTerminologyDto> conditions)
+  {
+    Conditions = conditions;
+  }
+
+  public List<FdbTerminologyWithConceptDto> getAllergens()
   {
     return Allergens;
   }
 
-  public void setAllergens(final List<FdbTerminologyDto> allergens)
+  public void setAllergens(final List<FdbTerminologyWithConceptDto> allergens)
   {
     Allergens = allergens;
   }
 
-  public List<FdbTerminologyDto> getCurrentDrugs()
+  public List<FdbTerminologyWithConceptDto> getCurrentDrugs()
   {
     return CurrentDrugs;
   }
 
-  public void setCurrentDrugs(final List<FdbTerminologyDto> CurrentDrugs)
+  public void setCurrentDrugs(final List<FdbTerminologyWithConceptDto> CurrentDrugs)
   {
     this.CurrentDrugs = CurrentDrugs;
   }
 
-  public List<FdbTerminologyDto> getProspectiveDrugs()
+  public List<FdbTerminologyWithConceptDto> getProspectiveDrugs()
   {
     return ProspectiveDrugs;
   }
 
-  public void setProspectiveDrugs(final List<FdbTerminologyDto> ProspectiveDrugs)
+  public void setProspectiveDrugs(final List<FdbTerminologyWithConceptDto> ProspectiveDrugs)
   {
     this.ProspectiveDrugs = ProspectiveDrugs;
   }

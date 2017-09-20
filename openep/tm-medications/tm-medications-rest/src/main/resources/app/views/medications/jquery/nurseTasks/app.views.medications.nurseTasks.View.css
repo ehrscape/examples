@@ -1,0 +1,682 @@
+/**************************************/
+@charset "UTF-8";
+
+.v-nurse-task-list-view .TextLabel
+{
+  color: #848998;
+  line-height: 20px;
+}
+
+.v-nurse-task-list-view .TextLabel.MedicationLabel
+{
+  color: #7891D8;
+}
+
+.v-nurse-task-list-view [data-icon]:before {
+  font-family: "data-table" !important;
+  content: attr(data-icon);
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.v-nurse-task-list-view [class^="icon-"]:before,
+.v-nurse-task-list-view [class*=" icon-"]:before {
+  font-family: "data-table" !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.v-nurse-task-list-view .icon-filter:before {
+  content: "b";
+}
+.v-nurse-task-list-view .icon-collapse:before {
+  content: "a";
+}
+.v-nurse-task-list-view .icon-expand:before {
+  content: "c";
+}
+.v-nurse-task-list-view .icon-close:before {
+  content: "d";
+}
+.v-nurse-task-list-view .icon-up:before {
+  content: "e";
+}
+.v-nurse-task-list-view .icon-down:before {
+  content: "f";
+}
+.v-nurse-task-list-view .icon-sort:before {
+  content: "g";
+}
+.v-nurse-task-list-view .icon-done:before {
+  content: "h";
+}
+.v-nurse-task-list-view .icon-done-all:before {
+  content: "i";
+}
+.v-nurse-task-list-view .icon-search:before {
+  content: "j";
+}
+.v-nurse-task-list-view .icon-pin:before {
+  content: "k";
+}
+.v-nurse-task-list-view .icon-add:before {
+  content: "m";
+}
+.v-nurse-task-list-view .icon-right:before {
+  content: "l";
+}
+.v-nurse-task-list-view .icon-left:before {
+  content: "n";
+}
+/**************************************/
+
+
+.v-nurse-task-list-view .icon-supply  {
+  background-image: url('${context.path}/resources/images/icons/supply_24.png') !important;
+  border-radius: 7px 0 0 7px;
+  border: 1px solid #DCDCDC !important;
+}
+.v-nurse-task-list-view .icon-supply.selected, .v-nurse-task-list-view .icon-supply:hover,
+.v-nurse-task-list-view .icon-supply:focus, .v-nurse-task-list-view .icon-supply:active {
+  background-image: url('${context.path}/resources/images/icons/supply_on_24.png') !important;
+  background-color: #6C6B6C !important;
+  outline: none;
+}
+
+.v-nurse-task-list-view .icon-dispense {
+  background-image: url('${context.path}/resources/images/icons/dispense_24.png') !important;
+  border-radius: 0 0 0 0;
+  border: 1px solid #DCDCDC !important;
+  border-left: 0 !important;
+}
+
+.v-nurse-task-list-view .icon-dispense.selected, .v-nurse-task-list-view .icon-dispense:hover,
+.v-nurse-task-list-view .icon-dispense:focus, .v-nurse-task-list-view .icon-dispense:active {
+  background-image: url('${context.path}/resources/images/icons/dispense_on_24.png') !important;
+  background-color: #6C6B6C !important;
+  outline: none;
+}
+
+.v-nurse-task-list-view .icon-pharmacist {
+  background-image: url('${context.path}/resources/images/icons/mortar_24.png') !important;
+  border-radius: 0 0 0 0;
+  border-top: 1px solid #DCDCDC !important;
+  border-bottom: 1px solid #DCDCDC !important;
+}
+
+.v-nurse-task-list-view .icon-pharmacist.selected, .v-nurse-task-list-view .icon-pharmacist:hover,
+.v-nurse-task-list-view .icon-pharmacist:focus, .v-nurse-task-list-view .icon-pharmacist:active {
+  background-image: url('${context.path}/resources/images/icons/mortar_on_24.png') !important;
+  background-color: #6C6B6C !important;
+  outline: none;
+}
+
+.v-nurse-task-list-view .icon-perfusion-syringes {
+  background-image: url('${context.path}/resources/images/icons/catheter_24.png') !important;
+  border-radius: 0 7px 7px 0;
+  border: 1px solid #DCDCDC !important;
+}
+
+.v-nurse-task-list-view .icon-perfusion-syringes.selected, .v-nurse-task-list-view .icon-perfusion-syringes:hover,
+.v-nurse-task-list-view .icon-perfusion-syringes:focus, .v-nurse-task-list-view .icon-perfusion-syringes:active {
+  background-image: url('${context.path}/resources/images/icons/catheter_white_24.png') !important;
+  background-color: #6C6B6C !important;
+  outline: none;
+}
+
+
+.v-nurse-task-list-view .icon-confirm_and_extend {
+  background-image: url('${context.path}/resources/images/icons/confirmAndExtend_24.png') !important;
+}
+
+.v-nurse-task-list-view .icon-confirm {
+  background-image: url('${context.path}/resources/images/icons/checkbox_Checked_24.png') !important;
+}
+
+.v-nurse-task-list-view .supply_action_btn {
+  background-position: center center;
+  padding: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-height: 24px;
+  min-width: 24px;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.v-nurse-task-list-view .icon-more-dropdown {
+  background-image: url('${context.path}/resources/images/icons/more_16.png') !important;
+  background-position: center center;
+  padding: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-height: 16px;
+  min-width: 16px;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+
+.v-nurse-task-list-view .icon-print {
+  background-image: url('${context.path}/resources/images/icons/print_24.png') !important;
+  background-position: center center;
+  padding: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.v-nurse-task-list-view .icon-print-finish {
+  background-image: url('${context.path}/resources/images/icons/checkbox_Checked_24.png ') !important;
+  background-position: center center;
+  padding: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.v-nurse-task-list-view .textColorYellow
+{
+  color: #FDA61E;
+}
+
+.v-nurse-task-list-view .textColorGreen
+{
+  color: #01D54B;
+}
+
+.v-nurse-task-list-view .textColorRed
+{
+  color: #BE1E2D;
+}
+
+.v-nurse-task-list-view .grid_chooser_btn {
+  width: 34px;
+  height: 34px;
+  float: left;
+  border: 0;
+  /*min-width: 36px !important;*/
+  /*min-height: 35px !important;*/
+
+  background-repeat: no-repeat;
+}
+
+.v-nurse-task-list-view .headerSection {
+  height: 40px;
+}
+.v-nurse-task-list-view .nurse-task-list-controller {
+  height: 100%;
+  width: 100%;
+  right: 0;
+  top: 0;
+}
+
+
+
+/*****************************************************/
+.v-nurse-task-list-view .fieldlist {
+  margin: 0 0 -1em;
+  padding: 0;
+}
+
+.v-nurse-task-list-view .fieldlist li {
+  list-style: none;
+  padding-bottom: 1em;
+}
+/*****************************************************/
+
+.v-nurse-task-list-view .review-column > a {
+  text-align: center;
+}
+
+
+.verticalAlignCenter {
+  text-align: center;
+}
+
+.v-nurse-task-list-view textarea:focus, .v-nurse-task-list-view input[type="text"]:focus,
+.v-nurse-task-list-view input[type="password"]:focus, .v-nurse-task-list-view input[type="datetime"]:focus,
+.v-nurse-task-list-view input[type="datetime-local"]:focus, .v-nurse-task-list-view input[type="date"]:focus,
+.v-nurse-task-list-view input[type="month"]:focus, .v-nurse-task-list-view input[type="time"]:focus,
+.v-nurse-task-list-view input[type="week"]:focus, .v-nurse-task-list-view input[type="number"]:focus,
+.v-nurse-task-list-view input[type="email"]:focus, .v-nurse-task-list-view input[type="url"]:focus,
+.v-nurse-task-list-view input[type="search"]:focus, .v-nurse-task-list-view input[type="tel"]:focus,
+.v-nurse-task-list-view input[type="color"]:focus, .v-nurse-task-list-view .uneditable-input:focus {
+  border: 1px transparent;
+  outline: 0;
+  outline: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+/************************/
+.v-nurse-task-list-view .therapyTextInput  {
+  margin-bottom: 0 !important;
+  width: 100px;
+  border-radius: 0 !important;
+
+}
+
+.v-nurse-task-list-view .therapyInput, .v-nurse-task-list-view .therapyInput:focus {
+  box-shadow: none !important;
+  border-top: 0 !important;
+  border-left: 0 !important;
+  border-bottom: 1px solid #ccc !important;
+  border-right: 0 !important;
+}
+
+
+.v-nurse-task-list-view .dt .dt-header .dt-header-cell {
+  color: #577DA0 !important;
+  background: white;
+  text-transform: uppercase;
+  line-height: 18px;
+  font-family: 'Segoe UI', 'Arial';
+  font-weight: normal;
+  font-size: 14px;
+}
+
+.v-nurse-task-list-view .dt .dt-cell,
+.v-nurse-task-list-view .dt .dt-header-cell {
+  overflow: visible;
+}
+
+.v-nurse-task-list-view .popupHeader {
+  font-weight: bold;
+  color: #61646D;
+  height: 30px;
+  border: none;
+  background: -webkit-linear-gradient(#D5EFFF, #D1EAF8);
+  background: -o-linear-gradient(#D5EFFF, #D1EAF8);
+  background: -moz-linear-gradient(#D5EFFF, #D1EAF8);
+  background: linear-gradient(#D5EFFF, #D1EAF8);
+}
+
+.v-nurse-task-list-view .inline {
+  display: inline;
+}
+
+.v-nurse-task-list-view .pointer {
+  cursor: pointer;
+}
+.v-nurse-task-list-view .inline {
+  display: inline;
+}
+.v-nurse-task-list-view .popupHeaderCloseBtn {
+  padding: 3px;
+}
+.v-nurse-task-list-view .popupContent {
+  margin: 10px 10px 20px 10px;
+}
+
+.v-nurse-task-list-view .moreDropDownContextMenu {
+  -webkit-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.35);
+  -moz-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.35);
+  position: absolute;
+  background: white;
+  z-index: 1;
+  height: 66px;
+}
+
+.v-nurse-task-list-view .dropdown.angular {
+  position: absolute;
+}
+
+.v-nurse-task-list-view .dropdown.angular .dropdown-menu {
+  min-width: initial;
+}
+
+.v-nurse-task-list-view .moreDropDownContextMenu > ul {
+  margin: 0 0 0 10px;
+}
+
+.v-nurse-task-list-view .moreDropDownContextMenu > ul > li {
+  list-style: none;
+  padding-top: 5px;
+  height: 33px;
+}
+
+
+
+.v-nurse-task-list-view .modalWindow {
+  -webkit-box-shadow: 0 2px 5px 0 rgba(0,0,0,0.35);
+  -moz-box-shadow: 0 2px 5px 0 rgba(0,0,0,0.35);
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.35);
+  margin-right: 5px;
+  position: absolute;
+  background: white;
+  z-index: 1;
+  height:210px;
+  width: 300px;
+  top: 30px;
+  left: 100px;
+}
+
+.v-nurse-task-list-view .dt.material {
+  height: 100%;
+}
+
+.v-nurse-task-list-view .dt .dt-body {
+  height: 100%;
+  width: 100% !important;
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.v-nurse-task-list-view .dt .dt-header {
+  width: 100% !important;
+}
+
+.v-nurse-task-list-view dt .dt-header .dt-header-cell.sortable .dt-header-cell-label {
+  color: #577DA0 !important;
+}
+
+.v-nurse-task-list-view .app-views-toolbar {
+  border-bottom: 0px;
+}
+
+.v-nurse-task-list-view .grid_chooser_btn[disabled] {
+  cursor: wait;
+}
+
+.v-nurse-task-list-view .btn.icon-more-dropdown:active {
+  box-shadow: none;
+}
+
+/* Perfusion Syringes */
+.v-nurse-task-list-view .nurse-task-list .content {
+  -webkit-overflow-scrolling: touch;
+}
+
+.v-nurse-task-list-view .nurse-task-list .header {
+  border-top: 1px solid #D3D3D3;
+  min-height: 30px;
+  -webkit-transition: padding-right 0.5s; /* Safari 3.1 to 6.0 */
+  transition: padding-right 0.25s;
+
+}
+
+.v-nurse-task-list-view .nurse-task-list .header,
+.v-nurse-task-list-view .nurse-task-list .content .request {
+  border-bottom: 1px solid #D3D3D3;
+}
+
+.v-nurse-task-list-view .nurse-task-list .row {
+  padding-left: 10px;
+  border-left: 5px solid transparent; /* match for urgent border */
+  margin: 0; /* bootstrap collide override */
+}
+
+.v-nurse-task-list-view .nurse-task-list .content .row.urgent {
+  border-left: 5px solid rgb(255, 0, 0);
+}
+
+.v-nurse-task-list-view .nurse-task-list .content .row .task.first {
+  border-top: 1px solid #D3D3D3;
+}
+
+.v-nurse-task-list-view .nurse-task-list .content .row.first .task.first {
+  border-top: 0;
+}
+
+.v-nurse-task-list-view .nurse-task-list .content .row.urgent.last {
+  border-bottom: 1px solid #D3D3D3;;
+}
+
+
+.v-nurse-task-list-view .nurse-task-list .column {
+  box-sizing: border-box;
+  /*border-right: 1px solid #D3D3D3; for testing purposes */
+}
+
+.v-nurse-task-list-view .nurse-task-list .column.status,
+.v-nurse-task-list-view .nurse-task-list .column.last {
+  border-right: none;
+}
+
+.v-nurse-task-list-view .nurse-task-list .column-content.urgent .TextData,
+.v-nurse-task-list-view .nurse-task-list .column-content.urgent .TextDataBold {
+  color: rgb(255, 0, 0);
+}
+
+.v-nurse-task-list-view .nurse-task-list .column-content {
+  margin: 5px;
+}
+
+.v-nurse-task-list-view .syringe-progress {
+  min-width: 35px;
+}
+
+.v-nurse-task-list-view .syringe-progress .progress-line,
+.v-nurse-task-list-view .syringe-progress .background-line {
+  border-radius: 5px 5px;
+  height: 6px;
+}
+
+.v-nurse-task-list-view .syringe-progress .background-line {
+  background: #EFEFF4;
+  margin: 5px;
+  width: 100%;
+  position: relative;
+}
+
+.v-nurse-task-list-view .syringe-progress.in-progress .progress-line {
+  position: absolute;
+  top: 0;
+}
+
+.v-nurse-task-list-view .syringe-progress.in-progress .progress-line {
+  background: #F59700;
+  width: 50%;
+}
+
+.v-nurse-task-list-view .syringe-progress.completed .progress-line {
+  background: #40C256;
+  width: 100%;
+}
+
+.v-nurse-task-list-view .syringe-progress .icon-syringe-progress {
+  width: 100% !important;
+  height: 16px !important;
+  position: absolute;
+  top: -5px;
+  background-image: url('${context.path}/resources/images/icons/catheter_yellow_16.png');
+  background-position: left !important;
+}
+
+.v-nurse-task-list-view .syringe-progress.in-progress .icon-syringe-progress {
+  background-image: url('${context.path}/resources/images/icons/catheter_orange_16.png');
+  background-position: center !important;
+}
+
+.v-nurse-task-list-view .syringe-progress.completed .icon-syringe-progress {
+  background-image: url('${context.path}/resources/images/icons/catheter_green_16.png');
+  background-position: right !important;
+}
+
+.v-nurse-task-list-view .syringe-overview .confirmed-label {
+  text-transform: uppercase;
+  color: #40C256;
+  margin: 5px;
+}
+
+.v-nurse-task-list-view .syringe-overview .confirmed-label p {
+  text-align: center;
+  margin: 0;
+  width: 100%;
+}
+
+.v-nurse-task-list-view .syringe-overview .control {
+  min-width: 200px;
+}
+
+/* based on common tm-button, should be inside a common area at one point */
+.v-nurse-task-list-view .btn-ios {
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  border-radius: 0px;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  background-image: none;
+  text-shadow: none;
+}
+
+/* ios style addition to btn */
+.v-nurse-task-list-view .btn-ios {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  border: 1px solid #2978CC;
+  background-color: #ffffff;
+  color: #2978CC;
+  min-width: auto;
+}
+
+.v-nurse-task-list-view .btn-ios.active {
+  color: #ffffff;
+  background-color: #2978CC;
+}
+
+
+.v-nurse-task-list-view .nurse-task-list .content .row.planned {
+  border-left: 5px solid #4A90E2;
+}
+
+
+.v-nurse-task-list-view .nurse-task-list .content .row.due {
+  border-left: 5px solid #FFDB4C;
+}
+
+
+.v-nurse-task-list-view .nurse-task-list .content .row.late {
+  border-left: 5px solid #FF0000;
+}
+
+.v-nurse-task-list-view .nurse-task-list-controller .headerSection .aplication-type-selector {
+  float: right;
+  margin-top: 5px;
+  margin-right: 20px;
+}
+
+.v-nurse-task-list-view .nurse-task-list .content .row-delimiter {
+  height: 1px;
+  background: #DCDCDC;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.v-nurse-task-list-view .nurse-task-list .content-loader {
+  text-align: center;
+  padding: .5rem 1.2rem;
+  vertical-align: top;
+  border-top: 0;
+  color: #61646D;
+  line-height: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* aplication type drop down */
+.v-nurse-task-list-view .down-arrow {
+  margin: 8px 0px 8px 8px;
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: top;
+  border-top: 4px solid #000;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
+}
+
+.v-nurse-task-list-view .selector-button {
+  padding: 5px;
+  cursor: pointer;
+  float: right;
+  padding-left: 15px;
+  padding-right: 15px;
+  min-width: 50px;
+}
+
+.v-nurse-task-list-view .selector-button:hover {
+  background-color: #e6e6e6;
+}
+.v-nurse-task-list-view .filter-body {
+  box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.35);
+  position: absolute;
+  background: white;
+  z-index: 1;
+  margin-top: 10px;
+  position: absolute;
+  z-index: 30;
+  background: white;
+  direction: ltr;
+  padding-right: 20px;
+}
+.v-nurse-task-list-view .disabled {
+  cursor: not-allowed;
+}
+.v-nurse-task-list-view .hide-check-image {
+  visibility: hidden
+}
+
+.v-nurse-task-list-view .aplication-type-selected {
+  height: 24px;
+  width: 24px;
+  border: 0px;
+  content: url('${context.path}/resources/images/icons/checkbox_Checked_24.png');
+}
+
+.app-views .TextHeading4 {
+  font-size: 18px;
+  line-height: 22px;
+  color: #577DA0;
+}
+
+.v-nurse-task-list-view .nurse-task-group-title {
+  color: #61646D;
+  font-weight: bold;
+  line-height: 18px;
+  margin: 6px 0 0 10px;
+  display: inline-block;
+}
+
+.v-nurse-task-list-view .nurse-task-column-header{
+  border-top: 1px solid #DCDCDC
+}
+
+
+

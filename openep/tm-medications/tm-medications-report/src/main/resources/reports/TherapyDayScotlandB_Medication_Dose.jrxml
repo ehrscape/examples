@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.2.2.final using JasperReports Library version 6.2.2  -->
+<!-- 2016-05-19T12:47:43 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TherapyDayB_Medication_Dose" pageWidth="786" pageHeight="539" orientation="Landscape" columnWidth="786" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="com.marand.ispek.common.Dictionary" whenResourceMissingType="Key" uuid="8d713aa8-1f3a-4536-a167-162361f93792">
+	<property name="ireport.zoom" value="1.6105100000000008"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<template><![CDATA[$P{initData}.getStylesDir() + "TherapyDay_Styles.jrtx"]]></template>
+	<parameter name="initData" class="com.marand.ispek.print.jasperreports.IspekJasperReportInitData" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.ispek.print.jasperreports.SampleIspekJRDataSourceFactory.createInitData()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="labelFieldDelimiter" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[": "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="order" class="com.marand.thinkmed.medications.dto.TherapyDto" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.thinkmed.medications.client.SampleMedicationsJRDataSourceFactory.createSimpleTherapyDto()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="therapyApplicationStartDate" class="java.util.Date" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.thinkmed.medications.client.SampleMedicationsJRDataSourceFactory.getTherapyApplicationStartDate()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="administrations" class="java.util.List" isForPrompting="false"/>
+	<parameter name="pharmacistsReviewState" class="com.marand.thinkmed.medications.dto.pharmacist.review.TherapyPharmacistReviewStatusEnum" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<detail>
+		<band height="20" splitType="Prevent">
+			<textField isStretchWithOverflow="true">
+				<reportElement style="smallLabel" stretchType="RelativeToBandHeight" x="0" y="0" width="72" height="20" isPrintWhenDetailOverflows="true" uuid="438357d5-5984-4b23-ab76-ea282484fae2"/>
+				<box>
+					<leftPen lineWidth="0.25" lineColor="#666666"/>
+					<rightPen lineWidth="0.25" lineColor="#666666"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getTherapyApplicationColumnValue($P{administrations}, $P{order}, $P{therapyApplicationStartDate}, 0, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement style="smallLabel" stretchType="RelativeToBandHeight" x="288" y="0" width="71" height="20" isPrintWhenDetailOverflows="true" uuid="bc45fcc9-1b8a-4162-a227-e047bef2cd5d"/>
+				<box>
+					<leftPen lineWidth="0.25" lineColor="#666666"/>
+					<rightPen lineWidth="0.25" lineColor="#666666"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getTherapyApplicationColumnValue($P{administrations}, $P{order}, $P{therapyApplicationStartDate}, 4, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement style="smallLabel" stretchType="RelativeToBandHeight" x="430" y="0" width="71" height="20" isPrintWhenDetailOverflows="true" uuid="d4a058dc-60c7-4f19-8879-632c4d8bbcb0"/>
+				<box>
+					<leftPen lineWidth="0.25" lineColor="#666666"/>
+					<rightPen lineWidth="0.25" lineColor="#666666"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getTherapyApplicationColumnValue($P{administrations}, $P{order}, $P{therapyApplicationStartDate}, 6, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement style="smallLabel" stretchType="RelativeToBandHeight" x="216" y="0" width="72" height="20" isPrintWhenDetailOverflows="true" uuid="56e6b826-c2a7-4933-85d6-9f9152c3b628"/>
+				<box>
+					<leftPen lineWidth="0.25" lineColor="#666666"/>
+					<rightPen lineWidth="0.25" lineColor="#666666"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getTherapyApplicationColumnValue($P{administrations}, $P{order}, $P{therapyApplicationStartDate}, 3, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement style="smallLabel" stretchType="RelativeToBandHeight" x="144" y="0" width="72" height="20" isPrintWhenDetailOverflows="true" uuid="5dbf4e90-0fe2-4681-a6b1-7efa3de8bfcd"/>
+				<box>
+					<leftPen lineWidth="0.25" lineColor="#666666"/>
+					<rightPen lineWidth="0.25" lineColor="#666666"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getTherapyApplicationColumnValue($P{administrations}, $P{order}, $P{therapyApplicationStartDate}, 2, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement style="smallLabel" stretchType="RelativeToBandHeight" x="359" y="0" width="71" height="20" isPrintWhenDetailOverflows="true" uuid="bc72c336-e19a-4c23-89e7-cf2bfcdba265"/>
+				<box>
+					<leftPen lineWidth="0.25" lineColor="#666666"/>
+					<rightPen lineWidth="0.25" lineColor="#666666"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getTherapyApplicationColumnValue($P{administrations}, $P{order}, $P{therapyApplicationStartDate}, 5, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement style="smallLabel" stretchType="RelativeToBandHeight" x="72" y="0" width="72" height="20" isPrintWhenDetailOverflows="true" uuid="ee1abf32-c11d-40d4-b48a-32e082afa6c7"/>
+				<box>
+					<leftPen lineWidth="0.25" lineColor="#666666"/>
+					<rightPen lineWidth="0.25" lineColor="#666666"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getTherapyApplicationColumnValue($P{administrations}, $P{order}, $P{therapyApplicationStartDate}, 1, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="10">
+			<textField isStretchWithOverflow="true">
+				<reportElement style="smallLabel" x="0" y="0" width="501" height="10" isPrintWhenDetailOverflows="true" uuid="aa93316b-6053-47a6-966c-32edfc518aa5"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid" lineColor="#666666"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid" lineColor="#666666"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid" lineColor="#666666"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid" lineColor="#666666"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getTherapyApplicationComment($P{order}, $P{pharmacistsReviewState}, 0, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="10">
+			<textField isStretchWithOverflow="true">
+				<reportElement style="smallLabel" x="0" y="0" width="501" height="10" isPrintWhenDetailOverflows="true" uuid="2df30539-9fcf-42cd-b4d7-bd60fa12e2ef"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#666666"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid" lineColor="#666666"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid" lineColor="#666666"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid" lineColor="#666666"/>
+				</box>
+				<textElement verticalAlignment="Top" markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getTherapyApplicationComment($P{order}, $P{pharmacistsReviewState}, 1, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

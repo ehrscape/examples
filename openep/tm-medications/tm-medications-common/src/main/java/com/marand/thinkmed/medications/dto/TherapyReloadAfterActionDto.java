@@ -19,10 +19,8 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.DataObject;
-import com.marand.maf.core.formatter.Displayable;
-import com.marand.maf.core.formatter.DisplayableFormatters;
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.JsonSerializable;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import com.marand.thinkmed.medications.TherapyStatusEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.joda.time.DateTime;
@@ -31,17 +29,15 @@ import org.joda.time.DateTime;
  * @author Mitja Lapajne
  */
 
-public class TherapyReloadAfterActionDto extends DataObject implements JsonSerializable
+public class TherapyReloadAfterActionDto extends DataTransferObject implements JsonSerializable
 {
   private String ehrCompositionId;
   private String ehrOrderName;
 
   private TherapyStatusEnum therapyStatus;
-  private boolean therapyActionsAllowed;
+  private boolean doctorReviewNeeded;
   private boolean therapyEndsBeforeNextRounds;
-  @Displayable({DisplayableFormatters.ShortDate.class, DisplayableFormatters.ShortTime.class, DisplayableFormatters.ShortDateTime.class})
   private DateTime therapyStart;
-  @Displayable({DisplayableFormatters.ShortDate.class, DisplayableFormatters.ShortTime.class, DisplayableFormatters.ShortDateTime.class})
   private DateTime therapyEnd;
 
   public String getEhrCompositionId()
@@ -74,14 +70,14 @@ public class TherapyReloadAfterActionDto extends DataObject implements JsonSeria
     this.therapyStatus = therapyStatus;
   }
 
-  public boolean isTherapyActionsAllowed()
+  public boolean isDoctorReviewNeeded()
   {
-    return therapyActionsAllowed;
+    return doctorReviewNeeded;
   }
 
-  public void setTherapyActionsAllowed(final boolean therapyActionsAllowed)
+  public void setDoctorReviewNeeded(final boolean doctorReviewNeeded)
   {
-    this.therapyActionsAllowed = therapyActionsAllowed;
+    this.doctorReviewNeeded = doctorReviewNeeded;
   }
 
   public boolean isTherapyEndsBeforeNextRounds()
@@ -121,7 +117,7 @@ public class TherapyReloadAfterActionDto extends DataObject implements JsonSeria
         .append("ehrCompositionId", ehrCompositionId)
         .append("ehrOrderName", ehrOrderName)
         .append("therapyStatus", therapyStatus)
-        .append("therapyActionsAllowed", therapyActionsAllowed)
+        .append("doctorReviewNeeded", doctorReviewNeeded)
         .append("therapyEndsBeforeNextRounds", therapyEndsBeforeNextRounds)
         .append("therapyStart", therapyStart)
         .append("therapyEnd", therapyEnd)

@@ -26,7 +26,6 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
   patientId: null,
   presetMedicationId: null, //optional
   presetTherapies: null,    //optional
-  presetDate: null,    //optional
   warningsEnabled: true,
   isPastMode: false,
   assertBaselineInfusion: true,
@@ -36,6 +35,10 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
   oldTherapiesForWarningsSearch: null,
   resultCallback: null,
   linkIndex: null,
+  bnfPercentageSum: null,
+  currentBnfMedications: null,
+  medicationRuleUtils: null,
+
   /** privates: components */
   orderingContainer: null,
   basketContainer: null,
@@ -46,18 +49,24 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
   /** constructor */
   Constructor: function(config)
   {
-    var self = this;
     this.callSuper(config);
-    var appFactory = this.view.getAppFactory();
-    this.setLayout(appFactory.createDefaultVFlexboxLayout("start", "stretch"));
+
+    var self = this;
+
+    this.setLayout(tm.jquery.VFlexboxLayout.create("flex-start", "stretch"));
     this.baselineInfusionIntervals = [];
     this.oldTherapiesForWarningsSearch = [];
     this.linkIndex = 0;
+    this.bnfPercentageSum = self.view.getCurrentBnfMaximumSum();
+    this.currentBnfMedications = [];
     this._loadPatientBaselineInfusionIntervals();
     if (this.warningsEnabled)
     {
       this._loadTherapiesForWarningsSearch();
     }
+
+    this.medicationRuleUtils = this.getConfigValue("medicationRuleUtils",
+        new tm.views.medications.MedicationRuleUtils({view: this.view}));
 
     this._buildComponents();
     this._buildGui();
@@ -73,7 +82,7 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
       }
       if (self.presetTherapies)
       {
-        self._fixTherapiesTimingAndAddToBasket(self.presetTherapies);
+        self._fixTherapiesTimingAndAddToBasket(self.presetTherapies, true);
       }
     });
   },
@@ -82,95 +91,29 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
   _buildComponents: function()
   {
     var self = this;
-    this.orderingContainer = new app.views.medications.ordering.OrderingContainer({
-      view: this.view,
-      width: 720,
-      mainContainer: this,
-      isPastMode: this.isPastMode,
-      presetDate: this.presetDate,
-      addTherapiesToBasketFunction: function(therapies)
-      {
-        self._fixTherapiesTimingAndAddToBasket(therapies);
-      },
-      saveDateTimePaneEvent: function()
-      {
-        self.saveDateTimePane.setHeight(34);
-        self.saveDateTimePane.setPadding('4 0 0 0');
-        self.saveDateTimePane.show();
-        self.saveDateTimePane.repaint();
-      },
-      confirmTherapyEvent: function(data)
-      {
-        if (data != 'VALIDATION_FAILED')
-        {
-          return self._addToBasket(data);
-        }
-        return false;
-      },
-      removeFromBasketFunction: function(therapy)
-      {
-        self.basketContainer.removeTherapy(therapy);
-      },
-      saveTherapyToTemplateFunction: function(therapy, invalidTherapy)
-      {
-        self._openSaveTemplateDialog([therapy], true, invalidTherapy);
-      },
-      linkTherapyFunction: function(callback)
-      {
-        self._openLinkTherapyDialog(callback);
-      }
-    });
-    this.basketContainer = new app.views.medications.ordering.BasketContainer({
-      view: this.view,
-      flex: 1,
-      therapyAddedEvent: function()
-      {
-        if (self.warningsEnabled)
-        {
-          self.warningsContainer.refreshWarnings();
-        }
-        self.orderingContainer.clear();
-      },
-      therapiesRemovedEvent: function(therapies)
-      {
-        if (self.warningsEnabled)
-        {
-          self.warningsContainer.refreshWarnings();
-        }
-        for (var i = 0; i < therapies.length; i++)
-        {
-          var therapy = therapies[i].therapy;
-          if (therapy && therapy.baselineInfusion)
-          {
-            self._removeBaselineInfusion(therapy);
-          }
-        }
-      },
-      editTherapyFunction: function(therapy)
-      {
-        self.orderingContainer.editTherapy(therapy);
-        if (therapy && therapy.baselineInfusion)
-        {
-          self._removeBaselineInfusion(therapy);
-        }
-      },
-      saveTemplateFunction: function(therapies)
-      {
-        self._openSaveTemplateDialog(therapies, false);
-      }
-    });
+    var view = this.view;
+    var appFactory = view.getAppFactory();
+
+    this.orderingContainer = this.buildOrderingContainer();
+    this.basketContainer = this.buildBasketContainer();
+
     this.warningsContainer = new app.views.medications.ordering.WarningsContainer({
-      view: this.view,
+      view: view,
+      medicationRuleUtils: this.medicationRuleUtils,
       height: this.warningsEnabled ? 300 : 30,
       getPatientMedsForWarningsFunction: function()
       {
-        return self._getTherapiesForWarningsSearch();
-      }});
+        return self._getTherapiesForWarningsSearch(true);
+      }
+    });
 
-    var careProfessionals = this.view.getCareProfessionals();
-    var currentUserAsCareProfessionalName = this.view.getCurrentUserAsCareProfessional() ? this.view.getCurrentUserAsCareProfessional().name : null;
-    this.performerContainer =
-        tm.views.medications.MedicationUtils.createPerformerContainer(this.view, careProfessionals, currentUserAsCareProfessionalName);
+    if (this.isPastMode === true)
+    {
+      var careProfessionals = view.getCareProfessionals();
+      var currentUserAsCareProfessionalName = view.getCurrentUserAsCareProfessional() ? view.getCurrentUserAsCareProfessional().name : null;
+      this._performerContainer =
+          tm.views.medications.MedicationUtils.createPerformerContainer(view, careProfessionals, currentUserAsCareProfessionalName);
+    }
 
     this.saveDateTimePane = new app.views.medications.ordering.TherapySaveDatePane();
     this.saveDateTimePane.hide();
@@ -178,55 +121,89 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
 
   _buildGui: function()
   {
-    var appFactory = this.view.getAppFactory();
-    var mainContainer = new tm.jquery.Container({layout: appFactory.createDefaultHFlexboxLayout("start", "stretch"), flex: 1});
+    var mainContainer = new tm.jquery.Container({
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "stretch"),
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto")
+    });
     mainContainer.add(this.orderingContainer);
-    var eastContainer = new tm.jquery.Container({layout: appFactory.createDefaultVFlexboxLayout("start", "stretch"), flex: 1});
+    var eastContainer = new tm.jquery.Container({
+      layout: tm.jquery.VFlexboxLayout.create("flex-start", "stretch"),
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto")
+    });
     eastContainer.add(this.basketContainer);
     eastContainer.add(this.warningsContainer);
     mainContainer.add(eastContainer);
     this.add(mainContainer);
-    this.add(this.performerContainer);
+    if (this._performerContainer != null)
+    {
+      this.add(this._performerContainer);
+    }
     this.add(this.saveDateTimePane);
   },
 
-  _addToBasket: function(therapy)
+  _editBasketTherapy: function(therapyContainer)
+  {
+    var self = this;
+    var therapy = therapyContainer.getData().therapy;
+    this._reduceCalculatedBnfPercentage([therapy]);
+
+    this.basketContainer.removeTherapy(therapy); // has to be removed before warnings are calculated (otherwise it's included)
+    this.orderingContainer.editTherapy(therapyContainer, false, function(){
+      if (self.warningsEnabled)
+      {
+        self.warningsContainer.refreshWarnings();
+      }
+      if (therapy && therapy.baselineInfusion)
+      {
+        self._removeBaselineInfusion(therapy);
+      }
+
+      self.warningsContainer.refreshParacetamolLimitWarning([], self.basketContainer.getTherapies(), true);
+    });
+  },
+
+  _addToBasket: function(therapy, addedTherapiesCount, intialBasketItemsCount, changeReason, linkedTherapy)
   {
     var self = this;
     var appFactory = this.view.getAppFactory();
-    var enums = app.views.medications.TherapyEnums;
-
     var params = {therapy: JSON.stringify(therapy)};
     var fillDisplayValuesUrl =
         this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_FILL_DISPLAY_VALUES;
 
     var baselineInfusionAlreadyExists =
         therapy.baselineInfusion && this._baselineInfusionsIntersects(therapy.start, therapy.end);
+
     if (baselineInfusionAlreadyExists && this.assertBaselineInfusion)
     {
       appFactory.createWarningSystemDialog(self.view.getDictionary("patient.already.has.baseline.infusion"), 320, 122).show();
       return false;
     }
-    else if (therapy.dosingFrequency && therapy.dosingFrequency.type == enums.dosingFrequencyTypeEnum.BETWEEN_DOSES && therapy.dosingDaysFrequency)
-    {
-      this.view.loadViewData(fillDisplayValuesUrl, params, null, function(therapyWithDisplayValues)
-      {
-        var message = self.view.getDictionary('can.not.prescribe.therapy.with.dosing.frequency') + ": " +
-            therapyWithDisplayValues.frequencyDisplay.toLowerCase() + ', ' +
-            therapyWithDisplayValues.daysFrequencyDisplay + '".';
-        appFactory.createWarningSystemDialog(message, 520, 122).show();
-      });
-      return false;
-    }
     else
     {
-      this.view.loadViewData(fillDisplayValuesUrl, params, null, function(therapyWithDisplayValues)
+      this.view.loadPostViewData(fillDisplayValuesUrl, params, null, function(therapyWithDisplayValues)
       {
         //fix date after serialization
-        therapyWithDisplayValues.start = new Date(therapyWithDisplayValues.start.data);
-        therapyWithDisplayValues.end = therapyWithDisplayValues.end ? new Date(therapyWithDisplayValues.end.data) : null;
+        therapyWithDisplayValues.start = therapyWithDisplayValues.start ? new Date(therapyWithDisplayValues.start) : null;
+        therapyWithDisplayValues.end = therapyWithDisplayValues.end ? new Date(therapyWithDisplayValues.end) : null;
+        therapyWithDisplayValues.completed = therapy.completed;
 
-        self.basketContainer.addTherapy(therapyWithDisplayValues);
+        var basketItemsCount = self.basketContainer.getTherapies().length;
+        var addingLastTherapyFromList = !addedTherapiesCount || basketItemsCount - intialBasketItemsCount == addedTherapiesCount - 1;
+        var therapyWithDisplayValuesDto = app.views.medications.common.TherapyJsonConverter.convert(therapyWithDisplayValues);        
+
+        self._addToCalculatedBnfPercentage(therapy);
+        if (addingLastTherapyFromList)
+        {
+          self.warningsContainer.refreshParacetamolLimitWarning([therapy], self.basketContainer.getTherapies(), true);
+        }
+
+        self.basketContainer.addTherapy({
+              therapy: therapyWithDisplayValuesDto,
+              linkedTherapy: linkedTherapy
+            },
+            {
+              forceNoRefreshWarnings: !addingLastTherapyFromList
+            });
       });
       if (therapy.baselineInfusion)
       {
@@ -244,16 +221,23 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
     var self = this;
     var appFactory = this.view.getAppFactory();
 
+    var content = jQuery.map(therapies, function(item){
+      var clonedItem = jQuery.extend(true, {}, item);
+      clonedItem.linkName = null;
+      return clonedItem;
+    });
+
     var dialog = appFactory.createDataEntryDialog(
         this.view.getDictionary('therapy.template'),
         null,
         new app.views.medications.ordering.SaveTemplatePane({
           view: self.view,
+          templateMode: self.getTherapyTemplateMode(),
           startProcessOnEnter: true,
           padding: 8,
           addSingleTherapy: addSingleTherapy,
           invalidTherapy: invalidTherapy,
-          therapies: therapies,
+          therapies: content,
           templates: self.orderingContainer.getTemplates()}),
         function(resultData)
         {
@@ -269,104 +253,21 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
     dialog.show();
   },
 
-  _openLinkTherapyDialog: function(callback)
+  /**
+   *
+   * @param {Array<app.views.medications.common.dto.Therapy>}therapies
+   * @param {Boolean} clearEnd
+   * @private
+   */
+  _fixTherapiesTimingAndAddToBasket: function(therapies, clearEnd)
   {
-    var self = this;
-    var appFactory = this.view.getAppFactory();
-
-    var dialog = appFactory.createDataEntryDialog(
-        this.view.getDictionary('link'),
-        null,
-        new app.views.medications.ordering.LinkTherapyPane({
-          view: self.view,
-          linkIndex: self.linkIndex,
-          orderedTherapies: self.basketContainer.getTherapies()
-        }),
-        //new tm.jquery.Container({layout: appFactory.createDefaultHFlexboxLayout("start", "stretch"), flex: 1, html: "demo"}),
-        function(resultData)
-        {
-          if (resultData)
-          {
-            callback(resultData.selectedTherapy, self.linkIndex);
-            self.linkIndex++;
-          }
-        },
-        550,
-        480
-    );
-
-    dialog.show();
-  },
-
-  _fixTherapiesTimingAndAddToBasket: function(therapies)
-  {
+    var basketContainerElementsCount = this.basketContainer.getTherapies().length;
     for (var i = 0; i < therapies.length; i++)
     {
       var therapy = therapies[i];
-      var dosingFrequencyKey = tm.views.medications.MedicationTimingUtils.getFrequencyKey(therapy.dosingFrequency);
-      var dosingFrequencyModeKey = therapy.dosingFrequency ? therapy.dosingFrequency.type : "WITHOUT_FREQUENCY";
-      var nextAdministrationTimestamp;
-      if (therapy.variable)
-      {
-        nextAdministrationTimestamp =
-            tm.views.medications.MedicationTimingUtils.getNextAdministrationTimestampForVario(therapy.timedDoseElements)
-      }
-      else
-      {
-        nextAdministrationTimestamp = tm.views.medications.MedicationTimingUtils.getNextAdministrationTimestamp(
-            dosingFrequencyKey,
-            dosingFrequencyModeKey,
-            null,
-            this.view.getAdministrationTiming());
-      }
-      therapy.start = nextAdministrationTimestamp ? nextAdministrationTimestamp : new Date();
-      therapy.end = null;
-      if (this.presetDate)
-      {
-        therapy.start = new Date(
-            this.presetDate.getFullYear(),
-            this.presetDate.getMonth(),
-            this.presetDate.getDate(),
-            therapy.start.getHours(),
-            therapy.start.getMinutes(),
-            0,
-            0);
-      }
-
-      var baselineInfusionAlreadyExists =
-          therapy.baselineInfusion && this._baselineInfusionsIntersects(therapy.start, therapy.end);
-      if (baselineInfusionAlreadyExists && this.assertBaselineInfusion)
-      {
-        this.view.getAppFactory().createWarningSystemDialog(
-            this.view.getDictionary("patient.already.has.baseline.infusion"), 320, 122).show();
-        return false;
-      }
-
-      if (therapy.baselineInfusion)
-      {
-        this.baselineInfusionIntervals.push({
-          startMillis: therapy.start.getTime(),
-          endMillis: therapy.end ? therapy.end.getTime() : null
-        })
-      }
-      this._fixTherapyTimingAndAddToBasket(therapy, therapy.completed);
+      therapy.rescheduleTherapyTimings(clearEnd);
+      this._addToBasket(therapy, therapies.length, basketContainerElementsCount);
     }
-  },
-
-  _fixTherapyTimingAndAddToBasket: function(therapy, completed)
-  {
-    var self = this;
-    var params = {therapy: JSON.stringify(therapy)};
-    var fillDisplayValuesUrl =
-        this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_FILL_DISPLAY_VALUES;
-    this.view.loadViewData(fillDisplayValuesUrl, params, null, function(therapyWithDisplayValues)
-    {
-      //fix date after serialization
-      therapyWithDisplayValues.start = new Date(therapyWithDisplayValues.start.data);
-      therapyWithDisplayValues.end = therapyWithDisplayValues.end ? new Date(therapyWithDisplayValues.end.data) : null;
-      therapyWithDisplayValues.completed = completed;
-      self.basketContainer.addTherapy(therapyWithDisplayValues);
-    });
   },
 
   _baselineInfusionsIntersects: function(start, end)
@@ -391,22 +292,29 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
     return false;
   },
 
-  _validateAndSaveTherapies: function()
+  /**
+   * Validates the user input and returns a promise.
+   * @returns {tm.jquery.Promise}
+   * @private
+   */
+  _validateUserInput: function()
   {
     var self = this;
+    var deferred = tm.jquery.Deferred.create();
     var appFactory = this.view.getAppFactory();
     var therapies = this.basketContainer.getTherapies();
-    var prescriber = this.performerContainer.getPerformer();
+    var basketItems = this.basketContainer.getBasketItems();
+    var prescriber = this._getPrescriber();
 
     if (therapies.length == 0)
     {
       appFactory.createWarningSystemDialog(self.view.getDictionary("you.have.no.therapies.in.basket"), 360, 122).show();
-      this._savingFailed();
+      deferred.reject();
     }
     else if (!self.isPastMode && !prescriber)
     {
       appFactory.createWarningSystemDialog(self.view.getDictionary("prescriber.not.defined.warning"), 320, 122).show();
-      this._savingFailed();
+      deferred.reject();
     }
     else
     {
@@ -414,37 +322,69 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
       if (incompleteTherapiesExist)
       {
         appFactory.createWarningSystemDialog(self.view.getDictionary("unfinished.therapies.in.basket.warning"), 360, 122).show();
-        this._savingFailed();
+        deferred.reject();
       }
       else
       {
         var unfinishedOrderExists = this.orderingContainer.unfinishedOrderExists();
+        var warningsLoadingInProgress = this.warningsContainer.isDataLoading();
 
-        if (unfinishedOrderExists)
+        if (unfinishedOrderExists || warningsLoadingInProgress)
         {
-          var confirmDialog = appFactory.createConfirmSystemDialog(this.view.getDictionary('unfinished.therapy.that.will.not.be.saved.warning'),
+          var warningString = "";
+          var height = 110;
+          if (unfinishedOrderExists)
+          {
+            warningString += this.view.getDictionary('unfinished.therapy.that.will.not.be.saved.warning') + "\n";
+            height += 32;
+          }
+          if (warningsLoadingInProgress)
+          {
+            warningString += this.view.getDictionary('interactions.not.loaded.warning');
+            height += 48;
+          }
+          var confirmDialog = appFactory.createConfirmSystemDialog(warningString,
               function(confirmed)
               {
-                if (confirmed == true)
+                if (confirmed == true && self._fillAndValidateCriticalWarnings(therapies))
                 {
-                  self._saveOrder(therapies);
+                  deferred.resolve(basketItems);
                 }
                 else
                 {
-                  self._savingFailed();
+                  deferred.reject();
                 }
               }
           );
           confirmDialog.setWidth(380);
-          confirmDialog.setHeight(122);
+          confirmDialog.setHeight(height);
           confirmDialog.show();
+        }
+        else if (self._fillAndValidateCriticalWarnings(therapies))
+        {
+          deferred.resolve(basketItems);
         }
         else
         {
-          this._saveOrder(therapies);
+          deferred.reject();
         }
       }
     }
+
+    return deferred.promise();
+  },
+
+  _fillAndValidateCriticalWarnings: function(therapies)
+  {
+    var areCriticalWarningsOverriden = this.warningsContainer.assertAllCriticalWarningsOverridden();
+    if (!areCriticalWarningsOverriden)
+    {
+      var message = this.view.getDictionary('you.have.unchecked.warnings');
+      this.view.getAppFactory().createWarningSystemDialog(message, 320, 160).show();
+      return false;
+    }
+    this._fillTherapyWarningsBeforeSave(therapies);
+    return true;
   },
 
   _doesOrderContainIncompleteTherapies: function(therapies)
@@ -459,39 +399,41 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
     return false;
   },
 
-  _saveOrder: function(therapies)
+  _getPrescriber: function()
+  {
+    return this._performerContainer != null ?
+        this._performerContainer.getPerformer() : this.view.getCurrentUserAsCareProfessional();
+  },
+
+  /**
+   * Places the order of the specified therapies.
+   * @param {Array} basketItems with therapies to order.
+   * @returns {tm.jquery.Promise}
+   */
+  placeOrder: function(basketItems)
   {
     var self = this;
 
-    this._fillTherapyWarningsBeforeSave(therapies);
+    var viewHubNotifier = this.view.getHubNotifier();
+    var hubAction = tm.views.medications.TherapyView.THERAPY_SAVE_HUB;
+    viewHubNotifier.actionStarted(hubAction);
+
+    var medicationOrders = basketItems.map(function(basketItem){
+      var saveMedicationOrder = new app.views.medications.common.dto.SaveMedicationOrder({
+        therapy: basketItem.therapy,
+        actionEnum: app.views.medications.TherapyEnums.medicationOrderActionEnum.PRESCRIBE
+      });
+      if (basketItem.linkedTherapy)
+      {
+        saveMedicationOrder.linkCompositionUid = basketItem.linkedTherapy.getCompositionUid();
+      }
+      return saveMedicationOrder;
+    });
 
     var saveDateTime = this.saveDateTimePane.isHidden() ? null : this.saveDateTimePane.getSaveDateTime();
-    var saveMedicationsOrderUrl =
-        this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_SAVE_MEDICATIONS_ORDER;
-    var centralCaseData = self.view.getCentralCaseData();
-    var params = {
-      patientId: self.view.getPatientId(),
-      therapies: JSON.stringify(therapies),
-      roundsInterval: JSON.stringify(self.view.getRoundsInterval()),
-      centralCaseId: centralCaseData ? centralCaseData.centralCaseId : null,
-      careProviderId: centralCaseData ? centralCaseData.careProviderId : null,
-      sessionId: centralCaseData && centralCaseData.sessionId ? centralCaseData.sessionId : null,
-      knownOrganizationalEntity: self.view.getKnownOrganizationalEntity(),
-      prescriber: JSON.stringify(self.performerContainer.getPerformer()),
-      saveDateTime: JSON.stringify(saveDateTime)
-    };
 
-    this.view.loadPostViewData(saveMedicationsOrderUrl, params, null,
-        function()
-        {
-          var resultData = new app.views.common.AppResultData({success: true});
-          self.resultCallback(resultData);
-        },
-        function()
-        {
-          self._savingFailed();
-        },
-        true);
+    return this.view.getRestApi().saveMedicationsOrder(medicationOrders, this._getPrescriber(), saveDateTime,
+        this.view.getPatientLastLinkNamePrefix(), true);
   },
 
   _fillTherapyWarningsBeforeSave: function(therapies)
@@ -503,48 +445,46 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
     {
       var overrideReason = warnings[i].overrideReason;
       var warningDto = warnings[i].warning; //MedicationsWarningDto
-      var primaryMedicationId = warningDto.primaryMedication ? warningDto.primaryMedication.id : null;
-      var secondaryMedicationId = warningDto.secondaryMedication ? warningDto.secondaryMedication.id : null;
 
-      if (primaryMedicationId || secondaryMedicationId)
+      if (warningDto.medications.length != 0)
       {
         for (var j = 0; j < therapies.length; j++)
         {
           var therapy = therapies[j];
           var therapyContainsMedicationWithWarning = false;
-          if (therapy.medicationOrderFormType == enums.medicationOrderFormType.SIMPLE)
+          if (therapy.isOrderTypeSimple())
           {
-            if (therapy.medication.id == primaryMedicationId ||
-                therapy.medication.id == secondaryMedicationId)
+            for (var l = 0; l < warningDto.medications.length; l++)
             {
-              therapyContainsMedicationWithWarning = true;
-            }
-          }
-          else if (therapy.medicationOrderFormType == enums.medicationOrderFormType.COMPLEX)
-          {
-            for (var k = 0; k < therapy.ingredientsList.length; k++)
-            {
-              var infusionIngredient = therapy.ingredientsList[k];
-              if (infusionIngredient.medication.id == primaryMedicationId ||
-                  infusionIngredient.medication.id == secondaryMedicationId)
+              var simpleMedicationForWarningDto = warningDto.medications[l];
+              if (therapy.medication.id == simpleMedicationForWarningDto.id)
               {
                 therapyContainsMedicationWithWarning = true;
               }
             }
           }
+          else if (therapy.isOrderTypeComplex())
+          {
+            for (var k = 0; k < therapy.ingredientsList.length; k++)
+            {
+              var infusionIngredient = therapy.ingredientsList[k];
+              for (var n = 0; n < warningDto.medications.length; n++)
+              {
+                var complexMedicationForWarningDto = warningDto.medications[n];
+                if (infusionIngredient.medication.id == complexMedicationForWarningDto.id)
+                {
+                  therapyContainsMedicationWithWarning = true;
+                }
+              }
+            }
+          }
           if (therapyContainsMedicationWithWarning)
           {
-            therapy.criticalWarnings.push("Warning overriden. Reason: " + overrideReason + " Warning: " + warningDto.description);
+            therapy.criticalWarnings.push("Warning overridden. Reason: " + overrideReason + " Warning: " + warningDto.description);
           }
         }
       }
     }
-  },
-
-  _savingFailed: function()
-  {
-    var resultData = new app.views.common.AppResultData({success: false});
-    this.resultCallback(resultData);
   },
 
   _loadPatientBaselineInfusionIntervals: function()
@@ -571,43 +511,16 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
     });
   },
 
-  _getTherapiesForWarningsSearch: function()
+  _getTherapiesForWarningsSearch: function(prospective)
   {
-    var enums = app.views.medications.TherapyEnums;
     var therapiesForWarnings = [];
-
     var therapies = this.basketContainer.getTherapies();
     for (var i = 0; i < therapies.length; i++)
     {
-      var therapy = therapies[i];
-      if (therapy.medicationOrderFormType == enums.medicationOrderFormType.SIMPLE)
-      {
-        therapiesForWarnings.push(
-            {
-              id: therapy.medication.id,
-              description: therapy.medication.name,
-              prospective: true,
-              routeCode: therapy.route ? therapy.route.code : null,
-              doseUnit: therapy.quantityUnit,
-              doseAmount: therapy.variable ? 0 : therapy.doseElement.quantity
-            });
-      }
-      else if (therapy.medicationOrderFormType == enums.medicationOrderFormType.COMPLEX)
-      {
-        for (var j = 0; j < therapy.ingredientsList.length; j++)
-        {
-          var infusionIngredient = therapy.ingredientsList[j];
-          therapiesForWarnings.push(
-              {
-                id: infusionIngredient.medication.id,
-                description: infusionIngredient.medication.name,
-                prospective: true,
-                routeCode: therapy.route ? therapy.route.code : null,
-                doseUnit: infusionIngredient.quantityUnit,
-                doseAmount: infusionIngredient.quantity
-              });
-        }
-      }
+      therapiesForWarnings.push.apply(
+          therapiesForWarnings,
+          tm.views.medications.warning.WarningsHelpers.getMedicationsForWarningSearchForTherapy(therapies[i], prospective)
+      );
     }
     $.merge(therapiesForWarnings, this.oldTherapiesForWarningsSearch);
     return therapiesForWarnings;
@@ -628,18 +541,266 @@ Class.define('app.views.medications.ordering.MedicationsOrderingContainer', 'app
     }
   },
 
-  /** public methods */
+  /**
+   * Validates the input and places the order if successful.
+   * @param {function} resultDataCallback
+   */
   processResultData: function(resultDataCallback)
   {
-    this.resultCallback = resultDataCallback;
-    this._validateAndSaveTherapies();
+    var self = this;
+
+    this._validateUserInput().then(
+        function validationSuccessHandler(basketItems)
+        {
+          self.placeOrder(basketItems).then(successResultCallbackHandler, failureResultCallbackHandler);
+        },
+        failureResultCallbackHandler
+    );
+
+    function successResultCallbackHandler(){
+      resultDataCallback(new app.views.common.AppResultData({success: true}));
+    }
+
+    function failureResultCallbackHandler()
+    {
+      resultDataCallback(new app.views.common.AppResultData({success: false}));
+    }
   },
 
-  clear: function()
+  _addToCalculatedBnfPercentage: function(therapy)
+  {
+    if (!tm.jquery.Utils.isEmpty(therapy.bnfMaximumPercentage))
+    {
+      this.currentBnfMedications.push(therapy.getMainMedication().getId());
+      this.bnfPercentageSum += therapy.bnfMaximumPercentage;
+
+      if (this.bnfPercentageSum > 100)
+      {
+        this.warningsContainer.addBnfWarning(this.bnfPercentageSum, this.currentBnfMedications);
+      }
+    }
+  },
+
+  _removeParacetamolLimitWarning: function(therapies)
+  {
+    var basketTherapies = this.basketContainer.getTherapies();
+    if (therapies)
+    {
+      basketTherapies = basketTherapies.filter(function(item)
+      {
+        return therapies.indexOf(item) === -1;
+      });
+    }
+
+    this.warningsContainer.refreshParacetamolLimitWarning(basketTherapies, null, false);
+  },
+
+  _reduceCalculatedBnfPercentage: function(therapies)
+  {
+    var medicationIds = [];
+    var percentageSum = 0;
+    var oldPercentage = this.bnfPercentageSum;
+
+    therapies.forEach(function(item)
+    {
+      if (!tm.jquery.Utils.isEmpty(item.bnfMaximumPercentage))
+      {
+        medicationIds.push(item.getMainMedication().getId());
+        percentageSum += item.bnfMaximumPercentage;
+      }
+    });
+
+    this.bnfPercentageSum -= percentageSum;
+    this.currentBnfMedications = this.currentBnfMedications.filter(
+        function (item)
+        {
+          return medicationIds.indexOf(item) === -1;
+        });
+
+    if (oldPercentage > 100)
+    {
+      if (this.bnfPercentageSum < 100 || this.currentBnfMedications.isEmpty())
+      {
+        this.warningsContainer.removeAdditionalWarning(app.views.medications.TherapyEnums.additionalWarningType.BNF);
+      }
+      else if (!this.currentBnfMedications.isEmpty())
+      {
+        this.warningsContainer.addBnfWarning(this.bnfPercentageSum, this.currentBnfMedications);
+      }
+    }
+  },
+
+  /* overridable! check usage! */
+  buildOrderingContainer: function()
+  {
+    var view = this.view;
+    var isPastMode = this.isPastMode;
+    var self = this;
+
+    return new app.views.medications.ordering.OrderingContainer({
+      view: view,
+      flex: tm.jquery.flexbox.item.Flex.create(0, 0, "720px"),
+      mainContainer: this,
+      isPastMode: isPastMode,
+      templateMode: this.getTherapyTemplateMode(),
+      additionalMedicationSearchFilter: app.views.medications.TherapyEnums.medicationFinderFilterEnum.INPATIENT_PRESCRIPTION,
+      medicationRuleUtils: self.medicationRuleUtils,
+      addTherapiesToBasketFunction: function(therapies)
+      {
+        self._fixTherapiesTimingAndAddToBasket(therapies, false);
+      },
+      saveDateTimePaneEvent: function()
+      {
+        self.saveDateTimePane.setHeight(34);
+        self.saveDateTimePane.setPadding('4 0 0 0');
+        self.saveDateTimePane.show();
+        self.saveDateTimePane.repaint();
+      },
+      confirmTherapyEvent: function(data, changeReason, linkedTherapy)
+      {
+        if (data != 'VALIDATION_FAILED')
+        {
+          return self._addToBasket(data, null, null, changeReason, linkedTherapy);
+        }
+        return false;
+      },
+      saveTherapyToTemplateFunction: function(therapy, invalidTherapy)
+      {
+        self._openSaveTemplateDialog([therapy], true, invalidTherapy);
+      },
+      getBasketTherapiesFunction: function()
+      {
+        return self.getBasketContainer().getTherapies();
+      },
+      refreshBasketFunction: function()
+      {
+        self.getBasketContainer().refreshWithExistingData();
+      },
+      getPatientMedsForWarningsFunction: function()
+      {
+        return self._getTherapiesForWarningsSearch(false);
+      }
+    });
+  },
+
+  /* overridable! check usage! */
+  buildBasketContainer: function()
+  {
+    var self = this;
+    var view = this.view;
+    var appFactory = view.getAppFactory();
+
+    return new app.views.medications.ordering.BasketContainer({
+      view: view,
+      headerTitle: view.getDictionary("therapy.list"),
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto"),
+      therapyAddedEvent: function(options)
+      {
+        if (self.isWarningsEnabled())
+        {
+          if (options && options.forceNoRefreshWarnings)
+          {
+            // do nothing
+          }
+          else
+          {
+            self.getWarningsContainer().refreshWarnings();
+          }
+        }
+        self.getOrderingContainer().clear();
+      },
+      therapiesRemovedEvent: function(therapyContainers, options)
+      {
+        var therapies = [];
+        therapyContainers.forEach(function(item)
+        {
+          therapies.push(item.therapy);
+        });
+
+        self._reduceCalculatedBnfPercentage(therapies);
+        self._removeParacetamolLimitWarning(therapies);
+
+        if (self.isWarningsEnabled())
+        {
+          if (options && options.clearBasket) {
+            self.getWarningsContainer().clear();
+          } else {
+            self.getWarningsContainer().refreshWarnings();
+          }
+        }
+        for (var i = 0; i < therapies.length; i++)
+        {
+          var therapy = therapies[i].therapy;
+          if (therapy && therapy.baselineInfusion)
+          {
+            self._removeBaselineInfusion(therapy);
+          }
+        }
+      },
+      editTherapyFunction: function(therapyContainer)
+      {
+        if (self.getOrderingContainer().unfinishedOrderExists()) {
+          var confirmDialog = appFactory.createConfirmSystemDialog(
+              view.getDictionary('unfinished.therapy.that.will.not.be.saved.warning'),
+              function (confirmed)
+              {
+                if (confirmed == true)
+                {
+                  self._editBasketTherapy(therapyContainer);
+                }
+              }
+          );
+          confirmDialog.setWidth(380);
+          confirmDialog.setHeight(122);
+          confirmDialog.show();
+        }
+        else
+        {
+          self._editBasketTherapy(therapyContainer);
+        }
+      },
+      saveTemplateFunction: function(therapies)
+      {
+        self._openSaveTemplateDialog(therapies, false);
+      }
+    });
+  },
+
+  clear: function ()
   {
     this.orderingContainer.clear();
     this.basketContainer.clear();
     this.warningsContainer.clear();
+  },
+
+  getOrderingContainer: function()
+  {
+    return this.orderingContainer;
+  },
+
+  getBasketContainer: function()
+  {
+    return this.basketContainer;
+  },
+
+  getWarningsContainer: function()
+  {
+    return this.warningsContainer;
+  },
+
+  isWarningsEnabled: function()
+  {
+    return this.warningsEnabled === true;
+  },
+
+  getDialogResultCallback: function()
+  {
+    return this.resultCallback;
+  },
+
+  getTherapyTemplateMode: function()
+  {
+    return app.views.medications.TherapyEnums.therapyTemplateModeEnum.INPATIENT;
   }
 });
 

@@ -1,0 +1,76 @@
+<div data-tm-flex-layout="column"
+     data-align-items="stretch" data-justify-content="flex-start">
+    <div class="header" data-tm-flex-item="0 0 auto" data-tm-flex-layout="row" data-align-items="flex-start"
+         data-justify-content="flex-start">
+        <tm-meds-document-header data-tm-flex-item="1 1 auto"
+                                 data-document="vm.getDocument()"></tm-meds-document-header>
+    </div>
+    <div class="body" data-tm-flex-item="0 0 auto" data-tm-flex-layout="row" data-justify-content="flex-start"
+         data-align-items="flex-start">
+        <div data-tm-flex-item="0 0 5px" data-align-self="stretch" class="status-line"></div>
+        <div class="content" data-tm-flex-item="1 1 auto" data-tm-flex-layout="column" data-justify-content="flex-start"
+             data-align-items="stretch">
+            <div class="cumulative-dose-maximum" data-tm-flex-item="0 0 auto"
+                 data-ng-if="vm.getDocument().getContent().getBnfMaximum()">
+                <span class="TextData">
+                    {{::'cumulative.dose.can.go' | tmDictionaryTermFilter}}
+                    {{vm.getDocument().getContent().getBnfMaximum()}}{{::'of.anti.psychotic.bnf.maximum' |
+                    tmDictionaryTermFilter}} </span>
+            </div>
+            <div class="mental-health-medications"
+                 data-ng-if="vm.getDocument().getContent().getMentalHealthMedications().length">
+                <span class="TextLabel light">
+                    {{::'approved.therapies' | tmDictionaryTermFilter | uppercase}} </span>
+                <div class="mental-health-medication" data-tm-flex-layout="row" data-justify-content="flex-start"
+                     data-align-items="flex-start" data-tm-flex-item="0 0 auto"
+                     data-ng-repeat="medication in vm.getDocument().getContent().getMentalHealthMedications()">
+                    <div class="description" data-tm-flex-item="1 1 auto" data-tm-flex-layout="column"
+                         data-justify-content="flex-start"
+                         data-align-items="stretch">
+                        <div data-tm-flex-item="0 0 auto">
+                            <span class="TextDataBold">
+                                {{medication.getGenericName()}} </span>
+                            <span class="TextData" data-ng-if="medication.getName()">
+                                ({{medication.getName()}}) </span>
+                            <span class="TextData">
+                                &ndash; </span>
+                            <span class="TextLabel light">
+                                {{::'route' | tmDictionaryTermFilter | uppercase}} &nbsp;</span>
+                            <span class="TextData" data-ng-if="medication.getRoute()">
+                                {{medication.getRouteName()}} </span>
+                            <span class="TextData" data-ng-if="!medication.getRoute()">
+                                {{::'all'  | tmDictionaryTermFilter}} </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mental-health-border" data-ng-if="vm.getDocument().getContent().getMentalHealthTemplates().length &&
+            vm.getDocument().getContent().getMentalHealthMedications().length"></div>
+            <div class="mental-health-templates"
+                 data-ng-if="vm.getDocument().getContent().getMentalHealthTemplates().length">
+                <span class="TextLabel light">
+                    {{::'approved.mental.health' | tmDictionaryTermFilter | uppercase}}&nbsp; </span>
+                <div class="mental-health-template" data-tm-flex-layout="row" data-justify-content="flex-start"
+                     data-align-items="flex-start" data-tm-flex-item="0 0 auto"
+                     data-ng-repeat="template in vm.getDocument().getContent().getMentalHealthTemplates()">
+                    <div class="description" data-tm-flex-item="1 1 auto" data-tm-flex-layout="column"
+                         data-justify-content="flex-start"
+                         data-align-items="stretch">
+                        <div data-tm-flex-item="0 0 auto">
+                            <span class="TextData">
+                                {{template.getName()}} </span>
+                            <span class="TextData">
+                                &ndash; </span>
+                            <span class="TextLabel light">
+                                {{::'route' | tmDictionaryTermFilter | uppercase}} &nbsp;</span>
+                            <span class="TextData" data-ng-if="template.getRoute()">
+                                {{template.getRouteName()}} </span>
+                            <span class="TextData" data-ng-if="!template.getRoute()">
+                                {{::'all'  | tmDictionaryTermFilter}} </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

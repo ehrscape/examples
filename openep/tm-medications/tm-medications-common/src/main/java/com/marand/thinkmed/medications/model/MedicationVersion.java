@@ -20,6 +20,7 @@
 package com.marand.thinkmed.medications.model;
 
 import com.marand.maf.core.data.entity.TemporalEntity;
+import com.marand.thinkmed.medications.TitrationType;
 
 /**
  * @author Klavdij Lapajne
@@ -61,4 +62,68 @@ public interface MedicationVersion extends TemporalEntity
   Boolean getActive();
 
   void setActive(final Boolean active);
+
+  Boolean getSuggestSwitchToOral();
+
+  void setSuggestSwitchToOral(Boolean promptSwitchToOral);
+
+  Boolean getReviewReminder();
+
+  void setReviewReminder(Boolean reviewReminder);
+
+  Boolean getControlledDrug();
+
+  void setControlledDrug(Boolean controlledDrug);
+
+  Boolean isMentalHealthDrug();
+
+  void setMentalHealthDrug(final Boolean mentalHealthDrug);
+
+  String getMedicationPackaging();
+
+  void setMedicationPackaging(final String medicationPackaging);
+
+  Boolean getClinicalTrialMedication();
+
+  void setClinicalTrialMedication(final Boolean clinicalTrialMedication);
+
+  Boolean getUnlicensedMedication();
+
+  void setUnlicensedMedication(final Boolean unlicensedMedication);
+
+  Boolean getHighAlertMedication();
+
+  void setHighAlertMedication(final Boolean highAlertMedication);
+
+  Boolean getBlackTriangleMedication();
+
+  void setBlackTriangleMedication(final Boolean blackTriangleMedication);
+
+  Boolean getNotForPrn();
+
+  void setNotForPrn(final Boolean notForPrn);
+
+  Boolean getInpatientMedication();
+
+  void setInpatientMedication(final Boolean inpatientMedication);
+
+  Boolean getOutpatientMedication();
+
+  void setOutpatientMedication(final Boolean outpatientMedication);
+
+  Double getRoundingFactor();
+
+  void setRoundingFactor(Double roundingFactor);
+
+  TitrationType getTitration();
+
+  void setTitration(TitrationType titration);
+
+  String getPrice();
+
+  void setPrice(String price);
+
+  Boolean isExpensiveDrug();
+
+  void setExpensiveDrug(Boolean expensiveDrug);
 }

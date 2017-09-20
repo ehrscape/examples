@@ -21,19 +21,83 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <import resource="MedicationsBo-context.xml"/>
+    <import resource="MedicationsBusiness-context.xml"/>
+    <import resource="MedicationsReportModule-context.xml"/>
+
+    <bean id="medicationsServiceExporter" parent="securedRemotingExporterTemplate">
+        <property name="serviceInterface" value="com.marand.thinkmed.medications.service.MedicationsService"/>
+        <property name="service" ref="medicationsService"/>
+    </bean>
 
     <bean id="medicationsService" class="com.marand.thinkmed.medications.service.impl.MedicationsServiceImpl">
         <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="therapyUpdater" ref="therapyUpdater"/>
         <property name="medicationsDao" ref="medicationsDao"/>
-        <property name="ehrMedicationsDao" ref="ehrMedicationsDao"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
         <property name="medicationsExternalService" ref="medicationsExternalService"/>
-        <property name="medicationsProcessService" ref="medicationsProcessService"/>
-        <property name="ehrSessionTemplate" ref="ehrSessionTemplate"/>
-        <property name="therapyTasksProvider" ref="therapyTasksProvider"/>
+        <property name="therapyCacheInvalidator" ref="therapyCacheInvalidator"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="medicationsTasksHandler" ref="medicationsTasksHandler"/>
+        <property name="pharmacistTaskProvider" ref="pharmacistTaskProvider"/>
+        <property name="pharmacistTaskCreator" ref="pharmacistTaskCreator"/>
+        <property name="pharmacistTaskHandler" ref="pharmacistTaskHandler"/>
+        <property name="infusionBagTaskProvider" ref="infusionBagTaskProvider"/>
+        <property name="pharmacySupplyProcessHandler" ref="pharmacySupplyProcessHandler"/>
+        <property name="administrationTaskCreator" ref="administrationTaskCreator"/>
         <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
         <property name="medicationsConnector" ref="medicationsConnector"/>
-        <property name="ehrTaggingDao" ref="ehrTaggingDao"/>
+        <property name="taggingOpenEhrDao" ref="taggingOpenEhrDao"/>
+        <property name="medicationsFinder" ref="medicationsFinder"/>
+        <property name="demoPatientIdGenerator" ref="demoPatientIdGenerator"/>
+        <property name="pharmacistReviewProvider" ref="pharmacistReviewProvider"/>
+        <property name="pharmacistReviewSaver" ref="pharmacistReviewSaver"/>
+        <property name="therapyWarningsProvider" ref="therapyWarningsProvider"/>
+        <property name="administrationHandler" ref="administrationHandler"/>
+        <property name="mentalHealthFormHandler" ref="mentalHealthFormHandler"/>
+        <property name="medicationOnAdmissionHandler" ref="medicationOnAdmissionHandler"/>
+        <property name="medicationOnDischargeHandler" ref="medicationOnDischargeHandler"/>
+        <property name="medicationReconciliationHandler" ref="medicationReconciliationHandler"/>
+        <property name="administrationTaskConverter" ref="administrationTaskConverter"/>
+        <property name="overviewContentProvider" ref="overviewContentProvider"/>
+        <property name="preparePerfusionSyringeProcessHandler" ref="preparePerfusionSyringeProcessHandler"/>
+        <property name="prescriptionHandler" ref="prescriptionHandler"/>
+        <property name="therapyDocumentProvider" ref="therapyDocumentProvider"/>
+        <property name="therapyReportDataProvider" ref="therapyReportDataProvider"/>
+        <property name="therapyReportCreator" ref="therapyReportCreator"/>
+        <property name="infusionBagHandler" ref="infusionBagHandler"/>
+        <property name="titrationDataProvider" ref="titrationDataProvider"/>
+        <property name="medicationIngredientRuleHandler" ref="medicationIngredientRuleHandler"/>
+        <property name="therapyBatchActionHandler" ref="therapyBatchActionHandler"/>
+        <property name="therapyChangeCalculator" ref="therapyChangeCalculator"/>
+        <property name="therapyAuditTrailProvider" ref="therapyAuditTrailProvider"/>
+        <property name="administrationProvider" ref="administrationProvider"/>
+        <property name="allergiesHandler" ref="allergiesHandler"/>
+        <property name="patientDataProvider" ref="patientDataProvider"/>
+        <property name="additionalWarningsDelegator" ref="additionalWarningsDelegator"/>
+        <property name="additionalWarningsActionHandler" ref="additionalWarningsActionHandler"/>
+        <property name="tasksRescheduler" ref="tasksRescheduler"/>
+        <property name="barcodeTaskFinder" ref="barcodeTaskFinder"/>
+
+        <!--properties-->
+        <property name="medicationsSearchStartMustMatch" value="${medications.search.start.must.match}"/>
+        <property name="medicationsPharmacistReviewReferBackPreset" value="${medications.pharmacist.review.refer.back.preset:#{null}}"/>
+        <property name="mentalHealthReportEnabled" value="${mental.health.report.enabled:#{null}}"/>
+        <property name="autoAdministrationCharting" value="${auto.administration.charting.enabled:#{null}}"/>
+        <property name="medicationsSupplyPresent" value="${medications.supply.present:#{null}}"/>
+        <property name="medicationsWitnessRequiredUnderAge" value="${medications.witness.required.under.age:#{null}}"/>
+        <property name="medicationsWitnessRequired" value="${medications.witness.required:#{null}}"/>
+        <property name="bnfEnabled" value="${bnf.enabled:#{null}}"/>
+        <property name="medicationsShowHeparinPane" value="${medications.show.heparin.pane:#{null}}"/>
+        <property name="prescriptionSystem" value="${medications.outpatient.prescription.type:#{null}}"/>
+        <property name="formularyFilterEnabled" value="${medications.formulary.filter.enabled}"/>
+        <property name="doctorReviewEnabled" value="${doctor.review.enabled}"/>
+        <property name="doseRangeEnabled" value="${dose.range.enabled}"/>
+        <property name="infusionBagEnabled" value="${infusion.bag.enabled}"/>
+    </bean>
+
+    <bean id="demoPatientIdGenerator" factory-bean="databaseSupport" factory-method="sequenceGenerator">
+        <constructor-arg value="medications_demo_patient_id" />
+        <constructor-arg type="int" value="1" />
     </bean>
 
 </beans>

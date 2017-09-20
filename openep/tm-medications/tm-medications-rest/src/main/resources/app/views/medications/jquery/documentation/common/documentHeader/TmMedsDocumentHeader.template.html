@@ -1,0 +1,26 @@
+<div data-tm-flex-layout="row" data-align-items="flex-start" data-justify-content="flex-start"
+     class="therapy-document-header" data-ng-class="{'unauthorized' : !vm.getDocument().getContent().isAuthorized()}">
+    <div data-tm-flex-item="0 0 5px" data-align-self="stretch" class="status-line"></div>
+    <div data-tm-flex-item="0 0 55px" data-align-self="stretch"
+         data-tm-flex-layout="row" data-align-items="flex-start" data-justify-content="center">
+        <div class="document-icon {{vm.getDocument().getDocumentType() | lowercase}} layers-container"
+             data-tm-flex-item="0 0 auto">
+            <div class="layer h-right v-bottom status-icon"></div>
+        </div>
+    </div>
+    <div data-tm-flex-item="1 1 auto" class="description" data-tm-flex-layout="column" data-align-items="stretch"
+         data-justify-content="flex-start">
+        <div data-tm-flex-item="0 0 auto" class="TextHeading3">
+            {{ vm.getDocument().getDocumentType() | tmMedsEnumTranslationFilter: 'TherapyDocumentType' }}
+        </div>
+        <div data-tm-flex-item="0 0 auto" class="TextData">
+            {{ vm.getDocument().getCreatedTimestamp() | tmDateFilter }}
+          <span ng-if="vm.getDocument().getCreator()">
+              - {{ vm.getDocument().getCreator() | tmMedsNamedExternalNameFilter }}
+          </span>
+        </div>
+        <div data-tm-flex-item="0 0 auto" ng-if="vm.getDocument().getCareProvider()" class="TextData">
+            {{ vm.getDocument().getCareProvider() | tmMedsNamedExternalNameFilter }}
+        </div>
+    </div>
+</div>

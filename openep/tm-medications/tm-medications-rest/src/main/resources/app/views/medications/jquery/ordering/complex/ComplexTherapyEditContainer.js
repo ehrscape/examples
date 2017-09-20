@@ -23,31 +23,50 @@ Class.define('app.views.medications.ordering.ComplexTherapyEditContainer', 'app.
 
   /** configs */
   view: null,
+  medicationData: null, /** @param {Array<app.views.medications.common.dto.MedicationData>} medicationData */
   therapy: null,
   copyTherapy: false,
-  hideDialogFunction: null, //optional
   isPastMode: false,
+  therapyAlreadyStarted: false,
+  therapyModifiedInThePast: false,
+  saveTherapyFunction: null, //optional
   /** privates */
   resultCallback: null,
-  medications: null,
+  editingStartTimestamp: null,
   /** privates: components */
   complexTherapyContainer: null,
   performerContainer: null,
   saveDateTimePane: null,
 
+  _renderConditionTask: null,
+
   /** constructor */
   Constructor: function(config)
   {
-    var self = this;
-    this.medications = [];
     this.callSuper(config);
 
-    this.setLayout(tm.jquery.VFlexboxLayout.create('start', "stretch", 0));
+    var self = this;
+    var appFactory = this.view.getAppFactory();
+
     this._buildComponents();
     this._buildGui();
+
+    this.complexTherapyContainer.setMedicationDataByTherapy(this.getTherapy(), this.getMedicationData());
     this.on(tm.jquery.ComponentEvent.EVENT_TYPE_RENDER, function()
     {
-      self._presentValue();
+      self._abortRenderConditionTask();
+      self._renderConditionTask = appFactory.createConditionTask(
+          function()
+          {
+            self._presentValue();
+            self._renderConditionTask = null;
+          },
+          function()
+          {
+            return self.isRendered(true);
+          },
+          20, 1000
+      );
     });
   },
 
@@ -57,35 +76,45 @@ Class.define('app.views.medications.ordering.ComplexTherapyEditContainer', 'app.
     var self = this;
     var appFactory = this.view.getAppFactory();
 
-    var editingStartTimestamp = new Date();
-    editingStartTimestamp.setSeconds(0);
-    editingStartTimestamp.setMilliseconds(0);
+    this.editingStartTimestamp = CurrentTime.get();
+    this.editingStartTimestamp.setSeconds(0);
+    this.editingStartTimestamp.setMilliseconds(0);
 
     this.complexTherapyContainer = new app.views.medications.ordering.ComplexTherapyContainer({
       view: this.view,
       startProcessOnEnter: true,
-      flex: 1,
+      flex: tm.jquery.flexbox.item.Flex.create(1, 0, "auto"),
       editMode: true,
-      copyTherapy: this.copyTherapy,
+      changeReasonRequired: this.getTherapy().isLinkedToAdmission(),
+      copyMode: this.copyTherapy,
       isPastMode: this.isPastMode,
+      therapyAlreadyStarted: this.therapyAlreadyStarted,
+      additionalMedicationSearchFilter: app.views.medications.TherapyEnums.medicationFinderFilterEnum.INPATIENT_PRESCRIPTION,
       getTherapyStartNotBeforeDateFunction: function()
       {
-        return self.isPastMode == true ? null : self.saveDateTimePane.isHidden() ? editingStartTimestamp : self.saveDateTimePane.getSaveDateTime();
+        return self.isPastMode == true ? null : self._getEditTimestamp();
       },
-      confirmTherapyEvent: function(result)
+      confirmTherapyEvent: function(result, changeReason)
       {
         if (result == "VALIDATION_FAILED")
         {
           self.resultCallback(new app.views.common.AppResultData({success: false}));
         }
-        else if (!self.isPastMode && !self.performerContainer.getPerformer())
-        {
-          appFactory.createWarningSystemDialog(self.view.getDictionary("prescriber.not.defined.warning"), 320, 122).show();
-          self.resultCallback(new app.views.common.AppResultData({success: false}));
-        }
         else
         {
-          self._saveTherapy(result);
+          var performer = self._performerContainer != null ?
+              self._performerContainer.getPerformer() : self.view.getCurrentUserAsCareProfessional();
+          
+          if (self.saveTherapyFunction)
+          {
+            self.saveTherapyFunction(result, performer);
+            self.resultCallback(new app.views.common.AppResultData({success: true}));
+          }
+          else
+          {
+            self._saveTherapy(result, changeReason, performer,
+                self.saveDateTimePane.isHidden() ? null : self.saveDateTimePane.getSaveDateTime());
+          }
         }
       },
       saveDateTimePaneEvent: function()
@@ -94,28 +123,16 @@ Class.define('app.views.medications.ordering.ComplexTherapyEditContainer', 'app.
         self.saveDateTimePane.setPadding('4 0 0 0');
         self.saveDateTimePane.show();
         self.saveDateTimePane.repaint();
-      },
-      closeDialogFunction: function()
-      {
-        if (self.hideDialogFunction)
-        {
-          self.hideDialogFunction();
-        }
       }
     });
 
-    var careProfessionals = this.view.getCareProfessionals();
-    var currentUserAsCareProfessionalName = null;
-    if (this.isPastMode)
+    if (this.isPastMode === true)
     {
-      currentUserAsCareProfessionalName = this.therapy.prescriberName;
+      var careProfessionals = this.view.getCareProfessionals();
+      var currentUserAsCareProfessionalName = this.view.getCurrentUserAsCareProfessional() ? this.view.getCurrentUserAsCareProfessional().name : null;
+      this._performerContainer =
+          tm.views.medications.MedicationUtils.createPerformerContainer(this.view, careProfessionals, currentUserAsCareProfessionalName);
     }
-    else if (this.view.getCurrentUserAsCareProfessional())
-    {
-      currentUserAsCareProfessionalName = this.view.getCurrentUserAsCareProfessional().name;
-    }
-    this.performerContainer =
-        tm.views.medications.MedicationUtils.createPerformerContainer(this.view, careProfessionals, currentUserAsCareProfessionalName);
 
     this.saveDateTimePane = new app.views.medications.ordering.TherapySaveDatePane();
     this.saveDateTimePane.hide();
@@ -123,67 +140,116 @@ Class.define('app.views.medications.ordering.ComplexTherapyEditContainer', 'app.
 
   _buildGui: function()
   {
+    this.setLayout(tm.jquery.VFlexboxLayout.create('flex-start', "stretch", 0));
+
     this.add(this.complexTherapyContainer);
-    this.add(this.performerContainer);
+    if (this._performerContainer != null)
+    {
+      this.add(this._performerContainer);
+    }
     this.add(this.saveDateTimePane);
+  },
+
+  _getEditTimestamp: function()
+  {
+    return this.saveDateTimePane.isHidden() ? this.editingStartTimestamp : this.saveDateTimePane.getSaveDateTime();
   },
 
   _presentValue: function()
   {
-    this.complexTherapyContainer.setComplexTherapy(this.therapy, this.isPastMode == true);
+    var therapyHasAlreadyStarted = new Date(this.getTherapy().getStart()) < this._getEditTimestamp();
+    if (therapyHasAlreadyStarted &&
+        this.getTherapy().isContinuousInfusion() &&
+        this.getTherapy().isVariable &&
+        !this.getTherapy().isRecurringContinuousInfusion())
+    {
+      this.getTherapy().setVariable(false);
+      if (tm.jquery.Utils.isArray(this.getTherapy().getTimedDoseElements()) &&
+          this.getTherapy().getTimedDoseElements().length > 0)
+      {
+        this.getTherapy().setDoseElement(
+            this.getTherapy().getTimedDoseElements()[this.getTherapy().getTimedDoseElements().length - 1].doseElement);
+      }
+      this.getTherapy().setTimedDoseElements([]);
+    }
+
+    var setTherapyStart = !therapyHasAlreadyStarted || this.isPastMode == true;
+
+    this.complexTherapyContainer.setComplexTherapy(
+        this.getTherapy(),
+        setTherapyStart,
+        this.therapyModifiedInThePast);
   },
 
-  _saveTherapy: function(newTherapy)
+  _saveTherapy: function(newTherapy, changeReason, prescriber, saveDateTime)
   {
     var self = this;
-    var saveUrl;
-    var params;
-    var saveDateTime = this.saveDateTimePane.isHidden() ? null : this.saveDateTimePane.getSaveDateTime();
-    var centralCaseData = self.view.getCentralCaseData(); //TherapyCentralCaseData
+
     if (this.copyTherapy)
     {
-      saveUrl = this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_SAVE_MEDICATIONS_ORDER;
-      params = {
-        patientId: self.view.getPatientId(),
-        therapies: JSON.stringify([newTherapy]),
-        centralCaseId: centralCaseData ? centralCaseData.centralCaseId : null,
-        careProviderId: centralCaseData ? centralCaseData.careProviderId : null,
-        sessionId: centralCaseData && centralCaseData.sessionId ? centralCaseData.sessionId : null,
-        knownOrganizationalEntity: self.view.getKnownOrganizationalEntity(),
-        prescriber: JSON.stringify(this.performerContainer.getPerformer()),
-        roundsInterval: JSON.stringify(self.view.getRoundsInterval()),
-        saveDateTime: JSON.stringify(saveDateTime)
-      };
+      var medicationOrder = [
+        new app.views.medications.common.dto.SaveMedicationOrder({
+          therapy: newTherapy,
+          actionEnum: app.views.medications.TherapyEnums.medicationOrderActionEnum.PRESCRIBE
+        })
+      ];
+
+      this.view.getRestApi().saveMedicationsOrder(medicationOrder, prescriber, saveDateTime, null, true)
+          .then(function onSuccess()
+              {
+                self.resultCallback(new app.views.common.AppResultData({success: true}));
+              },
+              function onFailure()
+              {
+                self.resultCallback(new app.views.common.AppResultData({success: false}));
+              });
     }
     else
     {
-      newTherapy.compositionUid = this.therapy.compositionUid;
-      newTherapy.ehrOrderName = this.therapy.ehrOrderName;
-      saveUrl = this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_MODIFY_THERAPY;
-      params = {
-        patientId: this.view.getPatientId(),
-        therapy: JSON.stringify(newTherapy),
-        centralCaseId: centralCaseData ? centralCaseData.centralCaseId : null,
-        careProviderId: centralCaseData ? centralCaseData.careProviderId : null,
-        sessionId: centralCaseData && centralCaseData.sessionId ? centralCaseData.sessionId : null,
-        knownOrganizationalEntity: self.view.getKnownOrganizationalEntity(),
-        prescriber: JSON.stringify(self.performerContainer.getPerformer()),
-        saveDateTime: JSON.stringify(saveDateTime)
-      };
-    }
+      newTherapy.setCompositionUid(this.getTherapy().getCompositionUid());
+      newTherapy.setEhrOrderName(this.getTherapy().getEhrOrderName());
 
-    this.view.loadPostViewData(saveUrl, params, null,
-        function()
-        {
-          var resultData = new app.views.common.AppResultData({success: true});
-          self.resultCallback(resultData);
-        },
-        function()
-        {
-          var resultData = new app.views.common.AppResultData({success: false});
-          self.resultCallback(resultData);
-        },
-        true);
+      this.view.getRestApi().modifyTherapy(
+          newTherapy, 
+          changeReason, 
+          prescriber, 
+          this.therapyAlreadyStarted, 
+          saveDateTime, 
+          true)
+          .then(function onSuccess()
+              {
+                self.resultCallback(new app.views.common.AppResultData({success: true}));
+              },
+              function onFailure()
+              {
+                self.resultCallback(new app.views.common.AppResultData({success: false}));
+              });
+    }
+  },
+
+  _abortRenderConditionTask: function()
+  {
+    if (!tm.jquery.Utils.isEmpty(this._renderConditionTask))
+    {
+      this._renderConditionTask.abort();
+      this._renderConditionTask = null;
+    }
+  },
+  
+  /**
+   * @returns {Array<app.views.medications.common.dto.MedicationData>}
+   */
+  getMedicationData: function()
+  {
+    return this.medicationData;
+  },
+
+  /**
+   * @returns {app.views.medications.common.dto.Therapy}
+   */
+  getTherapy: function()
+  {
+    return this.therapy;
   },
 
   /** public methods */
@@ -191,6 +257,14 @@ Class.define('app.views.medications.ordering.ComplexTherapyEditContainer', 'app.
   {
     this.resultCallback = resultDataCallback;
     this.complexTherapyContainer.validateAndConfirmOrder();
+  },
+  /**
+   * @Override
+   */
+  destroy: function()
+  {
+    this.callSuper();
+    this._abortRenderConditionTask();
   }
 });
 

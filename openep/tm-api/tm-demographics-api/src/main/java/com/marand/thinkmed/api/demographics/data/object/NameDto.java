@@ -19,7 +19,7 @@
 
 package com.marand.thinkmed.api.demographics.data.object;
 
-import com.marand.thinkmed.api.core.data.object.Dto;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import com.marand.thinkmed.api.demographics.DemographicsUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -27,7 +27,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 /**
  * @author Jani Vrhovnik
  */
-public class NameDto extends Dto
+public class NameDto extends DataTransferObject
 {
   private static final long serialVersionUID = 3905267224947630632L;
 

@@ -19,35 +19,34 @@
 
 package com.marand.thinkmed.medications.model.impl;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 
 import com.marand.maf.core.hibernate.entity.AbstractCatalogEntity;
 import com.marand.thinkmed.medications.model.MedicationCustomGroup;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = @Index(name = "xpMedCustomGroupCareProvider", columnList = "care_provider_id"))
 public class MedicationCustomGroupImpl extends AbstractCatalogEntity implements MedicationCustomGroup
 {
-  private String organizationalEntityName;
+  private String careProviderId;
   private Integer sortOrder;
 
   @Override
-  @Column(nullable = false)
-  @Index(name = "xpMedCustomGroupOrg")
-  public String getOrganizationalEntityName()
+  public String getCareProviderId()
   {
-    return organizationalEntityName;
+    return careProviderId;
   }
 
   @Override
-  public void setOrganizationalEntityName(final String organizationalEntityName)
+  public void setCareProviderId(final String careProviderId)
   {
-    this.organizationalEntityName = organizationalEntityName;
+    this.careProviderId = careProviderId;
   }
 
   @Override
@@ -66,6 +65,6 @@ public class MedicationCustomGroupImpl extends AbstractCatalogEntity implements 
   protected void appendToString(final ToStringBuilder tsb)
   {
     super.appendToString(tsb);
-    tsb.append("organizationalEntityName", organizationalEntityName);
+    tsb.append("careProviderId", careProviderId);
   }
 }

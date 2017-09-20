@@ -18,6 +18,7 @@
  */
 
 Class.define('app.views.medications.therapy.ReferenceWeightPane', 'app.views.common.containers.AppDataEntryContainer', {
+  cls: "reference-weight-pane",
   /** configs */
   view: null,
   weight: null,
@@ -51,7 +52,7 @@ Class.define('app.views.medications.therapy.ReferenceWeightPane', 'app.views.com
   _buildComponents: function()
   {
     var self = this;
-    this.weightField = tm.views.medications.MedicationUtils.createNumberField('n3', 90, '0');
+    this.weightField = tm.views.medications.MedicationUtils.createNumberField('n3', 90);
 
     this.validationForm = new tm.jquery.Form({
       onValidationSuccess: function()
@@ -95,6 +96,10 @@ Class.define('app.views.medications.therapy.ReferenceWeightPane', 'app.views.com
   {
     var self = this;
 
+    var viewHubNotifier = this.view.getHubNotifier();
+    var hubAction = tm.views.medications.TherapyView.THERAPY_SAVE_REFERENCE_WEIGHT_HUB;
+    viewHubNotifier.actionStarted(hubAction);
+
     var referenceWeight = this.weightField.getValue();
     var saveUrl = this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_SAVE_REFERENCE_WEIGHT;
     var params = {
@@ -107,11 +112,13 @@ Class.define('app.views.medications.therapy.ReferenceWeightPane', 'app.views.com
         {
           var resultData = new app.views.common.AppResultData({success: true, value: referenceWeight});
           self.resultCallback(resultData);
+          viewHubNotifier.actionEnded(hubAction);
         },
         function()
         {
           var resultData = new app.views.common.AppResultData({success: false});
           self.resultCallback(resultData);
+          viewHubNotifier.actionFailed(hubAction);
         },
         true);
   },

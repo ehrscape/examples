@@ -19,6 +19,8 @@
 
 package com.marand.thinkmed.medications;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.base.Preconditions;
 
 /**
@@ -27,9 +29,38 @@ import com.google.common.base.Preconditions;
 
 public class TherapyTaggingUtils
 {
-  public static String generateTag(final TherapyTag therapyTag, final Long centralCaseId)
+  private TherapyTaggingUtils()
   {
-    Preconditions.checkNotNull(centralCaseId);
-    return therapyTag.getPrefix() + centralCaseId;
   }
+
+  public static String generateTag(final TherapyTagEnum therapyTagEnum, @Nonnull final String centralCaseId)
+  {
+    Preconditions.checkNotNull(centralCaseId, "centralCaseId");
+    return therapyTagEnum.getPrefix() + centralCaseId;
+  }
+
+  public static String generateSourceTag(@Nonnull final String sourceId)
+  {
+    Preconditions.checkNotNull(sourceId, "sourceId");
+    return TherapyTagEnum.SOURCE.getPrefix() + sourceId;
+  }
+
+  public static String getTherapySourceIdFromTag(final String therapyTag)
+  {
+    final String prefix = TherapyTagEnum.SOURCE.getPrefix();
+    return therapyTag.startsWith(prefix) ? therapyTag.replaceFirst(prefix, "") : null;
+  }
+
+  public static String createGroupUUIdTag(@Nonnull final String groupUUId)
+  {
+    Preconditions.checkNotNull(groupUUId, "groupUUId");
+    return TherapyTagEnum.GROUP_UUID.getPrefix() + groupUUId;
+  }
+
+  public static String getGroupUUIdFromTag(final String tag)
+  {
+    final String prefix = TherapyTagEnum.GROUP_UUID.getPrefix();
+    return tag.startsWith(prefix) ? tag.replaceFirst(prefix, "") : null;
+  }
+
 }

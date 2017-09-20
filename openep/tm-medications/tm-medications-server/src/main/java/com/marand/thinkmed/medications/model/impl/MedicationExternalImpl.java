@@ -31,12 +31,18 @@ import com.marand.thinkmed.medications.MedicationExternalSystemType;
 import com.marand.thinkmed.medications.model.Medication;
 import com.marand.thinkmed.medications.model.MedicationExternal;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xfMedicationExternalMed", columnList = "medication_id"),
+    @Index(name = "xpMedicationExternalExtId", columnList = "external_id"),
+    @Index(name = "xpMedicationExternalExtSys", columnList = "external_system"),
+    @Index(name = "xpMedicationExternalSysTyp", columnList = "external_system_type")})
 public class MedicationExternalImpl extends AbstractEffectiveEntity implements MedicationExternal
 {
   private Medication medication;
@@ -46,7 +52,6 @@ public class MedicationExternalImpl extends AbstractEffectiveEntity implements M
 
   @Override
   @ManyToOne(targetEntity = MedicationImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedicationExternalMed")
   public Medication getMedication()
   {
     return medication;
@@ -60,7 +65,6 @@ public class MedicationExternalImpl extends AbstractEffectiveEntity implements M
 
   @Override
   @Column(nullable = false)
-  @Index(name = "xpMedicationExternalExtId")
   public String getExternalId()
   {
     return externalId;
@@ -74,7 +78,6 @@ public class MedicationExternalImpl extends AbstractEffectiveEntity implements M
 
   @Override
   @Column(nullable = false)
-  @Index(name = "xpMedicationExternalExtSys")
   public String getExternalSystem()
   {
     return externalSystem;
@@ -87,7 +90,6 @@ public class MedicationExternalImpl extends AbstractEffectiveEntity implements M
   }
 
   @Override
-  @Index(name = "xpMedicationExternalSysTyp")
   @Enumerated(EnumType.STRING)
   public MedicationExternalSystemType getExternalSystemType()
   {

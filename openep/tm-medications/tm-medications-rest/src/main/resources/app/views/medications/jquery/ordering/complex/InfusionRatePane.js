@@ -18,6 +18,7 @@
  */
 
 Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Container', {
+  cls: "infusion-rate-pane",
   scrollable: "visible",
 
   /** configs */
@@ -27,11 +28,21 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
   getInfusionIngredientsFunction: null,
   getContinuousInfusionFunction: null,
   getVolumeSumFunction: null,
+  getDurationFunction: null,
   formulaVisibleFunction: null,
   singleIngredientVolumeCalculatedEvent: null, //optional
   durationChangeEvent: null, //optional
   rateFormulaChangeEvent: null, //optional
   changeEvent: null, //optional
+  infusionRatePaneForVariable: false,
+  getInfusionDataForVariableFunction: null,
+  verticalLayout: false,
+  formulaFieldFocusLostEvent: null, //optional
+  rateFieldFocusLostEvent: null, //optional
+  allowZeroRate: false, //optional
+  autoRefreshRate: true,
+  rateUnit: 'ml/h',
+
   /** privates */
   firstMedicationData: null,
   clearingInProgress: null,
@@ -49,18 +60,24 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
   Constructor: function(config)
   {
     this.callSuper(config);
-    this.setLayout(tm.jquery.HFlexboxLayout.create("start", "start"));
     this._buildComponents();
-    this._buildGui();
+    if (this.verticalLayout)
+    {
+      this.setLayout(tm.jquery.VFlexboxLayout.create("center", "stretch", 0));
+      this._buildVerticalGui();
+    }
+    else
+    {
+      this.setLayout(tm.jquery.HFlexboxLayout.create("flex-start", "center"));
+      this._buildGui();
+    }
   },
 
   /** private methods */
   _buildComponents: function()
   {
     var self = this;
-    this.clearingInProgress = false;
-
-    this.durationField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, '0');
+    this.durationField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, "duration-field");
     this.durationField.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function(component)
     {
       var durationValue = $(component.getDom()).val();
@@ -77,25 +94,38 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     });
 
     this.durationSpacer = this._createSpacer();
-    this.durationUnitLabel = new app.views.medications.ValueLabel({cls: 'TextData pointer-cursor', width: "25", value: 'h', padding: '6 0 0 0'});
+    this.durationUnitLabel = new app.views.medications.ValueLabel({
+      cls: 'TextData pointer-cursor duration-unit-label', width: "25", value: 'h' });
     this.durationUnitLabel.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function()
     {
       self._toggleDurationUnits();
     });
     this.durationUnitSpacer = this._createSpacer();
-    this.rateField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, '0');
-    this.rateField.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function()
+    this.rateField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, "rate-field");
+
+    if (this.isAutoRefreshRate())
     {
-      self._calculateRate('RATE');
-      self._calculateInfusionValues('RATE');
-      if (self.changeEvent)
+      this.rateField.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function()
       {
-        self.changeEvent();
+        self.refreshRate();
+      });
+    }
+
+    this.rateField.onKey(new tm.jquery.event.KeyStroke({key: "tab"}), function()
+    {
+      self.requestFocusToFormula();
+      if (self.rateFieldFocusLostEvent)
+      {
+        self.rateFieldFocusLostEvent();
       }
     });
-    this.rateUnitLabel = tm.views.medications.MedicationUtils.crateLabel('TextData', 'ml/h');
 
-    this.formulaField = tm.views.medications.MedicationUtils.createNumberField('n3', 68, '0');
+    this.rateUnitLabel = new tm.jquery.Container({
+      cls: 'TextData rate-unit-label',
+      html: tm.views.medications.MedicationUtils.getFormattedUnit(this.rateUnit)
+    });
+
+    this.formulaField = tm.views.medications.MedicationUtils.createNumberField('n3', 68, "formula-field");
     this.formulaField.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function()
     {
       self._calculateRate('FORMULA');
@@ -105,6 +135,21 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
       }
       self._calculateInfusionValues('FORMULA');
     });
+
+    if (this.formulaFieldFocusLostEvent)
+    {
+      this.formulaField.onKey(new tm.jquery.event.KeyStroke({key: "tab"}), function()
+      {
+        if (!self.formulaUnitPane.isHidden())
+        {
+          self.formulaUnitPane.requestFocus();
+        }
+        if (self.formulaFieldFocusLostEvent)
+        {
+          self.formulaFieldFocusLostEvent();
+        }
+      });
+    }
 
     this.formulaUnitPane = new app.views.medications.ordering.InfusionRateFormulaUnitPane({
       view: this.view,
@@ -130,9 +175,49 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     this.add(this.formulaUnitPane);
   },
 
+  _buildVerticalGui: function()
+  {
+    var durationContainer = new tm.jquery.Container({
+      cls: "duration-container",
+      layout: tm.jquery.HFlexboxLayout.create("flex-end", "center")
+    });
+    this.durationField.setFlex(tm.jquery.flexbox.item.Flex.create(1, 1, "100%"));
+    durationContainer.add(this.durationField);
+    durationContainer.add(this._createSpacer());
+    durationContainer.add(this.durationUnitLabel);
+    durationContainer.add(this._createVerticalSpacer());
+    this.add(durationContainer);
+    var rateFieldContainer = new tm.jquery.Container({
+      cls: "rate-field-container",
+      layout: tm.jquery.HFlexboxLayout.create("flex-end", "center")
+    });
+    this.rateField.setFlex(tm.jquery.flexbox.item.Flex.create(1, 1, "100%"));
+    rateFieldContainer.add(this.rateField);
+    rateFieldContainer.add(this._createSpacer());
+    rateFieldContainer.add(this.rateUnitLabel);
+    rateFieldContainer.add(this._createVerticalSpacer());
+    this.add(rateFieldContainer);
+    var formulaFieldContainer = new tm.jquery.Container({
+      cls: "formula-field-container",
+      layout: tm.jquery.HFlexboxLayout.create("flex-end", "center"),
+      scrollable: 'visible'
+    });
+    this.formulaField.setFlex(tm.jquery.flexbox.item.Flex.create(1, 1, "100%"));
+    formulaFieldContainer.add(this.formulaField);
+    formulaFieldContainer.add(this._createSpacer());
+    formulaFieldContainer.add(this.formulaUnitPane);
+    formulaFieldContainer.add(this._createVerticalSpacer());
+    this.add(formulaFieldContainer);
+  },
+
   _createSpacer: function()
   {
     return new tm.jquery.Spacer({type: 'horizontal', size: 5});
+  },
+
+  _createVerticalSpacer: function()
+  {
+    return new tm.jquery.Spacer({type: 'horizontal', size: 2});
   },
 
   _showDurationFields: function()
@@ -151,90 +236,107 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     this.durationUnitSpacer.hide();
   },
 
-  _calculateRate: function(changeType) //changeType: 'RATE', 'FORMULA'
+  _calculateRate: function(changeType, preventEvent) //changeType: 'RATE', 'FORMULA'
   {
-    if (!this.clearingInProgress)
+    if (changeType === 'RATE')
     {
-      if (changeType == 'RATE')
+      var rate = this.rateField.getValue();
+      if (rate)
       {
-        var rate = this.rateField.getValue();
-        if (rate)
-        {
-          this._calculateFormulaFromRate();
-        }
-        else
-        {
-          this._calculateRateFromFormula();
-        }
+        this._calculateFormulaFromRate(preventEvent);
       }
-      else if (changeType == 'FORMULA')
+      else if (this.isAllowZeroRate() && rate === 0)
       {
-        var formula = this.formulaField.getValue();
-        if (formula)
-        {
-          this._calculateRateFromFormula();
-        }
-        else
-        {
-          this._calculateFormulaFromRate();
-        }
+        this.formulaField.setValue(0, true);
+      }
+      else
+      {
+        this._calculateRateFromFormula(preventEvent);
+      }
+    }
+    else if (changeType === 'FORMULA')
+    {
+      var formula = this.formulaField.getValue();
+      if (formula)
+      {
+        this._calculateRateFromFormula(preventEvent);
+      }
+      else
+      {
+        this._calculateFormulaFromRate(preventEvent);
       }
     }
   },
 
   _calculateInfusionValues: function(changeType) //changeType: 'VOLUME', 'DURATION', 'RATE', 'FORMULA'
   {
-    if (!this.clearingInProgress)
-    {
-      var duration = !this.durationField.isHidden() ? this._getDuration("h") : null;
-      var rate = this.rateField.getValue();
-      var formula = this.formulaField.getValue();
-      var dataForCalculation = this._getDataForCalculation();
-      var continuousInfusion = this.getContinuousInfusionFunction();
-      if (!continuousInfusion)
-      {
-        var volume = dataForCalculation.volume;
-        var infusionIngredients = this.getInfusionIngredientsFunction();
 
-        if (duration && volume && !rate)
+    var duration = null;
+    if (!this.infusionRatePaneForVariable)
+    {
+      duration = !this.durationField.isHidden() ? this._getDuration("h") : null;
+    }
+    else
+    {
+      duration = this.getDurationFunction();
+    }
+
+    var rate = this.rateField.getValue();
+    var formula = this.formulaField.getValue();
+    var dataForCalculation = this._getDataForCalculation();
+    var continuousInfusion = this.getContinuousInfusionFunction();
+    if (!continuousInfusion)
+    {
+      var volume = dataForCalculation.volume;
+      var infusionIngredients = this.getInfusionIngredientsFunction();
+
+      if (duration && volume && !rate)
+      {
+        this._calculateRateFromDurationAndVolume(duration, volume);
+      }
+      else if (!duration && volume && rate)
+      {
+        this._calculateDurationFromRateAndVolume(rate, volume);
+      }
+      else if (duration && !volume && rate && infusionIngredients.length == 1)
+      {
+        this._calculateVolumeFromDurationAndRate(duration, rate);
+        this._calculateRate('RATE');
+      }
+      else if (duration && !volume && formula && infusionIngredients.length == 1)
+      {
+        this._calculateVolumeFromDurationAndFormula(duration, formula);
+        this._calculateRate('FORMULA');
+      }
+      else if (duration && volume && rate)
+      {
+        if (changeType == 'VOLUME')
         {
           this._calculateRateFromDurationAndVolume(duration, volume);
         }
-        else if (!duration && volume && rate)
+        else if (changeType == 'DURATION')
         {
-          this._calculateDurationFromRateAndVolume(rate, volume);
+          this._calculateRateFromDurationAndVolume(duration, volume);
         }
-        else if (duration && !volume && rate && infusionIngredients.length == 1)
+        else if (changeType == 'RATE')
         {
-          this._calculateVolumeFromDurationAndRate(duration, rate);
-          this._calculateRate('RATE');
-        }
-        else if (duration && !volume && formula && infusionIngredients.length == 1)
-        {
-          this._calculateVolumeFromDurationAndFormula(duration, formula);
-          this._calculateRate('FORMULA');
-        }
-        else if (duration && volume && rate)
-        {
-          if (changeType == 'VOLUME')
+          if (this.infusionRatePaneForVariable)
           {
-            this._calculateRateFromDurationAndVolume(duration, volume);
+            this._calculateVolumeFromDurationAndRate(duration, rate);
           }
-          else if (changeType == 'DURATION')
-          {
-            this._calculateRateFromDurationAndVolume(duration, volume);
-          }
-          else if (changeType == 'RATE')
+          else
           {
             this._calculateDurationFromRateAndVolume(rate, volume);
           }
+
         }
       }
-      else if (changeType == 'VOLUME' && rate)
-      {
-        this._calculateRate('RATE');
-      }
     }
+    else if (changeType == 'VOLUME' && rate)
+    {
+      this._calculateRate('RATE');
+    }
+
   },
 
   _setDurationInUnits: function(durationValue)
@@ -252,10 +354,10 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     }
   },
 
-  _clearDuration: function()
+  _clearDuration: function(preventEvent)
   {
-    this.durationField.setValue(null);
-    this.durationUnitLabel.setValue("h");
+    this.durationField.setValue(null, preventEvent);
+    this.durationUnitLabel.setValue("h", preventEvent);
   },
 
   _toggleDurationUnits: function()
@@ -308,13 +410,17 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     {
       var dataForCalculation = this._getDataForCalculationFromSingleMedicationStrength();
 
-      if (formula && dataForCalculation.patientWeight && dataForCalculation.mass && dataForCalculation.massUnit && dataForCalculation.volume)
+      if (formula &&
+          dataForCalculation.patientWeight &&
+          dataForCalculation.mass &&
+          dataForCalculation.massUnit &&
+          dataForCalculation.quantityDenominator)
       {
         var calculatedRate = this._calculateRateFromFormulaWithData(
             dataForCalculation.patientWeight,
             dataForCalculation.mass,
             dataForCalculation.massUnit,
-            dataForCalculation.volume,
+            dataForCalculation.quantityDenominator,
             formula);
 
         if (calculatedRate)
@@ -328,9 +434,16 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
 
   _getDataForCalculation: function()
   {
-    var referenceWeight = this.view.getReferenceWeight();
+    var utils = tm.views.medications.MedicationUtils;
+    var enums = app.views.medications.TherapyEnums;
     var infusionIngredients = this.getInfusionIngredientsFunction();
-    if (infusionIngredients.length == 1)
+    if (this.infusionRatePaneForVariable && infusionIngredients.length == 1)
+    {
+      return this.getInfusionDataForVariableFunction();
+    }
+    var referenceWeight = this.view.getReferenceWeight();
+
+    if (!tm.jquery.Utils.isEmpty(infusionIngredients) && infusionIngredients.length == 1)
     {
       var continuousInfusion = this.getContinuousInfusionFunction();
       if (continuousInfusion)
@@ -343,19 +456,39 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
           patientWeight: referenceWeight,
           mass: infusionIngredients[0].quantity,
           massUnit: infusionIngredients[0].quantityUnit,
-          volume: infusionIngredients[0].volume
+          volume: infusionIngredients[0].quantityDenominator != null ?
+              infusionIngredients[0].quantityDenominator :
+              infusionIngredients[0].quantity
         };
       }
     }
     else
     {
       var volumeSum = this.getVolumeSumFunction();
-      var therapyMedsAndSupps = tm.views.medications.MedicationUtils.filterMedicationsByTypes(infusionIngredients, ['MEDICATION', 'SUPPLEMENT']);
+      var orderVolumeSum = 0;
+      var ratio = 1;
+      for (var i = 0; i < infusionIngredients.length; i++)
+      {
+        if (!tm.jquery.Utils.isEmpty(infusionIngredients[i].quantityDenominator))
+        {
+          orderVolumeSum += infusionIngredients[i].quantityDenominator;
+        }
+        else if (utils.isUnitVolumeUnit(infusionIngredients[i].quantityUnit))
+        {
+          orderVolumeSum += infusionIngredients[i].quantity;
+        }
+      }
+      var therapyMedsAndSupps = tm.views.medications.MedicationUtils.filterMedicationsByTypes(infusionIngredients, 
+          [enums.medicationTypeEnum.MEDICATION, enums.medicationTypeEnum.SUPPLEMENT]);
       if (therapyMedsAndSupps.length == 1 && volumeSum)
       {
+        if (orderVolumeSum != 0)
+        {
+          ratio = volumeSum / orderVolumeSum;
+        }
         return {
           patientWeight: referenceWeight,
-          mass: therapyMedsAndSupps[0].quantity,
+          mass: therapyMedsAndSupps[0].quantity * ratio,
           massUnit: therapyMedsAndSupps[0].quantityUnit,
           volume: volumeSum
         };
@@ -375,10 +508,11 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
   _getDataForCalculationFromSingleMedicationStrength: function()
   {
     var referenceWeight = this.view.getReferenceWeight();
-    var definingIngredient = tm.views.medications.MedicationUtils.getDefiningIngredient(this.firstMedicationData);
-    if (definingIngredient)
+    if (this.getFirstMedicationData())
     {
-      if (definingIngredient.strengthDenominatorUnit == 'ml')
+      var definingIngredient = this.getFirstMedicationData().getDefiningIngredient();
+      if (definingIngredient &&
+          (definingIngredient.strengthDenominatorUnit == 'ml' || definingIngredient.strengthDenominatorUnit == 'mL'))
       {
         return {
           patientWeight: referenceWeight,
@@ -396,8 +530,7 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     };
   },
 
-
-  _calculateRateFromFormula: function()
+  _calculateRateFromFormula: function(preventEvent)
   {
     var dataForCalculation = this._getDataForCalculation();
     var formula = this.formulaField.getValue();
@@ -412,7 +545,7 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
 
       if (calculatedRate != null)
       {
-        this.rateField.setValue(calculatedRate);
+        this.rateField.setValue(calculatedRate, preventEvent);
       }
     }
   },
@@ -431,7 +564,7 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     }
     else if (formulaPatientUnit == 'm2')
     {
-      var heightInCm = this.view.getPatientData().heightInCm;
+      var heightInCm = this.view.getPatientHeightInCm();
       formulaWithPatientUnit = formula * tm.views.medications.MedicationUtils.calculateBodySurfaceArea(heightInCm, patientWeight);
     }
     else
@@ -448,7 +581,7 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     return null;
   },
 
-  _calculateFormulaFromRate: function()
+  _calculateFormulaFromRate: function(preventEvent)
   {
     var dataForCalculation = this._getDataForCalculation();
     if (dataForCalculation.patientWeight && dataForCalculation.mass && dataForCalculation.massUnit && dataForCalculation.volume)
@@ -461,7 +594,7 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
 
       if (calculatedFormula != null)
       {
-        this.formulaField.setValue(calculatedFormula);
+        this.formulaField.setValue(calculatedFormula, preventEvent);
       }
     }
   },
@@ -483,7 +616,7 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
       }
       else if (formulaPatientUnit == 'm2')
       {
-        var heightInCm = this.view.getPatientData().heightInCm;
+        var heightInCm = this.view.getPatientHeightInCm();
         patientUnitWithFormula = rate / tm.views.medications.MedicationUtils.calculateBodySurfaceArea(heightInCm, patientWeight);
       }
       else
@@ -501,34 +634,23 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     return null;
   },
 
-  _setDurationVisible: function(visible)
+  _clearFieldValues: function(preventEvent)
   {
-    if (visible)
-    {
-      this._showDurationFields();
-    }
-    else
-    {
-      this._hideDurationFields();
-    }
-    this._calculateRate("RATE");
-  },
-
-  _clearFieldValues: function()
-  {
-    this.clearingInProgress = true;
-    this._clearDuration();
-    this.rateField.setValue(null);
-    this.formulaField.setValue(null);
-    this.clearingInProgress = false;
+    this._clearDuration(preventEvent);
+    this.rateField.setValue(null, preventEvent);
+    this.formulaField.setValue(null, preventEvent);
   },
 
   /** public methods */
 
-  setFirstMedicationData: function(medicationData)
+  /**
+   * @param {app.views.medications.common.dto.MedicationData} medicationData
+   * @param {boolean} [preventEvent=false]
+   */
+  setFirstMedicationData: function(medicationData, preventEvent)
   {
     this.firstMedicationData = medicationData;
-    this.formulaUnitPane.setMedicationData(medicationData);
+    this.formulaUnitPane.setMedicationData(medicationData, this.getContinuousInfusionFunction(), preventEvent);
   },
 
   getInfusionRate: function()
@@ -540,33 +662,50 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     return {
       duration: !this.durationField.isHidden() && this.durationField.getValue() ? this._getDuration("min") : null,
       rate: this.rateField.getValue(),
-      rateUnit: 'ml/h',
+      rateUnit: this.rateUnit,
       rateFormula: this.formulaField.getValue(),
-      rateFormulaUnit: this.formulaUnitPane.getRateFormulaUnit() ? this.formulaUnitPane.getRateFormulaUnit().displayUnit : null
+      rateFormulaUnit: this.formulaUnitPane.getRateFormulaUnit() && !tm.jquery.Utils.isEmpty(this.formulaField.getValue()) ?
+          this.formulaUnitPane.getRateFormulaUnit().displayUnit : null
     }
   },
 
-  setInfusionRate: function(rate)
+  setInfusionRate: function(rate, preventEvent)
   {
     if (rate && rate != 'BOLUS')
     {
-      this.rateField.setValue(rate);
+      this.rateField.setValue(rate, preventEvent);
     }
 
-    if (this.setInfusionRateTypeFunction)
+    if (!preventEvent && this.setInfusionRateTypeFunction)
     {
       this.setInfusionRateTypeFunction(rate);
     }
   },
 
-  setRate: function(rate)
+  setRate: function(rate, preventEvent)
   {
-    this.rateField.setValue(rate);
+    this.rateField.setValue(rate, preventEvent);
   },
 
+  setRateUnit: function(rateUnit)
+  {
+    this.rateUnit = rateUnit;
+    this.rateUnitLabel.setHtml(tm.views.medications.MedicationUtils.getFormattedUnit(rateUnit));
+  },
+
+  /**
+   * @param {Boolean} visible
+   */
   setDurationVisible: function(visible)
   {
-    this._setDurationVisible(visible);
+    if (visible)
+    {
+      this._showDurationFields();
+    }
+    else
+    {
+      this._hideDurationFields();
+    }
   },
 
   getInfusionRateFormulaPerHour: function(quantityUnit)
@@ -585,13 +724,13 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     return null;
   },
 
-  clear: function()
+  clear: function(preventEvent)
   {
-    this._setDurationVisible(true);
-    this._clearFieldValues();
+    this.setDurationVisible(true);
+    this._clearFieldValues(preventEvent);
     if (this.infusionRateTypePane)
     {
-      this.infusionRateTypePane.clear();
+      this.infusionRateTypePane.clear(preventEvent);
     }
   },
 
@@ -602,19 +741,17 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
 
   clearInfusionValues: function()
   {
-    this.clearingInProgress = true;
-    this._clearFieldValues();
+    this._clearFieldValues(true);
     var infusionIngredients = this.getInfusionIngredientsFunction();
     if (infusionIngredients.length == 1)
     {
       this.singleIngredientVolumeCalculatedEvent(null);
     }
-    this.clearingInProgress = false;
   },
 
   clearFieldValues: function()
   {
-    this._clearFieldValues();
+    this._clearFieldValues(true);
   },
 
   getInfusionRatePaneValidations: function()
@@ -632,6 +769,10 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
           return true;
         }
         else if (infusionRate.rate && (self.durationField.isHidden() || infusionRate.duration))
+        {
+          return true;
+        }
+        else if (self.isAllowZeroRate() && infusionRate.rate === 0)
         {
           return true;
         }
@@ -653,9 +794,19 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
     }
   },
 
-  setFormula: function(formula)
+  requestFocusToRate: function()
   {
-    this.formulaField.setValue(formula);
+    this.rateField.focus();
+  },
+
+  requestFocusToFormula: function()
+  {
+    this.formulaField.focus();
+  },
+
+  setFormula: function(formula, preventEvent)
+  {
+    this.formulaField.setValue(formula, preventEvent);
   },
 
   setFormulaUnitToLabel: function(formulaUnitDisplay)
@@ -674,18 +825,74 @@ Class.define('app.views.medications.ordering.InfusionRatePane', 'tm.jquery.Conta
   {
     if (this.formulaVisibleFunction())
     {
-      this.formulaField.show();
-      this.formulaUnitPane.show();
+      this.isRendered() ? this.formulaField.show() : this.formulaField.setHidden(false);
+      this.isRendered() ? this.formulaUnitPane.show() : this.formulaUnitPane.setHidden(false);
     }
     else
     {
-      this.formulaField.hide();
-      this.formulaUnitPane.hide();
+      this.isRendered() ? this.formulaField.hide() : this.formulaField.setHidden(true);
+      this.isRendered() ? this.formulaUnitPane.hide() : this.formulaUnitPane.setHidden(true);
+    }
+  },
+  
+  refreshRate: function(preventEvent)
+  {
+    this._calculateRate('RATE', preventEvent);
+    this._calculateInfusionValues('RATE', preventEvent);
+    if (!preventEvent && this.changeEvent)
+    {
+      this.changeEvent();
     }
   },
 
   presentContinuousInfusionFields: function(continuousInfusion)
   {
-    this._setDurationVisible(!continuousInfusion);
+    this.setDurationVisible(!continuousInfusion);
+    this._calculateRate("RATE");
+  },
+
+  updateFormulaUnitsForContinuous: function(continuousInfusion)
+  {
+    if (this.firstMedicationData)
+    {
+      this.formulaUnitPane.setMedicationData(this.firstMedicationData, continuousInfusion);
+    }
+  },
+
+  /**
+   * @returns {boolean}
+   */
+  isAutoRefreshRate: function()
+  {
+    return this.autoRefreshRate === true;
+  },
+
+  /**
+   * @returns {boolean}
+   */
+  isAllowZeroRate: function()
+  {
+    return this.allowZeroRate === true;
+  },
+
+  /**
+   * @returns {tm.jquery.NumberField}
+   */
+  getRateField: function()
+  {
+    return this.rateField;
+  },
+
+  /**
+   * @returns {app.views.medications.common.dto.MedicationData|null}
+   */
+  getFirstMedicationData: function()
+  {
+    return this.firstMedicationData;
+  },
+
+  getRateFormulaUnit: function()
+  {
+    return this.formulaUnitPane.getRateFormulaUnit();
   }
 });

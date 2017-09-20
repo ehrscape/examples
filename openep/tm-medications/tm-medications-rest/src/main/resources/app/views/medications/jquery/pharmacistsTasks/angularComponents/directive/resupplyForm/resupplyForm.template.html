@@ -1,0 +1,70 @@
+<div class="modalWindow" ng-style="formPosition" style="top: 20px;left: -300px;">
+    <div class="popupHeader">
+        <div class="headerHolder inline">
+            <div class="headerHolder inline">
+                <p class="headerTitleText">{{formMode === 1 ? 'confirm.and.resupply' : 'edit.supply' |
+                    tmDictionaryTermFilter}}</p>
+                <img ng-src="{{::'/images/icons/windowClose_24.png' | tmPictureUrlFilter}}"
+                     title="{{::'close' | tmDictionaryTermFilter}}"
+                     ng-click="closeResupplyForm()"
+                     class="inline float-right popupHeaderCloseBtn pointer"/>
+            </div>
+        </div>
+    </div>
+    <div class="popupContent">
+        <div style="height: 35px;">
+            <ul class="left-margin-0">
+                <li class="display-inline" style="width: 110px;">
+                    <label>
+                        <input class="resupply-form-radio-button"
+                               type="radio"
+                               data-ng-model="data.stockType"
+                               value="PATIENTS_OWN"/>
+                        <span>{{::'MedicationSupplyTypeEnum.PATIENTS_OWN' | tmDictionaryTermFilter}}</span>
+                    </label>
+                </li>
+                <li class="display-inline left-margin-10">
+                    <label>
+                        <input class="resupply-form-radio-button"
+                               type="radio"
+                               data-ng-model="data.stockType"
+                               value="ONE_STOP_DISPENSING"/>
+                        <span>{{::'MedicationSupplyTypeEnum.ONE_STOP_DISPENSING' | tmDictionaryTermFilter}}</span>
+                    </label>
+                </li>
+            </ul>
+        </div>
+        <div style="height: 35px;">
+            <div class="display-inline" style="width: 110px;">
+                <label>
+                    <input class="resupply-form-radio-button"
+                           type="radio"
+                           data-ng-model="data.stockType" value="NON_WARD_STOCK"/>
+                    <span>{{::'MedicationSupplyTypeEnum.NON_WARD_STOCK' | tmDictionaryTermFilter}}</span>
+                </label>
+            </div>
+            <p class="display-inline left-margin-10 margin-bottom-0">{{::'for' | tmDictionaryTermFilter}}</p>
+            <input class="display-inline therapyInput margin-bottom-0"
+                   style=" width: 83px; border-radius: 0px;"
+                   type="text"
+                   ng-model="data.days"/>
+            <p class="display-inline margin-bottom-0">{{::'days' | tmDictionaryTermFilter}}</p>
+        </div>
+        <div>
+            <p class="display-inline margin-bottom-0">{{::'commentary' | tmDictionaryTermFilter}}</p>
+            <input class="therapyInput therapyTextInput"
+                   style="width: 185px;"
+                   type="text" data-ng-model="data.comment"/>
+        </div>
+        <br>
+        <div>
+            <button class="float-right no-border no-padding cancel-button"
+                    ng-click="closeResupplyForm()" type="button">{{::'cancel' | tmDictionaryTermFilter}}
+            </button>
+            <button class="float-right no-border no-padding right-margin-10 confirm-button"
+                    ng-click="submitResuppyAction()"
+                    type="button">{{::'confirm' | tmDictionaryTermFilter}}
+            </button>
+        </div>
+    </div>
+</div>

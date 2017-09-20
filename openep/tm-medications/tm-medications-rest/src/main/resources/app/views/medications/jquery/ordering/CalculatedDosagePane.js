@@ -18,7 +18,7 @@
  */
 
 Class.define('app.views.medications.ordering.CalculatedDosagePane', 'tm.jquery.Container', {
-
+  cls: "calculated-dosage-pane",
   /** configs */
   view: null,
   /** privates */
@@ -31,24 +31,80 @@ Class.define('app.views.medications.ordering.CalculatedDosagePane', 'tm.jquery.C
     this.setLayout(new tm.jquery.VFlexboxLayout({gap: 5}));
   },
 
-  /** private methods */
-  _dosagePerWeight: function(dosage, weightInKg)
+  /**
+   * @param {Number|{minNumerator: Number, maxNumerator: Number}} dosage
+   * @param {Number} weightInKg
+   * @param {Number} [dosageMultiplier=1]
+   * @returns {String}
+   * @private
+   */
+  _dosagePerWeight: function(dosage, weightInKg, dosageMultiplier)
   {
-    return tm.views.medications.MedicationUtils.doubleToString(dosage / weightInKg, 'n2');
+    var dm = tm.jquery.Utils.isNumeric(dosageMultiplier) ? dosageMultiplier : 1;
+    
+    if (dosage && (dosage.maxNumerator || dosage.minNumerator))
+    {
+      return tm.views.medications.MedicationUtils.doubleToString(dosage.minNumerator * dm / weightInKg, 'n2') +
+          ' - ' + tm.views.medications.MedicationUtils.doubleToString(dosage.maxNumerator * dm / weightInKg, 'n2');
+    }
+
+    return tm.views.medications.MedicationUtils.doubleToString(dosage * dm / weightInKg, 'n2');
   },
 
+  /**
+   * @param {Number|{minNumerator: Number, maxNumerator: Number}} dosage
+   * @param {Number} timesPerDay
+   * @param {Number} weightInKg
+   * @returns {String}
+   * @private
+   */
   _dosagePerWeightPerDay: function(dosage, timesPerDay, weightInKg)
   {
+    if (dosage && (dosage.maxNumerator || dosage.minNumerator))
+    {
+      return tm.views.medications.MedicationUtils.doubleToString((dosage.minNumerator / weightInKg) * timesPerDay, 'n2') +
+          ' - ' + tm.views.medications.MedicationUtils.doubleToString((dosage.maxNumerator / weightInKg) * timesPerDay, 'n2');
+    }
+
     return tm.views.medications.MedicationUtils.doubleToString((dosage / weightInKg) * timesPerDay, 'n2');
   },
 
-  _dosagePerSurface: function(dosage, bodySurfaceArea)
+  /**
+   * @param {Number|{minNumerator: Number, maxNumerator: Number}} dosage
+   * @param {Number} bodySurfaceArea
+   * @param {Number} [dosageMultiplier=1]
+   * @returns {String}
+   * @private
+   */
+  _dosagePerSurface: function(dosage, bodySurfaceArea, dosageMultiplier)
   {
-    return tm.views.medications.MedicationUtils.doubleToString(dosage / bodySurfaceArea, 'n2');
+    var dm = tm.jquery.Utils.isNumeric(dosageMultiplier) ? dosageMultiplier : 1;
+
+    if (dosage && (dosage.maxNumerator || dosage.minNumerator))
+    {
+      return tm.views.medications.MedicationUtils.doubleToString(dosage.minNumerator * dm / bodySurfaceArea, 'n2') +
+          ' - ' + tm.views.medications.MedicationUtils.doubleToString(dosage.maxNumerator * dm / bodySurfaceArea, 'n2');
+    }
+
+    return tm.views.medications.MedicationUtils.doubleToString(dosage * dm/ bodySurfaceArea, 'n2');
   },
 
+  /**
+   * @param {Number|{minNumerator: Number, maxNumerator: Number}} dosage
+   * @param {Number} timesPerDay
+   * @param {Number} bodySurfaceArea
+   * @returns {String}
+   * @private
+   */
   _dosagePerSurfacePerDay: function(dosage, timesPerDay, bodySurfaceArea)
   {
+    if (dosage && (dosage.maxNumerator || dosage.minNumerator))
+    {
+      return tm.views.medications.MedicationUtils.doubleToString((dosage.minNumerator / bodySurfaceArea) * timesPerDay, 'n2') +
+          ' - ' +
+          tm.views.medications.MedicationUtils.doubleToString((dosage.maxNumerator / bodySurfaceArea) * timesPerDay, 'n2');
+    }
+
     return tm.views.medications.MedicationUtils.doubleToString((dosage / bodySurfaceArea) * timesPerDay, 'n2');
   },
 
@@ -61,6 +117,7 @@ Class.define('app.views.medications.ordering.CalculatedDosagePane', 'tm.jquery.C
   calculate: function(dosage, dosageUnit, timesPerDay, weightInKg, heightInCm, perHour)
   {
     var appFactory = this.view.getAppFactory();
+    var utils = tm.views.medications.MedicationUtils;
 
     var displayItemsList = [];
     if (dosage && dosageUnit && weightInKg)
@@ -69,12 +126,13 @@ Class.define('app.views.medications.ordering.CalculatedDosagePane', 'tm.jquery.C
 
       var dosagePerWeight = this._dosagePerWeight(dosage, weightInKg);
       displayItemsList.push(
-          this._getCalculationDisplayItem(dosagePerWeight + ' ' + dosageUnit + '/kg/' + perUnit));
+          this._getCalculationDisplayItem(utils.getFormattedDecimalNumber(dosagePerWeight) + ' ' +
+              dosageUnit + '/kg/' + perUnit));
 
       var dosagePerWeightPerDay = null;
       if (perHour)
       {
-        dosagePerWeightPerDay = this._dosagePerWeight(dosage * 24, weightInKg);
+        dosagePerWeightPerDay = this._dosagePerWeight(dosage, weightInKg, 24);
       }
       else if (timesPerDay)
       {
@@ -83,21 +141,23 @@ Class.define('app.views.medications.ordering.CalculatedDosagePane', 'tm.jquery.C
       if (dosagePerWeightPerDay)
       {
         displayItemsList.push(
-            this._getCalculationDisplayItem(dosagePerWeightPerDay + ' ' + dosageUnit + '/kg/' + this.view.getDictionary("day.lc")));
+            this._getCalculationDisplayItem(utils.getFormattedDecimalNumber(dosagePerWeightPerDay) + ' ' +
+                dosageUnit + '/kg/' + this.view.getDictionary("day.lc")));
       }
 
       if (heightInCm)
       {
-        var bodySurfaceArea = tm.views.medications.MedicationUtils.calculateBodySurfaceArea(heightInCm, weightInKg);
+        var bodySurfaceArea = utils.calculateBodySurfaceArea(heightInCm, weightInKg);
 
         var dosagePerSurface = this._dosagePerSurface(dosage, bodySurfaceArea);
         displayItemsList.push(
-            this._getCalculationDisplayItem(dosagePerSurface + ' ' + dosageUnit + '/m2/' + perUnit));
+            this._getCalculationDisplayItem(utils.getFormattedDecimalNumber(dosagePerSurface) + ' ' +
+                dosageUnit + '/m2/' + perUnit));
 
         var dosagePerSurfacePerDay = null;
         if (perHour)
         {
-          dosagePerSurfacePerDay = this._dosagePerSurface(dosage * 24, bodySurfaceArea);
+          dosagePerSurfacePerDay = this._dosagePerSurface(dosage, bodySurfaceArea, 24);
         }
         else if (timesPerDay)
         {
@@ -106,7 +166,8 @@ Class.define('app.views.medications.ordering.CalculatedDosagePane', 'tm.jquery.C
         if (dosagePerSurfacePerDay)
         {
           displayItemsList.push(
-              this._getCalculationDisplayItem(dosagePerSurfacePerDay + ' ' + dosageUnit + '/m2/' + this.view.getDictionary("day.lc")));
+              this._getCalculationDisplayItem(utils.getFormattedDecimalNumber(dosagePerSurfacePerDay) + ' ' +
+                  dosageUnit + '/m2/' + this.view.getDictionary("day.lc")));
         }
       }
     }

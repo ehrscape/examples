@@ -18,11 +18,13 @@
  */
 
 Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.common.containers.AppDataEntryContainer', {
+  cls: "save-template-pane",
   /** configs */
   view: null,
   therapies: null,
   templates: null,
   addSingleTherapy: true,
+  templateMode: null,
   /** privates*/
   resultCallback: null,
   validationForm: null,
@@ -60,23 +62,26 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
     var self = this;
     var enums = app.views.medications.TherapyEnums;
 
-    this.typeCombo = new tm.jquery.ComboBox({
+    this.typeCombo = new tm.jquery.SelectBox({
+      cls: "template-type-combo",
       width: 265,
-      padding: '0 0 0 25',
-      displayPropertyName: "name",
-      allowSingleDeselect: false,
-      multiple: false
+      padding: '0 0 0 25'
     });
-    var typeUser = {id: 1, name: this.view.getDictionary('my.template'), data: enums.templateTypeEnum.USER};
-    var typeOrg = {id: 2, name: this.view.getDictionary('organizational.template'), data: enums.templateTypeEnum.ORGANIZATIONAL};
-    var typePat = {id: 3, name: this.view.getDictionary('patient.template'), data: enums.templateTypeEnum.PATIENT};
-    this.typeCombo.addOption(typePat);
+    var typeUser = tm.jquery.SelectBox.createOption(enums.templateTypeEnum.USER, this.view.getDictionary('my.template'), null, null, true);
+    var typeOrg = tm.jquery.SelectBox.createOption(enums.templateTypeEnum.ORGANIZATIONAL, this.view.getDictionary('organizational.template'), null, null, false);
+    var typePat = tm.jquery.SelectBox.createOption(enums.templateTypeEnum.PATIENT, this.view.getDictionary('patient.template'), null, null, false);
+
     this.typeCombo.addOption(typeUser);
-    if (this.view.isOrgTemplatesEditAllowed())
+    if (this.view.getTherapyAuthority().isManageOrganizationalTemplatesAllowed())
     {
       this.typeCombo.addOption(typeOrg);
     }
-    this.typeCombo.setSelections([typeUser]);
+    if (this.view.getTherapyAuthority().isManagePatientTemplatesAllowed())
+    {
+      this.typeCombo.addOption(typePat);
+    }
+
+    this.typeCombo.setSelections([enums.templateTypeEnum.USER]);
     this.typeCombo.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function()
     {
       var type = self._getSelectedTemplateType();
@@ -95,8 +100,8 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
       self.templatesCombo.setSelection(null);
     });
 
-    this.newTemplateButton = new tm.jquery.RadioButton({checked: true, margin: "10 0 0 0"});
-    this.existingTemplateButton = new tm.jquery.RadioButton();
+    this.newTemplateButton = new tm.jquery.RadioButton({cls:"new-template-button", checked: true, margin: "10 0 0 0"});
+    this.existingTemplateButton = new tm.jquery.RadioButton({cls:"existing-template-button"});
     this.modeButtonGroup = new tm.jquery.RadioButtonGroup({
       groupName: "modeGroup",
       radioButtons: [this.newTemplateButton, this.existingTemplateButton],
@@ -116,7 +121,7 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
       }
     });
 
-    this.newTemplateNameField = new tm.jquery.TextField({width: 240});
+    this.newTemplateNameField = new tm.jquery.TextField({cls: "template-name-field", width: 240});
     this.newTemplateNameField.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function()
     {
       if (self.newTemplateNameField.getValue())
@@ -126,6 +131,7 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
     });
 
     this.templatesCombo = new tm.jquery.TypeaheadField({
+      cls: "templates-combo",
       displayProvider: function(template)
       {
         return template.name;
@@ -147,7 +153,12 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
 
     if (this.addSingleTherapy)
     {
-      this.incompleteTherapyCheckBox = new tm.jquery.CheckBox({labelText: 'Označi terapijo kot nepopolno', nowrap: true, padding: '0 0 0 47'});
+      this.incompleteTherapyCheckBox = new tm.jquery.CheckBox({
+        cls: "incomplete-therapy-checkbox",
+        labelText: this.view.getDictionary("mark.therapy.incomplete"),
+        nowrap: true,
+        padding: '0 0 0 47'
+      });
       if (this.invalidTherapy)
       {
         this.incompleteTherapyCheckBox.setChecked(true);
@@ -170,12 +181,11 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
 
   _buildGui: function()
   {
-    var appFactory = this.view.getAppFactory();
     this.add(this.typeCombo);
     this.add(new tm.jquery.Spacer({type: 'vertical', size: 7}));
 
     this.add(tm.views.medications.MedicationUtils.crateLabel('TextLabel', this.view.getDictionary('new.template'), '5 0 0 25'));
-    var newTemplateContainer = new tm.jquery.Container({layout: appFactory.createDefaultHFlexboxLayout("start", "center", 5)});
+    var newTemplateContainer = new tm.jquery.Container({layout: tm.jquery.HFlexboxLayout.create("flex-start", "center", 5)});
     newTemplateContainer.add(this.newTemplateButton);
     newTemplateContainer.add(this.newTemplateNameField);
     this.add(newTemplateContainer);
@@ -183,7 +193,7 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
 
     var existingTemplateTitle = this.addSingleTherapy ? this.view.getDictionary('add.to.existing.template') : this.view.getDictionary('override.existing.template');
     this.add(tm.views.medications.MedicationUtils.crateLabel('TextLabel', existingTemplateTitle, '5 0 0 25'));
-    var existingTemplateContainer = new tm.jquery.Container({layout: appFactory.createDefaultHFlexboxLayout("start", "center", 5)});
+    var existingTemplateContainer = new tm.jquery.Container({layout: tm.jquery.HFlexboxLayout.create("flex-start", "center", 5)});
     existingTemplateContainer.add(this.existingTemplateButton);
     existingTemplateContainer.add(this.templatesCombo);
     this.add(existingTemplateContainer);
@@ -216,7 +226,7 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
         required: true,
         componentValueImplementationFn: function()
         {
-          return self.templatesCombo.getValue();
+          return self.templatesCombo.getSelection();
         }
       }));
     }
@@ -224,7 +234,7 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
 
   _getSelectedTemplateType: function()
   {
-    return this.typeCombo.getSelections()[0].data;
+    return this.typeCombo.getSelections()[0];
   },
 
   _saveTemplate: function()
@@ -241,7 +251,10 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
     else
     {
       var saveUrl = this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_SAVE_TEMPLATE;
-      var params = {template: JSON.stringify(template)};
+      var params = {
+        template: JSON.stringify(template),
+        templateMode: this.templateMode
+      };
 
       this.view.loadPostViewData(saveUrl, params, null,
           function()
@@ -290,15 +303,13 @@ Class.define('app.views.medications.ordering.SaveTemplatePane', 'app.views.commo
     }
 
     var templateType = this._getSelectedTemplateType();
-    var isUserTemplate = templateType == enums.templateTypeEnum.USER;
     var isOrganizationalTemplate = templateType == enums.templateTypeEnum.ORGANIZATIONAL;
     var isPatientTemplate = templateType == enums.templateTypeEnum.PATIENT;
     return {
       id: createNewTemplate ? 0 : this.templatesCombo.getSelection().id,
       name: createNewTemplate ? this.newTemplateNameField.getValue() : this.templatesCombo.getSelection().name,
       type: templateType,
-      userId: isUserTemplate ? this.view.getUserId() : null,
-      departmentId: isOrganizationalTemplate ? this.view.getOrganizationalEntityId() : null,
+      careProviderId: isOrganizationalTemplate ? this.view.getCareProviderId() : null,
       patientId: isPatientTemplate ? this.view.getPatientId() : null,
       templateElements: templateElements
     }

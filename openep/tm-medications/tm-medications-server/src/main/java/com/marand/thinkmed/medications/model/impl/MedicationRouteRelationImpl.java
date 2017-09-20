@@ -27,12 +27,16 @@ import com.marand.maf.core.hibernate.entity.AbstractEffectiveEntity;
 import com.marand.thinkmed.medications.model.MedicationRoute;
 import com.marand.thinkmed.medications.model.MedicationRouteRelation;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xfMedicationRouteRelationPar", columnList = "parent_route_id"),
+    @Index(name = "xfMedicationRouteRelationChil", columnList = "child_route_id")})
 public class MedicationRouteRelationImpl extends AbstractEffectiveEntity implements MedicationRouteRelation
 {
   private MedicationRoute parentRoute;
@@ -41,7 +45,6 @@ public class MedicationRouteRelationImpl extends AbstractEffectiveEntity impleme
 
   @Override
   @ManyToOne(targetEntity = MedicationRouteImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedicationRouteRelationPar")
   public MedicationRoute getParentRoute()
   {
     return parentRoute;
@@ -55,7 +58,6 @@ public class MedicationRouteRelationImpl extends AbstractEffectiveEntity impleme
 
   @Override
   @ManyToOne(targetEntity = MedicationRouteImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedicationRouteRelationChil")
   public MedicationRoute getChildRoute()
   {
     return childRoute;

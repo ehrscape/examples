@@ -19,7 +19,8 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.thinkmed.api.core.data.object.IdentityDto;
+import com.marand.maf.core.data.IdentityDto;
+import com.marand.thinkmed.medications.rule.MedicationRuleEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -28,21 +29,23 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 public class MedicationIngredientDto extends IdentityDto
 {
-  private IngredientDto ingredient;
+  private long ingredientId;
+  private String ingredientName;
   private Double strengthNumerator;
   private String strengthNumeratorUnit;
   private Double strengthDenominator;
   private String strengthDenominatorUnit;
   private boolean descriptive;
+  private MedicationRuleEnum ingredientRule;
 
-  public IngredientDto getIngredient()
+  public String getIngredientName()
   {
-    return ingredient;
+    return ingredientName;
   }
 
-  public void setIngredient(final IngredientDto ingredient)
+  public void setIngredientName(final String ingredientName)
   {
-    this.ingredient = ingredient;
+    this.ingredientName = ingredientName;
   }
 
   public Double getStrengthNumerator()
@@ -95,18 +98,40 @@ public class MedicationIngredientDto extends IdentityDto
     this.descriptive = descriptive;
   }
 
+  public MedicationRuleEnum getIngredientRule()
+  {
+    return ingredientRule;
+  }
+
+  public void setIngredientRule(final MedicationRuleEnum ingredientRule)
+  {
+    this.ingredientRule = ingredientRule;
+  }
+
+  public long getIngredientId()
+  {
+    return ingredientId;
+  }
+
+  public void setIngredientId(final long ingredientId)
+  {
+    this.ingredientId = ingredientId;
+  }
+
   @Override
   protected void appendToString(final ToStringBuilder tsb)
   {
     super.appendToString(tsb);
 
     tsb
-        .append("ingredient", ingredient)
+        .append("ingredientId", ingredientId)
+        .append("ingredientName", ingredientName)
         .append("strengthNumerator", strengthNumerator)
         .append("strengthNumeratorUnit", strengthNumeratorUnit)
         .append("strengthDenominator", strengthDenominator)
         .append("strengthDenominatorUnit", strengthDenominatorUnit)
         .append("descriptive", descriptive)
+        .append("ingredientRule", ingredientRule)
     ;
   }
 }

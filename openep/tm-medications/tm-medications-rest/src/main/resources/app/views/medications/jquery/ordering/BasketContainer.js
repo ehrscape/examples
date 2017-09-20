@@ -22,168 +22,97 @@ Class.define('app.views.medications.ordering.BasketContainer', 'tm.jquery.Contai
 
   /** configs */
   view: null,
+  headerTitle: null,
   therapyAddedEvent: null,
   editTherapyFunction: null,
   therapiesRemovedEvent: null,
   saveTemplateFunction: null,
   /** privates */
   displayProvider: null,
+  existsUniversalTherapy: false,
   /** privates: components */
   header: null,
   list: null,
 
+  _refreshing: false,
+
   /** constructor */
-  Constructor: function(config)
+  Constructor: function (config)
   {
     this.callSuper(config);
-    this.displayProvider = new app.views.medications.TherapyDisplayProvider({view: config.view});
-    var appFactory = this.view.getAppFactory();
-    this.setLayout(appFactory.createDefaultVFlexboxLayout("start", "stretch"));
+
+    this.displayProvider = this.getConfigValue("displayProvider", new app.views.medications.TherapyDisplayProvider({
+      view: this.view,
+      showBnf: true
+    }));
+
+    this.setLayout(tm.jquery.VFlexboxLayout.create("flex-start", "stretch"));
     this._buildComponents();
     this._buildGui();
   },
 
   /** private methods */
-  _buildComponents: function()
+  _buildComponents: function ()
   {
     var self = this;
     this.header = new app.views.medications.ordering.MedicationsTitleHeader({
-      title: this.view.getDictionary("therapy.list"),
+      title: this.getHeaderTitle(),
       view: this.view,
-      actionsMenuFunction: function()
+      actionsMenuFunction: function ()
       {
         return self._createHeaderActionsMenu();
       }
     });
     this.list = new tm.jquery.List({
-      flex: 1,
+      cls: "basket-container-list",
+      flex: tm.jquery.flexbox.item.Flex.create(1, 0, "auto"),
       autoLoad: false,
       dataSource: [],
-      itemTpl: function(index, item)
+      itemTpl: function (index, item)
       {
-        return self._buildRow(index, item.therapy);
+        return self._buildRow(item);
       },
-      selectable: false
+      selectable: true
     });
   },
 
-  _buildGui: function()
+  _buildGui: function ()
   {
     this.add(this.header);
     this.add(this.list);
   },
 
-  _buildRow: function(index, therapy)
+
+  _buildRow: function (item)
   {
     var self = this;
-    var container = new tm.jquery.Container({
-      padding: '5 5 5 10',
-      layout: new tm.jquery.HFlexboxLayout({
-        alignment: new tm.jquery.FlexboxLayoutAlignment({
-          pack: 'start',
-          align: 'start'
-        })})
+
+    var therapyContainer = new app.views.medications.common.TherapyContainer({
+      flex: tm.jquery.flexbox.item.Flex.create(0, 0, "auto"),
+      view: this.getView(),
+      data: item,
+      displayProvider: this.getDisplayProvider(),
+      showIconTooltip: false
     });
-    container.on(tm.jquery.ComponentEvent.EVENT_TYPE_DOUBLE_CLICK, function()
+    therapyContainer.on(tm.jquery.ComponentEvent.EVENT_TYPE_DOUBLE_CLICK, function (component)
     {
-      self._editTherapy(index);
+      self._editTherapy(component);
     });
 
-    var iconsContainer = new tm.jquery.Container({
-      layout: tm.jquery.new.VFlexboxLayout.create("flex-start", "stretch", 0),
-      width: 20
-    });
-    container.add(iconsContainer);
+    if (this._refreshing == false) therapyContainer.setCls(therapyContainer.getCls() + " animated slideInLeft");
+    if (item.therapy.completed == false) therapyContainer.setCls(therapyContainer.getCls() + " incomplete-therapy");
 
-    if (therapy.completed == false)
-    {
-      iconsContainer.add(new tm.jquery.Container({
-        margin: '2 0 0 0',
-        height: 20,
-        width: 20,
-        cls: 'incomplete-therapy-icon'
-      }));
-    }
-    var therapyHasLinks =
-        (!tm.jquery.Utils.isEmpty(therapy.linkToTherapy) || !tm.jquery.Utils.isEmpty(therapy.linkFromTherapy));
-    if (therapyHasLinks === true)
-    {
-      iconsContainer.add(new tm.jquery.Container({
-        margin: '2 0 0 2',
-        html: 'L',
-        cls: 'basket-container-link'
-      }));
-    }
+    this.attachElementToolbar(therapyContainer);
 
-    var therapyContainer = new tm.jquery.Container({
-      flex: 1,
-      html: therapy.formattedTherapyDisplay,
-      cls: 'TherapyDescription'
+    if (this._refreshing == false)
+    therapyContainer.on(tm.jquery.ComponentEvent.EVENT_TYPE_RENDER, function(component){
+      // don't trigger apply
+      component.cls = component.getCls().replace("animated", "");
     });
-
-    if (therapy.completed == false)
-    {
-      container.setCls('incomplete-therapy');
-    }
-    container.add(therapyContainer);
-
-    var actionsContainer = new tm.jquery.Container({
-      width: 16, height: 16,
-      cls: 'menu-icon'
-    });
-    container.add(actionsContainer);
-
-    var popupMenu = this._createRowActionsMenu(index);
-    actionsContainer.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function(component, componentEvent, elementEvent)
-    {
-      tm.jquery.ComponentUtils.hideAllDropDownMenus(self.view);
-      popupMenu.show(elementEvent);
-    });
-    container.on(tm.jquery.ComponentEvent.EVENT_TYPE_RIGHT_MOUSE_DOWN, function(component, componentEvent, elementEvent)
-    {
-      tm.jquery.ComponentUtils.hideAllDropDownMenus(self.view);
-      popupMenu.show(elementEvent);
-    });
-    popupMenu.on(tm.jquery.ComponentEvent.EVENT_TYPE_SHOW, function()
-    {
-      container.originalCls = container.getCls();
-      container.setCls('selected-therapy');
-    });
-    popupMenu.on(tm.jquery.ComponentEvent.EVENT_TYPE_HIDE, function()
-    {
-      container.setCls(container.originalCls);
-    });
-
-    return container;
+    return therapyContainer;
   },
 
-  _createRowActionsMenu: function(index)
-  {
-    var self = this;
-    var appFactory = this.view.getAppFactory();
-    var menu = appFactory.createPopupMenu();
-    var menuItemEdit = new tm.jquery.MenuItem({
-          text: this.view.getDictionary("edit"),
-          iconCls: 'icon-edit',
-          handler: function()
-          {
-            self._editTherapy(index);
-          }}
-    );
-    menu.addMenuItem(menuItemEdit);
-    var menuItemRemove = new tm.jquery.MenuItem({
-          text: this.view.getDictionary("remove"),
-          iconCls: 'icon-delete',
-          handler: function()
-          {
-            self._removeRow(index);
-          }}
-    );
-    menu.addMenuItem(menuItemRemove);
-    return menu;
-  },
-
-  _createHeaderActionsMenu: function()
+  _createHeaderActionsMenu: function ()
   {
     var self = this;
     var appFactory = this.view.getAppFactory();
@@ -192,24 +121,30 @@ Class.define('app.views.medications.ordering.BasketContainer', 'tm.jquery.Contai
     {
       var menuItemRemove = new tm.jquery.MenuItem({
             text: this.view.getDictionary('remove.all'),
+            cls: "remove-all-menu-item",
             iconCls: 'icon-delete',
-            handler: function()
+            handler: function ()
             {
               self._clearBasket();
-            }}
+            }
+          }
       );
       menu.addMenuItem(menuItemRemove);
-
-      var menuItemSaveTemplate = new tm.jquery.MenuItem({
-            text: this.view.getDictionary('save.template'),
-            iconCls: 'icon-save',
-            handler: function()
-            {
-              var therapies = self.getTherapies();
-              self.saveTemplateFunction(therapies);
-            }}
-      );
-      menu.addMenuItem(menuItemSaveTemplate);
+      if (!this.existsUniversalTherapy)
+      {
+        var menuItemSaveTemplate = new tm.jquery.MenuItem({
+              text: this.view.getDictionary('save.template'),
+              cls: "save-template-menu-item",
+              iconCls: 'icon-save',
+              handler: function()
+              {
+                var therapies = self.getTherapies();
+                self.saveTemplateFunction(therapies);
+              }
+            }
+        );
+        menu.addMenuItem(menuItemSaveTemplate);
+      }
       return menu;
     }
     else
@@ -218,37 +153,72 @@ Class.define('app.views.medications.ordering.BasketContainer', 'tm.jquery.Contai
     }
   },
 
-  _removeRow: function(index)
+  _removeTherapy: function (therapyContainer)
   {
-    var therapy = this.list.getListData()[index];
-    this.list.removeRowData(this.list.getListData()[index]);
-    this.therapiesRemovedEvent([therapy]);
+    var elementData = therapyContainer.getData();
+
+    var therapyCanBeRemoved = this._canTherapyBeRemovedDueToLinks(elementData.therapy);
+    if (therapyCanBeRemoved)
+    {
+      this.list.removeRowData(elementData);
+
+      if (elementData.therapy.linkName)
+      {
+        this._removeTherapyLink(elementData.therapy);
+        this.list.rebuild();
+      }
+
+      this.therapiesRemovedEvent([elementData]);
+    }
+    var listData = this.list.getListData();
+    this.existsUniversalTherapy = this._existsTherapyWithUniversalMedication(listData);
   },
 
-  _clearBasket: function()
+  _canTherapyBeRemovedDueToLinks: function (therapy)
   {
-    this.therapiesRemovedEvent(this.list.getListData());
+    if (therapy.linkName)
+    {
+      var nextLinkName = tm.views.medications.MedicationUtils.getNextLinkName(therapy.linkName);
+      var listData = this.list.getListData();
+      for (var j = 0; j < listData.length; j++)
+      {
+        if (listData[j].therapy.linkName == nextLinkName)
+        {
+          var message = this.view.getDictionary('therapy.can.not.remove.if.linked');
+          this.view.getAppFactory().createWarningSystemDialog(message, 320, 160).show();
+          return false;
+        }
+      }
+    }
+    return true;
+  },
+
+  _clearBasket: function ()
+  {
+    var data = this.list.getListData().slice();
     this.list.clearListData();
+    this.therapiesRemovedEvent(data, {clearBasket: true});
+    this.existsUniversalTherapy = false;
   },
 
-  _editTherapy: function(index)
+  _editTherapy: function (therapyContainer)
   {
-    var therapy = this._getTherapyAtIndex(index);
-    var medication = this._getMedication(therapy);
-    if (tm.jquery.Utils.isEmpty(medication) || tm.jquery.Utils.isEmpty(medication.id))
+    var elementData = therapyContainer.getData();
+    var medication = this._getMedication(elementData.therapy);
+    if (tm.jquery.Utils.isEmpty(medication))
     {
       var message = this.view.getDictionary('therapy.template.can.not.edit');
       this.view.getAppFactory().createWarningSystemDialog(message, 320, 160).show();
     }
     else
     {
-      this.editTherapyFunction(therapy);
+      this.editTherapyFunction(therapyContainer);
     }
   },
 
-  _getMedication: function(therapy)
+  _getMedication: function (therapy)
   {
-    if (therapy.medicationOrderFormType == app.views.medications.TherapyEnums.medicationOrderFormType.COMPLEX)
+    if (therapy.isOrderTypeComplex())
     {
       return !tm.jquery.Utils.isEmpty(therapy.ingredientsList[0]) ? therapy.ingredientsList[0].medication : null;
     }
@@ -258,31 +228,77 @@ Class.define('app.views.medications.ordering.BasketContainer', 'tm.jquery.Contai
     }
   },
 
-  _getTherapyAtIndex: function(index)
+  _removeTherapyLink: function (therapy)
   {
-    var rowData = this.list.getListData()[index];
-    return rowData ? rowData.therapy : null;
+    var linkName = therapy.linkName;
+    var listData = this.list.getListData();
+
+    //remove first if second
+    var isSecondLinkedTherapy = linkName.length == 2 && linkName.charAt(1) == '2';
+    if (isSecondLinkedTherapy) //clear linkName on first therapy
+    {
+      var previousLinkName = linkName.charAt(0) + '1';
+      for (var j = 0; j < listData.length; j++)
+      {
+        if (listData[j].therapy.linkName == previousLinkName)
+        {
+          listData[j].therapy.linkName = null;
+          break;
+        }
+      }
+    }
+
+    therapy.linkName = null;
+  },
+
+  _existsTherapyWithUniversalMedication: function(listData)
+  {
+    for (var i = 0; i < listData.length; i++)
+    {
+      if (listData[i].therapy.hasUniversalIngredient())
+      {
+        return true;
+      }
+    }
+    return false;
   },
 
   /** public methods */
-  addTherapy: function(therapy)
+
+  /* for override, attach event handlers to therapyContainer's toolbars from outside */
+  attachElementToolbar: function (elementContainer)
   {
-    var rowData = {therapy: therapy};
-    this.list.addRowData(rowData, 0);
-    this.therapyAddedEvent();
+    var self = this;
+    var toolbar = new app.views.medications.ordering.TherapyContainerBasketToolbar({
+      therapyContainer: elementContainer,
+      editTherapyEventCallback: function (therapyContainer)
+      {
+        self._editTherapy(therapyContainer);
+      },
+      removeFromBasketEventCallback: function (therapyContainer)
+      {
+        self._removeTherapy(therapyContainer);
+      }
+    });
+    elementContainer.setToolbar(toolbar);
   },
 
-  addTherapies: function(therapies)
+  addTherapy: function (data, options)
   {
-    for (var i = 0; i < therapies.length; i++)
+    if (!tm.jquery.Utils.isEmpty(data) && data.hasOwnProperty("therapy"))
     {
-      var rowData = {therapy: therapies[i]};
-      this.list.addRowData(rowData, i);
+      this.list.addRowData(data, 0);
+      var listData = this.list.getListData();
+      this.existsUniversalTherapy = this._existsTherapyWithUniversalMedication(listData);
+      this.therapyAddedEvent(options);
     }
-    this.therapyAddedEvent();
+    else
+    {
+      this.getView().getLocalLogger().warn("An element with an invalid structure was added to the BasketContainer. Call ignored.");
+    }
   },
 
-  getTherapies: function()
+  getTherapies: function ()
   {
     var therapies = [];
     var listData = this.list.getListData();
@@ -293,7 +309,27 @@ Class.define('app.views.medications.ordering.BasketContainer', 'tm.jquery.Contai
     return therapies;
   },
 
-  removeTherapy: function(therapy)
+  getBasketItems: function()
+  {
+    return this.list.getListData();
+  },
+
+  getHeaderTitle: function ()
+  {
+    return this.headerTitle;
+  },
+
+  getView: function ()
+  {
+    return this.view;
+  },
+
+  getDisplayProvider: function ()
+  {
+    return this.displayProvider;
+  },
+
+  removeTherapy: function (therapy)
   {
     var listData = this.list.getListData();
     for (var i = 0; i < listData.length; i++)
@@ -301,8 +337,16 @@ Class.define('app.views.medications.ordering.BasketContainer', 'tm.jquery.Contai
       if (listData[i].therapy == therapy)
       {
         this.list.removeRowData(listData[i]);
+        break;
       }
     }
+  },
+
+  refreshWithExistingData: function ()
+  {
+    this._refreshing = true; // ugly way of blocking animations due to a lot of refreshes, causing itemTpl to fire again
+    this.list.rebuild();
+    this._refreshing = false;
   }
 });
 

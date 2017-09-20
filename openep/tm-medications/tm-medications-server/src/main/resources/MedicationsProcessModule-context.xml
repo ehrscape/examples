@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+<?xml version="1.0" encoding="UTF-8"?><!--
   ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
   ~
   ~ This file is part of Think!Med Clinical Medication Management.
@@ -18,26 +17,96 @@
   ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns="http://www.springframework.org/schema/beans"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="therapyTaskCreator" class="com.marand.thinkmed.medications.process.impl.TherapyTaskCreatorImpl">
-        <property name="mafDateRuleService" ref="mafDateRuleService"/>
-        <property name="medicationsBo" ref="medicationsBo"/>
+    <import resource="MedicationsBusiness-context.xml"/>
+
+    <bean id="administrationTaskCreator" class="com.marand.thinkmed.medications.administration.impl.AdministrationTaskCreatorImpl">
+        <property name="administrationTaskConverter" ref="administrationTaskConverter"/>
+        <property name="administrationUtils" ref="administrationUtils"/>
+        <property name="taskCreationDays" value="${administration.task.creation.days:#{null}}"/>
     </bean>
 
-    <bean id="medicationsProcessService" class="com.marand.thinkmed.medications.process.impl.MedicationsProcessServiceImpl">
+    <bean id="therapyCacheInvalidator" class="com.marand.thinkmed.medications.therapy.impl.TherapyCacheInvalidatorImpl">
+        <property name="cacheInvalidationServiceProvider" ref="loggingCacheInvalidationServiceProvider"/>
+        <property name="cacheProducerConfig" ref="therapyTasksCacheProducerConfig"/>
+    </bean>
+
+    <bean id="medicationsTasksProvider" class="com.marand.thinkmed.medications.task.impl.MedicationsTasksProviderImpl">
+        <property name="processService" ref="processService"/>
+        <property name="administrationTaskConverter" ref="administrationTaskConverter"/>
+    </bean>
+
+    <bean id="tasksRescheduler" class="com.marand.thinkmed.medications.task.impl.TasksReschedulerImpl">
+        <property name="therapyCacheInvalidator" ref="therapyCacheInvalidator"/>
+        <property name="medicationsTasksHandler" ref="medicationsTasksHandler"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+    </bean>
+
+    <bean id="infusionBagTaskProvider" class="com.marand.thinkmed.medications.infusion.impl.InfusionBagTaskProviderImpl">
+        <property name="processService" ref="processService"/>
+        <property name="infusionBagTaskHandler" ref="infusionBagTaskHandler"/>
+    </bean>
+
+    <bean id="infusionBagTaskHandler" class="com.marand.thinkmed.medications.infusion.impl.InfusionBagTaskHandlerImpl">
+        <property name="processService" ref="processService"/>
+        <property name="infusionBagTaskProvider" ref="infusionBagTaskProvider"/>
+        <property name="medicationsTasksHandler" ref="medicationsTasksHandler"/>
+        <property name="therapyCacheInvalidator" ref="therapyCacheInvalidator"/>
+    </bean>
+
+   <bean id="medicationsTasksHandler" class="com.marand.thinkmed.medications.task.impl.MedicationsTasksHandlerImpl">
+        <property name="processService" ref="processService"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="pharmacistTaskHandler" ref="pharmacistTaskHandler"/>
+        <property name="preparePerfusionSyringeProcessHandler" ref="preparePerfusionSyringeProcessHandler"/>
+        <property name="administrationTaskConverter" ref="administrationTaskConverter"/>
+        <property name="administrationTaskCreator" ref="administrationTaskCreator"/>
+    </bean>
+
+    <bean id="administrationTaskConverter"
+            class="com.marand.thinkmed.medications.administration.impl.AdministrationTaskConverterImpl">
+        <property name="overviewContentProvider" ref="overviewContentProvider"/>
+    </bean>
+
+    <bean id="pharmacistTaskCreator" class="com.marand.thinkmed.medications.pharmacist.impl.PharmacistTaskCreatorImpl">
+        <property name="processService" ref="processService"/>
+    </bean>
+
+    <bean id="pharmacistTaskProvider" class="com.marand.thinkmed.medications.pharmacist.impl.PharmacistTaskProviderImpl">
+        <property name="processService" ref="processService"/>
+        <property name="patientDataProvider" ref="patientDataProvider"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="overviewContentProvider" ref="overviewContentProvider"/>
         <property name="bpmService" ref="bpmService"/>
-        <property name="processService" ref="processService"/>
-        <property name="ehrMedicationsDao" ref="ehrMedicationsDao"/>
-        <property name="therapyTasksProvider" ref="therapyTasksProvider"/>
-        <property name="medicationsBo" ref="medicationsBo"/>
-        <property name="therapyTaskCreator" ref="therapyTaskCreator"/>
+        <property name="labelDisplayValuesProvider" ref="labelDisplayValuesProvider"/>
     </bean>
 
-    <bean id="therapyTasksProvider" class="com.marand.thinkmed.medications.process.impl.TherapyTaskProviderImpl">
+    <bean id="pharmacistTaskHandler" class="com.marand.thinkmed.medications.pharmacist.impl.PharmacistTaskHandlerImpl">
         <property name="processService" ref="processService"/>
+        <property name="pharmacistTaskProvider" ref="pharmacistTaskProvider"/>
+        <property name="pharmacistTaskCreator" ref="pharmacistTaskCreator"/>
+        <property name="bpmService" ref="bpmService"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+    </bean>
+
+    <bean id="pharmacySupplyProcessHandler"
+            class="com.marand.thinkmed.medications.pharmacist.impl.PharmacySupplyProcessHandlerImpl">
+        <property name="bpmService" ref="bpmService"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="pharmacistTaskProvider" ref="pharmacistTaskProvider"/>
+    </bean>
+
+    <bean id="preparePerfusionSyringeProcessHandler"
+            class="com.marand.thinkmed.medications.pharmacist.impl.PreparePerfusionSyringeProcessHandlerImpl">
+        <property name="bpmService" ref="bpmService"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+    </bean>
+
+    <bean id="labelDisplayValuesProvider" class="com.marand.thinkmed.medications.business.impl.LabelDisplayValuesProviderImpl">
+        <property name="medicationsConnector" ref="medicationsConnector"/>
     </bean>
 
 </beans>

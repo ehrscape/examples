@@ -1,0 +1,5 @@
+<div data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch"
+     style="overflow-y: auto; overflow-x: hidden; min-height: 1px;" class="scrollable">
+    <tm-meds-document-presenter data-ng-repeat="document in vm.getDocuments()" data-tm-flex-item="0 0 auto"
+                                data-document="document" data-read-only="::!vm.isEditAllowed()"></tm-meds-document-presenter>
+</div>

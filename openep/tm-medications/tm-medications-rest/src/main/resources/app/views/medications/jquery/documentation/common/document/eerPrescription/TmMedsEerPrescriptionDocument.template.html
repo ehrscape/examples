@@ -1,0 +1,57 @@
+<div data-ng-class="{'unauthorized' : !vm.getDocument().getContent().isAuthorized()}" data-tm-flex-layout="column"
+     data-align-items="stretch" data-justify-content="flex-start">
+    <div class="header" data-tm-flex-item="0 0 auto" data-tm-flex-layout="row" data-align-items="flex-start"
+         data-justify-content="flex-start">
+        <tm-meds-document-header data-tm-flex-item="1 1 auto"
+                                 data-document="vm.getDocument()"></tm-meds-document-header>
+        <div class="menu" data-tm-flex-item="0 0 auto" data-tm-flex-layout="row" data-align-items="flex-start"
+             data-align-items="flex-end">
+            <button data-ng-if="!vm.getDocument().getContent().isAuthorized()"
+                    data-ng-click="vm.authorizeDocument(vm.getDocument())"
+                    class="btn shadowless green" data-tm-flex-item="0 0 auto" data-ng-disabled="vm.isMenuDebounceActive()">
+                <div tabindex="-1" style="margin: auto">{{::'authorise' | tmDictionaryTermFilter }}</div>
+            </button>
+            <div data-tm-flex-item="0 0 auto" data-tm-flex-layout="column" data-align-items="center"
+                 data-justify-content="flex-start" data-ng-if="vm.getDocument().getContent().isAuthorized()">
+                <button data-ng-click="vm.updatePrescriptionPackage(vm.getDocument())" class="btn shadowless white"
+                        data-tm-flex-item="0 0 auto" data-ng-disabled="vm.isMenuDebounceActive()">
+                    <div tabindex="-1" class="icon-refresh-from-eer-24" style="margin: auto"></div>
+                </button>
+                <div data-tm-flex-item="0 0 auto" class="TextData menu-item-subscript-data">
+                    {{document.getContent().getLastUpdateTimestamp() | tmDateFilter }}
+                </div>
+            </div>
+            <tm-popup-menu class="more-actions-submenu" data-tm-flex-item="0 0 auto"
+                           data-ng-if="!vm.getDocument().getContent().isAuthorized()">
+                <tm-menu-item data-action="vm.deleteDocument(vm.getDocument())" data-icon-cls="icon-delete">
+                    {{::'delete' | tmDictionaryTermFilter}}
+                </tm-menu-item>
+            </tm-popup-menu>
+        </div>
+    </div>
+    <div class="body" data-tm-flex-item="0 0 auto" data-tm-flex-layout="row" data-justify-content="flex-start"
+         data-align-items="flex-start">
+        <div data-tm-flex-item="0 0 5px" data-align-self="stretch" class="status-line"></div>
+        <div class="content" data-tm-flex-item="1 1 auto" data-tm-flex-layout="column" data-justify-content="flex-start"
+             data-align-items="stretch">
+            <!-- white prescription section -->
+            <tm-meds-eer-prescription-document-section data-tm-flex-item="0 0 auto"
+                                                        data-ng-if="vm.showWhitePrescriptionsSection()"
+                                                        data-section-title="{{::'white.prescription' | tmDictionaryTermFilter | uppercase }}"
+                                                        data-section-therapies="vm.getWhiteDocumentTypePrescriptionTherapies()"
+                                                        data-cancel-therapy-click-handler="vm.cancelTherapy(document, prescriptionTherapy)"
+                                                        data-remove-therapy-click-handler="vm.removeTherapy(document, prescriptionTherapy)"
+                                                        data-read-only="::vm.isReadOnly()">
+            </tm-meds-eer-prescription-document-section>
+            <!-- green prescription section -->
+            <tm-meds-eer-prescription-document-section data-tm-flex-item="0 0 auto"
+                                                        data-ng-if="vm.showGreenPrescriptionsSection()"
+                                                        data-section-title="{{::'green.prescription' | tmDictionaryTermFilter | uppercase }}"
+                                                        data-section-therapies="vm.getGreenDocumentTypePrescriptionTherapies()"
+                                                        data-cancel-therapy-click-handler="vm.cancelTherapy(document, prescriptionTherapy)"
+                                                        data-remove-therapy-click-handler="vm.removeTherapy(document, prescriptionTherapy)"
+                                                        data-read-only="::vm.isReadOnly()">
+            </tm-meds-eer-prescription-document-section>
+        </div>
+    </div>
+</div>

@@ -24,18 +24,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-import com.marand.thinkmed.api.core.data.Catalog;
 import com.marand.thinkmed.api.organization.NoKnownClinicProvider;
 
 /**
  * @author Bostjan Vester
  */
-public interface KnownClinic extends Serializable, Catalog
+public interface KnownClinic extends Serializable
 {
   interface ValuesProvider
   {
     KnownClinic[] allValues();
   }
+
+  String code();
+  String name();
 
   class Utils
   {
@@ -89,7 +91,7 @@ public interface KnownClinic extends Serializable, Catalog
 
     public static Iterable<String> names(final List<KnownClinic> values)
     {
-      final List<String> result = new ArrayList<String>();
+      final List<String> result = new ArrayList<>();
 
       for (final KnownClinic value : values)
       {

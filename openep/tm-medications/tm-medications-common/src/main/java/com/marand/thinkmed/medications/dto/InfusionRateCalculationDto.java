@@ -19,17 +19,17 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.DataObject;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
-public class InfusionRateCalculationDto extends DataObject
+public class InfusionRateCalculationDto extends DataTransferObject
 {
   private Double quantity;
   private String quantityUnit;
-  private Double volume;  //in ml
+  private Double quantityDenominator;  //in ml
 
   public Double getQuantity()
   {
@@ -51,14 +51,14 @@ public class InfusionRateCalculationDto extends DataObject
     this.quantityUnit = quantityUnit;
   }
 
-  public Double getVolume()
+  public Double getQuantityDenominator()
   {
-    return volume;
+    return quantityDenominator;
   }
 
-  public void setVolume(final Double volume)
+  public void setQuantityDenominator(final Double quantityDenominator)
   {
-    this.volume = volume;
+    this.quantityDenominator = quantityDenominator;
   }
 
   @Override
@@ -66,6 +66,6 @@ public class InfusionRateCalculationDto extends DataObject
   {
     tsb.append("quantity", quantity)
         .append("quantityUnit", quantityUnit)
-        .append("volume", volume);
+        .append("quantityDenominator", quantityDenominator);
   }
 }

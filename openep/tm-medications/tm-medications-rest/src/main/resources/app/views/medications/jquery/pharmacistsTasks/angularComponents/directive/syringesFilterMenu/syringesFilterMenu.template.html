@@ -1,0 +1,22 @@
+<div data-tm-flex-layout="row" data-justify-content="flex-end" data-align-items="center"
+     data-tm-flex-item="0 0 auto">
+    <!-- don't use ng-if, seems to confuse the date picker and it won't open again -->
+    <tm-datepicker data-ng-show="getPerfusionSyringeFilterState().showDispensed" data-on-change="onDateChange()"
+                   data-date="getPerfusionSyringeFilterState().closedTasksDate"
+                   data-overlay-mode="true"></tm-datepicker>
+    <tm-dropdown-menu data-menu-title="{{::'filter.and.sort' | tmDictionaryTermFilter}}">
+        <tm-menu-checkbox-item data-checked="getPerfusionSyringeFilterState().showInProgress"
+                               data-action="toggleShowInProgressSyringeTasks()">{{::'perfusion.syringe.task.in.progress' |
+            tmDictionaryTermFilter}}
+        </tm-menu-checkbox-item>
+        <tm-menu-checkbox-item data-checked="getPerfusionSyringeFilterState().showCompleted"
+                               data-action="toggleShowCompletedSyringeTasks()">{{::'perfusion.syringe.task.confirmed' |
+            tmDictionaryTermFilter}}
+        </tm-menu-checkbox-item>
+        <tm-menu-divider-item></tm-menu-divider-item>
+        <tm-menu-checkbox-item data-checked="getPerfusionSyringeFilterState().showDispensed"
+                               data-action="toggleShowDispensedSyringeTasks()">{{::'perfusion.syringe.task.closed' |
+            tmDictionaryTermFilter}}
+        </tm-menu-checkbox-item>
+    </tm-dropdown-menu>
+</div>

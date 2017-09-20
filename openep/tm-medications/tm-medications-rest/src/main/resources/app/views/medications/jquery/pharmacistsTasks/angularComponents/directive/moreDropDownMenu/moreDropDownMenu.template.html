@@ -1,0 +1,22 @@
+<div class="float-right" style="position:relative;">
+    <button type="button"
+            data-ng-click="positionDropDownMenu($event); maskData.showDropDownContextMenu = !maskData.showDropDownContextMenu"
+            class="btn btn-default icon-more-dropdown">
+    </button>
+    <div ng-show="maskData.showDropDownContextMenu" class="moreDropDownContextMenu" data-ng-style="maskData.dropDownPosition">
+        <ul>
+            <li class="pointer"
+                data-ng-click="positionFormDialog($event); maskData.showSupplyForm = !maskData.showSupplyForm;">
+                <img ng-src="{{::'/images/icons/edit_24.png' | tmPictureUrlFilter}}"/>
+                {{dataItem.taskType  === 'SUPPLY_REVIEW' ? 'confirm.and.remind' : 'edit' | tmDictionaryTermFilter}}
+            </li>
+            <li data-ng-click="dismissTask();" class="pointer">
+                <img ng-src="{{::'/images/icons/delete_24.png' | tmPictureUrlFilter}}"/>
+                {{'dismiss' | tmDictionaryTermFilter}}
+            </li>
+        </ul>
+    </div>
+    <div ng-if="maskData.showSupplyForm">
+        <resupply-form item="dataItem" form-position="maskData.formPosition" form-mode="maskData.formMode" show-resupply-form="maskData.showSupplyForm"></resupply-form>
+    </div>
+</div>

@@ -22,6 +22,7 @@ package com.marand.thinkmed.medications.model;
 import java.util.Set;
 
 import com.marand.maf.core.data.entity.PermanentEntity;
+import com.marand.thinkmed.medications.TherapyTemplateModeEnum;
 import com.marand.thinkmed.medications.TherapyTemplateTypeEnum;
 
 /**
@@ -37,17 +38,21 @@ public interface TherapyTemplate extends PermanentEntity
 
   void setType(TherapyTemplateTypeEnum type);
 
-  Long getUserId();
+  TherapyTemplateModeEnum getTemplateMode();
 
-  void setUserId(Long userId);
+  void setTemplateMode(TherapyTemplateModeEnum mode);
 
-  Long getDepartmentId();
+  String getUserId();
 
-  void setDepartmentId(Long departmentId);
+  void setUserId(String userId);
 
-  Long getPatientId();
+  String getCareProviderId();
 
-  void setPatientId(final Long patientId);
+  void setCareProviderId(String careProviderId);
+
+  String getPatientId();
+
+  void setPatientId(final String patientId);
 
   Set<TherapyTemplateElement> getTherapyTemplateElements();
 

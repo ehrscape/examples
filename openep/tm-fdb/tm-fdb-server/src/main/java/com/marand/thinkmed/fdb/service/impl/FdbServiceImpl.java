@@ -1,12 +1,14 @@
 package com.marand.thinkmed.fdb.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.marand.maf.core.JsonUtil;
-import com.marand.maf.core.data.object.NamedIdentityDto;
+import com.marand.thinkmed.api.externals.data.object.NamedExternalDto;
 import com.marand.thinkmed.fdb.dto.FdbDrugSensitivityWarningDto;
 import com.marand.thinkmed.fdb.dto.FdbEnums;
 import com.marand.thinkmed.fdb.dto.FdbPatientChecksWarningDto;
@@ -14,8 +16,11 @@ import com.marand.thinkmed.fdb.dto.FdbPatientDto;
 import com.marand.thinkmed.fdb.dto.FdbScreeningDto;
 import com.marand.thinkmed.fdb.dto.FdbScreeningResultDto;
 import com.marand.thinkmed.fdb.dto.FdbTerminologyDto;
+import com.marand.thinkmed.fdb.dto.FdbTerminologyWithConceptDto;
 import com.marand.thinkmed.fdb.dto.FdbWarningDto;
 import com.marand.thinkmed.fdb.rest.FdbRestService;
+import com.marand.thinkmed.medicationsexternal.WarningSeverity;
+import com.marand.thinkmed.medicationsexternal.WarningType;
 import com.marand.thinkmed.medicationsexternal.dto.DoseRangeCheckDto;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationForWarningsSearchDto;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationsWarningDto;
@@ -102,11 +107,10 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
   public List<MedicationsWarningDto> findMedicationWarnings(
       final long patientAgeInDays,
       final Double patientWeightInKg,
-      final Integer gabInWeeks,
       final Double bsaInM2,
       final boolean isFemale,
-      final List<String> diseaseTypeCodes,
-      final List<String> allergiesExternalValues,
+      final List<NamedExternalDto> diseaseTypeValues,
+      final List<NamedExternalDto> allergiesExternalValues,
       final List<MedicationForWarningsSearchDto> medicationSummaries)
   {
     final FdbScreeningDto screeningDto =
@@ -115,77 +119,93 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
             patientWeightInKg,
             bsaInM2,
             isFemale,
+            diseaseTypeValues,
             medicationSummaries,
             allergiesExternalValues);
     final String json = JsonUtil.toJson(screeningDto);
     final String warningJson = service.scanForWarnings(json);
     final FdbScreeningResultDto resultDto = JsonUtil.fromJson(warningJson, FdbScreeningResultDto.class);
 
+    final Map<String, String> externalToInternalMedicationIdMap = createExternalToInternalMedicationMapping(medicationSummaries);
+
     final List<MedicationsWarningDto> warnings = new ArrayList<>();
-    fillWarnings(resultDto.getDrugInteractions(), warnings);
-    fillSensitivityWarnings(resultDto.getDrugSensitivities(), warnings);
-    fillWarnings(resultDto.getDuplicateTherapies(), warnings);
-    fillWarnings(resultDto.getDrugDoublings(), warnings);
-    fillWarnings(resultDto.getDrugEquivalences(), warnings);
-    fillPatientChecksWarnings(resultDto.getPatientChecks(), warnings);
+    fillWarnings(resultDto.getDrugInteractions(), warnings, WarningType.INTERACTION, externalToInternalMedicationIdMap);
+    fillSensitivityWarnings(resultDto.getDrugSensitivities(), warnings, externalToInternalMedicationIdMap);
+    fillWarnings(resultDto.getDuplicateTherapies(), warnings, WarningType.DUPLICATE, externalToInternalMedicationIdMap);
+    fillWarnings(resultDto.getDrugDoublings(), warnings, WarningType.DUPLICATE, externalToInternalMedicationIdMap);
+    fillWarnings(resultDto.getDrugEquivalences(), warnings, WarningType.DUPLICATE, externalToInternalMedicationIdMap);
+    fillPatientChecksWarnings(resultDto.getPatientChecks(), warnings, externalToInternalMedicationIdMap);
 
     sortWarningsBySeverity(warnings);
     return warnings;
   }
 
+  private Map<String, String> createExternalToInternalMedicationMapping(final Collection<MedicationForWarningsSearchDto> medications)
+  {
+    final Map<String, String> result = new HashMap<>();
+
+    for (final MedicationForWarningsSearchDto medication : medications)
+    {
+      result.put(medication.getExternalId(), String.valueOf(medication.getId()));
+    }
+
+    return result;
+  }
+
   private void sortWarningsBySeverity(final List<MedicationsWarningDto> warnings)
   {
     Collections.sort(
-        warnings, new Comparator<MedicationsWarningDto>()
-        {
-          @Override
-          public int compare(
-              final MedicationsWarningDto o1, final MedicationsWarningDto o2)
+        warnings, (o1, o2) -> {
+          if (o1.getSeverity() == null && o2.getSeverity() == null)
           {
-            if (o1.getSeverity() == null && o2.getSeverity() == null)
-            {
-              return 0;
-            }
-            if (o2.getSeverity() == null)
-            {
-              return -1;
-            }
-            if (o1.getSeverity() == null)
-            {
-              return 1;
-            }
-            return o2.getSeverity().compareTo(o1.getSeverity());
+            return 0;
           }
+          if (o2.getSeverity() == null)
+          {
+            return -1;
+          }
+          if (o1.getSeverity() == null)
+          {
+            return 1;
+          }
+          return o2.getSeverity().compareTo(o1.getSeverity());
         });
   }
 
-  private void fillWarnings(final List<FdbWarningDto> fdbWarnings, final List<MedicationsWarningDto> warnings)
+  private void fillWarnings(
+      final List<FdbWarningDto> fdbWarnings,
+      final List<MedicationsWarningDto> warnings,
+      final WarningType warningType,
+      final Map<String, String> externalToInternalMedicationIdMap)
   {
     if (fdbWarnings != null)
     {
       for (final FdbWarningDto fdbWarning : fdbWarnings)
       {
         final MedicationsWarningDto warning = new MedicationsWarningDto();
+        warning.setType(warningType);
         warning.setDescription(fdbWarning.getFullAlertMessage());
         if (fdbWarning.getAlertSeverity() != null)
         {
-          final MedicationsWarningDto.Severity severity = getSeverity(fdbWarning.getAlertSeverity().getValue());
+          final WarningSeverity severity = getSeverity(fdbWarning.getAlertSeverity().getValue());
           warning.setSeverity(severity);
         }
 
         if (fdbWarning.getPrimaryDrug() != null)
         {
-          final NamedIdentityDto primaryMedication = new NamedIdentityDto();
-          primaryMedication.setId(fdbWarning.getPrimaryDrug().getId());
-          primaryMedication.setName(fdbWarning.getPrimaryDrug().getName());
-          warning.setPrimaryMedication(primaryMedication);
+          final NamedExternalDto primaryMedication =
+              new NamedExternalDto(
+                  externalToInternalMedicationIdMap.get(String.valueOf(fdbWarning.getPrimaryDrug().getId())),
+                  fdbWarning.getPrimaryDrug().getName());
+          warning.getMedications().add(primaryMedication);
         }
         if (fdbWarning.getSecondaryDrug() != null)
         {
-          final NamedIdentityDto secondaryMedication = new NamedIdentityDto();
-          secondaryMedication.setId(fdbWarning.getSecondaryDrug().getId());
-          secondaryMedication.setName(fdbWarning.getSecondaryDrug().getName());
-          warning.setSecondaryMedication(secondaryMedication);
+          final NamedExternalDto secondaryMedication =
+              new NamedExternalDto(
+                  externalToInternalMedicationIdMap.get(String.valueOf(fdbWarning.getSecondaryDrug().getId())),
+                  fdbWarning.getSecondaryDrug().getName());
+          warning.getMedications().add(secondaryMedication);
         }
         warnings.add(warning);
       }
@@ -194,7 +214,8 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
 
   private void fillSensitivityWarnings(
       final List<FdbDrugSensitivityWarningDto> fdbWarnings,
-      final List<MedicationsWarningDto> warnings)
+      final List<MedicationsWarningDto> warnings,
+      final Map<String, String> externalToInternalMedicationIdMap)
   {
     if (fdbWarnings != null)
     {
@@ -205,10 +226,11 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
 
         if (fdbWarning.getDrug() != null)
         {
-          final NamedIdentityDto primaryMedication = new NamedIdentityDto();
-          primaryMedication.setId(fdbWarning.getDrug().getId());
-          primaryMedication.setName(fdbWarning.getDrug().getName());
-          warning.setPrimaryMedication(primaryMedication);
+          final NamedExternalDto primaryMedication =
+              new NamedExternalDto(externalToInternalMedicationIdMap.get(String.valueOf(fdbWarning.getDrug().getId())), fdbWarning.getDrug().getName());
+          warning.getMedications().add(primaryMedication);
+          warning.setSeverity(WarningSeverity.HIGH);
+          warning.setType(WarningType.ALLERGY);
         }
 
         warnings.add(warning);
@@ -217,21 +239,23 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
   }
 
   private void fillPatientChecksWarnings(
-      final List<FdbPatientChecksWarningDto> fdbWarnings, final List<MedicationsWarningDto> warnings)
+      final List<FdbPatientChecksWarningDto> fdbWarnings,
+      final List<MedicationsWarningDto> warnings,
+      final Map<String, String> externalToInternalMedicationIdMap)
   {
     if (fdbWarnings != null)
     {
       for (final FdbPatientChecksWarningDto fdbWarning : fdbWarnings)
       {
         final MedicationsWarningDto warning = new MedicationsWarningDto();
+        warning.setType(WarningType.CONTRAINDICATION);
         warning.setDescription(fdbWarning.getFullAlertMessage());
 
         if (fdbWarning.getDrug() != null)
         {
-          final NamedIdentityDto primaryMedication = new NamedIdentityDto();
-          primaryMedication.setId(fdbWarning.getDrug().getId());
-          primaryMedication.setName(fdbWarning.getDrug().getName());
-          warning.setPrimaryMedication(primaryMedication);
+          final NamedExternalDto primaryMedication =
+              new NamedExternalDto(externalToInternalMedicationIdMap.get(String.valueOf(fdbWarning.getDrug().getId())), fdbWarning.getDrug().getName());
+          warning.getMedications().add(primaryMedication);
         }
 
         warnings.add(warning);
@@ -244,8 +268,9 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
       final Double patientWeightInKg,
       final Double bsaInM2,
       final boolean isFemale,
+      final List<NamedExternalDto> diseaseTypeCodes,
       final List<MedicationForWarningsSearchDto> medicationSummaries,
-      final List<String> allergiesExternalValues)
+      final List<NamedExternalDto> allergiesExternalValues)
   {
     final FdbScreeningDto screeningDto = new FdbScreeningDto();
 
@@ -255,7 +280,6 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
     screeningDto.getScreeningModules().add(2);
     screeningDto.getScreeningModules().add(1);
     screeningDto.getScreeningModules().add(32);
-    screeningDto.getScreeningModules().add(128);
 
     final FdbPatientDto patientInformation = new FdbPatientDto();
     patientInformation.setAge(patientAgeInDays);
@@ -266,12 +290,13 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
 
     fillMedicationsToScreeningDto(screeningDto, medicationSummaries);
     fillAllergiesToScreeningDto(screeningDto, allergiesExternalValues);
+    fillConditionsToScreeningDto(screeningDto, diseaseTypeCodes);
 
-    screeningDto.setCheckAllDrugs(true);
+    screeningDto.setCheckAllDrugs(false);
     screeningDto.setValidateInput(true);
 
-    screeningDto.setMinimumConditionAlertSeverity(FdbEnums.MINIMUM_CONDITION_ALERT_SEVERITY_CONTRAINDICATION.getNameValue());
-    screeningDto.setMinimumInteractionAlertSeverity(FdbEnums.MINIMUM_INTERACTION_ALERT_SEVERITY_SIGNIFICANT_RISK.getNameValue());
+    screeningDto.setMinimumConditionAlertSeverity(FdbEnums.MINIMUM_CONDITION_ALERT_SEVERITY_PRECAUTION.getNameValue());
+    screeningDto.setMinimumInteractionAlertSeverity(FdbEnums.MINIMUM_INTERACTION_ALERT_SEVERITY_LOW_RISK.getNameValue());
     return screeningDto;
   }
 
@@ -281,9 +306,9 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
   {
     for (final MedicationForWarningsSearchDto medication : medicationSummaries)
     {
-      final FdbTerminologyDto drug = new FdbTerminologyDto();
+      final FdbTerminologyWithConceptDto drug = new FdbTerminologyWithConceptDto();
       drug.setId(medication.getExternalId());
-      drug.setName(medication.getDescription());
+      drug.setName(medication.getName());
       drug.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
       drug.setConceptType(
           medication.isProduct() ? FdbEnums.PRODUCT_CONCEPT_TYPE.getNameValue() : FdbEnums.DRUG_CONCEPT_TYPE.getNameValue());
@@ -299,50 +324,77 @@ public class FdbServiceImpl implements MedicationExternalDataPlugin, Initializin
     }
   }
 
-  private void fillAllergiesToScreeningDto(final FdbScreeningDto screeningDto, final List<String> allergiesExternalValues)
+  private void fillConditionsToScreeningDto(
+      final FdbScreeningDto screeningDto,
+      final List<NamedExternalDto> conditionsExternalValues)
   {
-    //for (final String allergenExternalId : allergiesExternalValues)
-    //{
-    //  final FdbTerminologyDto allergen = new FdbTerminologyDto();
-    //  allergen.setId(allergenExternalId);
-    //  //allergy.setName();
-    //  allergen.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
-    //  allergen.setConceptType(FdbEnums.SUBSTANCE_CONCEPT_TYPE.getNameValue());
-    //  screeningDto.getAllergens().add(allergen);
-    //}
-
-    //TODO Mitja
-    final FdbTerminologyDto allergen = new FdbTerminologyDto();
-    allergen.setId("91936005");
-    allergen.setName("penicillin");
-    allergen.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
-    allergen.setConceptType(FdbEnums.DRUG_CONCEPT_TYPE.getNameValue());
-    screeningDto.getAllergens().add(allergen);
+    for (final NamedExternalDto conditionExternal : conditionsExternalValues)
+    {
+      final FdbTerminologyDto condition = new FdbTerminologyDto();
+      fillFdbTerminologyDto(condition, conditionExternal);
+      screeningDto.getConditions().add(condition);
+    }
   }
 
-  private MedicationsWarningDto.Severity getSeverity(final Long fdbSeverityId)
+  private void fillAllergiesToScreeningDto(
+      final FdbScreeningDto screeningDto,
+      final List<NamedExternalDto> allergiesExternalValues)
   {
-    if (fdbSeverityId == 1L)
+    for (final NamedExternalDto allergenExternal : allergiesExternalValues)
     {
-      return MedicationsWarningDto.Severity.LOW;
+      final FdbTerminologyWithConceptDto allergen = new FdbTerminologyWithConceptDto();
+      fillFdbTerminologyDto(allergen, allergenExternal);
+      allergen.setConceptType(FdbEnums.DRUG_CONCEPT_TYPE.getNameValue());
+      screeningDto.getAllergens().add(allergen);
     }
-    if (fdbSeverityId == 2L)
+
+    //TODO Mitja
+    //final FdbTerminologyDto allergen = new FdbTerminologyDto();
+    //allergen.setId("387494007");
+    //allergen.setName("codeine");
+    //allergen.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
+    //allergen.setConceptType(FdbEnums.DRUG_CONCEPT_TYPE.getNameValue());
+    //screeningDto.getAllergens().add(allergen);
+  }
+
+  private <T extends FdbTerminologyDto> void fillFdbTerminologyDto(
+      final T fdbTerminologyDto,
+      final NamedExternalDto namedExternalDto)
+  {
+    fdbTerminologyDto.setId(namedExternalDto.getId());
+    fdbTerminologyDto.setName(namedExternalDto.getName());
+    fdbTerminologyDto.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
+  }
+
+  private WarningSeverity getSeverity(final Long fdbSeverityId)
+  {
+    if (fdbSeverityId == 1L || fdbSeverityId == 2L)
     {
-      return MedicationsWarningDto.Severity.MEDIUM;
+      return WarningSeverity.LOW;
     }
+    //if (fdbSeverityId == 2L)
+    //{
+    //  return MedicationsWarningDto.Severity.MEDIUM;
+    //}
     if (fdbSeverityId == 3L)
     {
-      return MedicationsWarningDto.Severity.SIGNIFICANT;
+      return WarningSeverity.SIGNIFICANT;
     }
     if (fdbSeverityId == 4L)
     {
-      return MedicationsWarningDto.Severity.HIGH;
+      return WarningSeverity.HIGH;
     }
     return null;
   }
 
   @Override
   public boolean isWarningsProvider()
+  {
+    return true;
+  }
+
+  @Override
+  public boolean requiresDiseaseCodesTranslation()
   {
     return true;
   }

@@ -29,23 +29,26 @@ import javax.persistence.OneToMany;
 import com.marand.maf.core.hibernate.entity.AbstractEffectiveCatalogEntity;
 import com.marand.thinkmed.medications.model.AtcClassification;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xfAtcClassificationParent", columnList = "parent_id"),
+    @Index(name = "xfAtcClassificationTopParent", columnList = "top_parent_id")})
 public class AtcClassificationImpl extends AbstractEffectiveCatalogEntity implements AtcClassification
 {
   private AtcClassification parent;
   private AtcClassification topParent;
   private int depth;
   private boolean leaf;
-  private Set<AtcClassification> children = new HashSet<AtcClassification>();
+  private Set<AtcClassification> children = new HashSet<>();
 
   @Override
   @ManyToOne(targetEntity = AtcClassificationImpl.class, fetch = FetchType.LAZY)
-  @Index(name = "xfAtcClassificationParent")
   public AtcClassification getParent()
   {
     return parent;
@@ -59,7 +62,6 @@ public class AtcClassificationImpl extends AbstractEffectiveCatalogEntity implem
 
   @Override
   @ManyToOne(targetEntity = AtcClassificationImpl.class, fetch = FetchType.LAZY)
-  @Index(name = "xfAtcClassificationTopParent")
   public AtcClassification getTopParent()
   {
     return topParent;

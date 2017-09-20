@@ -30,70 +30,86 @@ Class.define('app.views.medications.TherapyActions', 'tm.jquery.Object', {
   reviewTherapy: function(ehrCompositionId, ehrOrderName, successFunction, failedFunction)
   {
     var self = this;
+
+    var viewHubNotifier = this.view.getHubNotifier();
+    var hubAction = tm.views.medications.TherapyView.THERAPY_REVIEW_HUB;
+    viewHubNotifier.actionStarted(hubAction);
+
     var reviewTherapyUrl = this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_REVIEW_THERAPY;
-    var uidWithoutVersion = this.view.getUidWithoutVersion(ehrCompositionId);
-    var centralCaseData = this.view.getCentralCaseData(); //TherapyCentralCaseData
+    var uidWithoutVersion = tm.views.medications.MedicationUtils.getUidWithoutVersion(ehrCompositionId);
     var params = {
       patientId: this.view.getPatientId(),
       compositionUid: uidWithoutVersion,
-      ehrOrderName: ehrOrderName,
-      sessionId: centralCaseData && centralCaseData.sessionId ? centralCaseData.sessionId : null,
-      knownOrganizationalEntity: self.view.getKnownOrganizationalEntity()
+      ehrOrderName: ehrOrderName
     };
     this.view.loadPostViewData(reviewTherapyUrl, params, null,
         function()
         {
           successFunction();
+          viewHubNotifier.actionEnded(hubAction);
         },
         function()
         {
           failedFunction();
+          viewHubNotifier.actionFailed(hubAction);
         },
         true);
   },
 
-  abortTherapy: function(ehrCompositionId, ehrOrderName, successFunction, failedFunction)
+  abortTherapy: function(ehrCompositionId, ehrOrderName, changeReason, successFunction, failedFunction)
   {
-    var self = this;
+    var viewHubNotifier = this.view.getHubNotifier();
+    var hubAction = tm.views.medications.TherapyView.THERAPY_ABORT_HUB;
+    viewHubNotifier.actionStarted(hubAction);
+
     var abortTherapyUrl =
         this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_ABORT_THERAPY;
-    var uidWithoutVersion = this.view.getUidWithoutVersion(ehrCompositionId);
+    var uidWithoutVersion = tm.views.medications.MedicationUtils.getUidWithoutVersion(ehrCompositionId);
     var params = {
       patientId: this.view.getPatientId(),
       compositionUid: uidWithoutVersion,
-      ehrOrderName: ehrOrderName
+      ehrOrderName: ehrOrderName,
+      changeReason: changeReason != null ? JSON.stringify(changeReason) : null
     };
     this.view.loadPostViewData(abortTherapyUrl, params, null,
         function()
         {
           successFunction();
+          viewHubNotifier.actionEnded(hubAction);
         },
         function()
         {
-          failedFunction()
+          failedFunction();
+          viewHubNotifier.actionFailed(hubAction);
         },
         true);
   },
 
-  suspendTherapy: function(ehrCompositionId, ehrOrderName, successFunction, failedFunction)
+  suspendTherapy: function(ehrCompositionId, ehrOrderName, changeReason, successFunction, failedFunction)
   {
-    var self = this;
+    var viewHubNotifier = this.view.getHubNotifier();
+    var hubAction = tm.views.medications.TherapyView.THERAPY_SUSPEND_HUB;
+    viewHubNotifier.actionStarted(hubAction);
+
     var suspendTherapyUrl =
         this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_SUSPEND_THERAPY;
-    var uidWithoutVersion = this.view.getUidWithoutVersion(ehrCompositionId);
+    var uidWithoutVersion = tm.views.medications.MedicationUtils.getUidWithoutVersion(ehrCompositionId);
     var params = {
       patientId: this.view.getPatientId(),
       compositionUid: uidWithoutVersion,
-      ehrOrderName: ehrOrderName
+      ehrOrderName: ehrOrderName,
+      changeReason: changeReason != null ? JSON.stringify(changeReason) : null
     };
     this.view.loadPostViewData(suspendTherapyUrl, params, null,
         function()
         {
           successFunction();
+          viewHubNotifier.actionEnded(hubAction);
         },
         function()
         {
           failedFunction();
+          viewHubNotifier.actionFailed(hubAction);
         },
         true);
   },
@@ -101,25 +117,29 @@ Class.define('app.views.medications.TherapyActions', 'tm.jquery.Object', {
   reissueTherapy: function(ehrCompositionId, ehrOrderName, successFunction, failedFunction)
   {
     var self = this;
+
+    var viewHubNotifier = this.view.getHubNotifier();
+    var hubAction = tm.views.medications.TherapyView.THERAPY_REISSUE_HUB;
+    viewHubNotifier.actionStarted(hubAction);
+
     var reissueTherapyUrl =
         this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_REISSUE_THERAPY;
-    var uidWithoutVersion = this.view.getUidWithoutVersion(ehrCompositionId);
-    var centralCaseData = self.view.getCentralCaseData(); //TherapyCentralCaseData
+    var uidWithoutVersion = tm.views.medications.MedicationUtils.getUidWithoutVersion(ehrCompositionId);
     var params = {
       patientId: this.view.getPatientId(),
       compositionUid: uidWithoutVersion,
-      ehrOrderName: ehrOrderName,
-      sessionId: centralCaseData && centralCaseData.sessionId ? centralCaseData.sessionId : null,
-      knownOrganizationalEntity: self.view.getKnownOrganizationalEntity()
+      ehrOrderName: ehrOrderName
     };
     this.view.loadPostViewData(reissueTherapyUrl, params, null,
         function()
         {
           successFunction();
+          viewHubNotifier.actionEnded(hubAction);
         },
         function()
         {
           failedFunction();
+          viewHubNotifier.actionFailed(hubAction);
         },
         true);
   }

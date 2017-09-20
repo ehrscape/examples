@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.2.2.final using JasperReports Library version 6.2.2  -->
+<!-- 2016-06-03T12:49:41 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TherapyDayA_Complex" pageWidth="786" pageHeight="539" orientation="Landscape" columnWidth="786" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="com.marand.ispek.common.Dictionary" whenResourceMissingType="Key" uuid="8d713aa8-1f3a-4536-a167-162361f93792">
+	<property name="ireport.zoom" value="1.7715610000000017"/>
+	<property name="ireport.x" value="150"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<template><![CDATA[$P{initData}.getStylesDir() + "TherapyDay_Styles.jrtx"]]></template>
+	<subDataset name="EmptyDataset" uuid="19abbe06-48f2-4aa7-bbe3-3003f56dec5a"/>
+	<parameter name="initData" class="com.marand.ispek.print.jasperreports.IspekJasperReportInitData" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.ispek.print.jasperreports.SampleIspekJRDataSourceFactory.createInitData()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="labelFieldDelimiter" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[": "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="order" class="com.marand.thinkmed.medications.dto.ComplexTherapyDto" isForPrompting="false"/>
+	<parameter name="therapyConsecutiveDay" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="therapyStart" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="therapyEnd" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="therapyApplicationStartDate" class="java.util.Date" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.thinkmed.medications.client.SampleMedicationsJRDataSourceFactory.getTherapyApplicationStartDate()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="administrations" class="java.util.List" isForPrompting="false"/>
+	<parameter name="therapyReportStatusEnum" class="com.marand.thinkmed.medications.TherapyReportStatusEnum" isForPrompting="false">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+	</parameter>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<detail>
+		<band height="35">
+			<rectangle>
+				<reportElement key="" style="nonactiveMedicationBackground" stretchType="RelativeToBandHeight" mode="Opaque" x="0" y="0" width="285" height="35" uuid="4c84a298-94a9-4d9a-a134-930b51d07dc1">
+					<printWhenExpression><![CDATA[$P{therapyReportStatusEnum}.name() == "SUSPENDED"]]></printWhenExpression>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement key="" style="nonactiveMedicationBackground" stretchType="RelativeToBandHeight" mode="Opaque" x="0" y="0" width="786" height="30" uuid="6ae8732f-b254-4ed9-83d3-6b607256d0ce">
+					<printWhenExpression><![CDATA[$P{therapyReportStatusEnum}.name() == "FINISHED"]]></printWhenExpression>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<subreport isUsingCache="false">
+				<reportElement key="" stretchType="RelativeToBandHeight" mode="Transparent" x="0" y="0" width="285" height="30" uuid="1538f229-0fb6-48aa-b726-3b250cf73403"/>
+				<parametersMapExpression><![CDATA[$P{REPORT_PARAMETERS_MAP}]]></parametersMapExpression>
+				<subreportParameter name="baselineInfusionDisplay">
+					<subreportParameterExpression><![CDATA[$P{order}.getBaselineInfusionDisplay()]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="therapyConsecutiveDay">
+					<subreportParameterExpression><![CDATA[$P{therapyConsecutiveDay}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="labelFieldDelimiter">
+					<subreportParameterExpression><![CDATA[$P{labelFieldDelimiter}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{order}.getIngredientsList())]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{initData}.getSubreportsDir() + "TherapyDayScotlandA_Complex_Medication.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport>
+				<reportElement stretchType="RelativeToBandHeight" x="285" y="0" width="502" height="30" backcolor="#FF0000" uuid="067f5891-e0c4-4a8c-b21e-6a78db6fa020"/>
+				<parametersMapExpression><![CDATA[$P{REPORT_PARAMETERS_MAP}]]></parametersMapExpression>
+				<subreportParameter name="order">
+					<subreportParameterExpression><![CDATA[$P{order}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="therapyApplicationStartDate">
+					<subreportParameterExpression><![CDATA[$P{therapyApplicationStartDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="administrations">
+					<subreportParameterExpression><![CDATA[$P{administrations}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="labelFieldDelimiter">
+					<subreportParameterExpression><![CDATA[$P{labelFieldDelimiter}]]></subreportParameterExpression>
+				</subreportParameter>
+				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.JREmptyDataSource()]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{initData}.getSubreportsDir() + "TherapyDayScotlandB_Medication_Dose.jasper"]]></subreportExpression>
+			</subreport>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="1" width="1" height="33" uuid="77042391-f0e7-4e4c-9645-f7ab29b037f9">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5" lineColor="#333333"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="32" y="1" width="1" height="29" uuid="d7057cab-c273-49e9-a017-63c6174df0b9"/>
+				<graphicElement>
+					<pen lineWidth="0.25" lineColor="#666666"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="228" y="1" width="1" height="29" uuid="3476aa45-5f47-4aaa-855f-eea8472f1a38">
+					<printWhenExpression><![CDATA[!$P{order}.getIngredientsList().isEmpty()]]></printWhenExpression>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.25" lineColor="#666666"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="285" y="1" width="1" height="29" uuid="8feb88d9-746b-4c62-96d9-1b87956120f8"/>
+				<graphicElement>
+					<pen lineWidth="0.25" lineColor="#666666"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement positionType="Float" x="0" y="0" width="786" height="1" uuid="8a060988-0dde-4521-a64a-70edd755c9f1"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineColor="#333333"/>
+				</graphicElement>
+			</line>
+		</band>
+		<band height="65">
+			<rectangle>
+				<reportElement style="nonactiveMedicationBackground" stretchType="RelativeToBandHeight" x="0" y="-5" width="786" height="70" uuid="4a78e4b6-f5c5-4626-99ba-f282c04637c8">
+					<printWhenExpression><![CDATA[$P{therapyReportStatusEnum}.name() == "FINISHED"]]></printWhenExpression>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement style="nonactiveMedicationBackground" stretchType="RelativeToBandHeight" x="0" y="-5" width="285" height="70" uuid="2cb69389-2a38-4f1a-a457-5b56b6ad5390">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<printWhenExpression><![CDATA[$P{therapyReportStatusEnum}.name() == "SUSPENDED"]]></printWhenExpression>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement style="dataNormal" stretchType="RelativeToBandHeight" mode="Transparent" x="32" y="0" width="255" height="60" uuid="6b18c472-706b-429e-8205-79cf23dd531e"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="1" rightPadding="2">
+					<topPen lineWidth="0.0" lineColor="#666666"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0" lineColor="#666666"/>
+				</box>
+				<textElement markup="html">
+					<font isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getComplexCombinedDisplay($P{order}, $P{therapyStart}, $P{therapyEnd}, $P{therapyReportStatusEnum}, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement positionType="Float" stretchType="RelativeToBandHeight" x="0" y="-5" width="1" height="70" uuid="3e8ed012-c3f5-4f3b-b98e-2bf99332ed26">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5" lineColor="#333333"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="32" y="-5" width="1" height="70" uuid="9c21c49f-9430-4ce5-9890-aff725a01625">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.25" lineColor="#666666"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="285" y="-5" width="1" height="70" uuid="b6d98b4f-a292-4420-b4a4-58eb5e142f40">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.25" lineColor="#666666"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="786" y="-5" width="1" height="70" uuid="5743cf54-7daf-4f28-a19f-c0c19da82b3d">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5" lineColor="#333333"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="33" y="-5" width="252" height="1" uuid="2769a2f8-b2ae-4971-b696-1f015b16c707">
+					<printWhenExpression><![CDATA[!$P{order}.getIngredientsList().isEmpty()]]></printWhenExpression>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.25" lineColor="#666666"/>
+				</graphicElement>
+			</line>
+		</band>
+		<band height="5">
+			<line>
+				<reportElement positionType="Float" x="0" y="0" width="786" height="1" uuid="ac63951a-c18f-41bc-854d-055c71f059bf"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineColor="#333333"/>
+				</graphicElement>
+			</line>
+		</band>
+	</detail>
+</jasperReport>

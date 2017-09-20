@@ -3,7 +3,7 @@ package com.marand.thinkmed.fdb.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.JsonSerializable;
 
 /**
  * @author Mitja Lapajne

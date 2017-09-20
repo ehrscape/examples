@@ -27,29 +27,44 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.Index;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import com.marand.maf.core.hibernate.entity.AbstractEffectiveEntity;
 import com.marand.thinkmed.medications.MedicationLevelEnum;
 import com.marand.thinkmed.medications.model.Medication;
 import com.marand.thinkmed.medications.model.MedicationCustomGroupMember;
+import com.marand.thinkmed.medications.model.MedicationFormulary;
+import com.marand.thinkmed.medications.model.MedicationIndicationLink;
 import com.marand.thinkmed.medications.model.MedicationIngredientLink;
 import com.marand.thinkmed.medications.model.MedicationRouteLink;
 import com.marand.thinkmed.medications.model.MedicationType;
 import com.marand.thinkmed.medications.model.MedicationVersion;
+import com.marand.thinkmed.medications.model.MedicationWarning;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.Sort;
-import org.hibernate.annotations.SortType;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SortNatural;
 
 /**
  * @author Mitja Lapajne
  * @author Klavdij Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xpMedicationSort", columnList = "sort_order"),
+    @Index(name = "xpMedicationVtm", columnList = "vtm_id"),
+    @Index(name = "xpMedicationVmp", columnList = "vmp_id"),
+    @Index(name = "xpMedicationAmp", columnList = "amp_id"),
+    @Index(name = "xpMedicationVmpp", columnList = "vmpp_id"),
+    @Index(name = "xpMedicationAmpp", columnList = "ampp_id"),
+    @Index(name = "xpMedicationTf", columnList = "tf_id"),
+    @Index(name = "xpMedicationMedLevel", columnList = "medication_level"),
+    @Index(name = "xpMedicationOrderable", columnList = "orderable")})
 public class MedicationImpl extends AbstractEffectiveEntity implements Medication
 {
   private Integer sortOrder;
+  private String code; //not unique, use for import only
   private String description;
   private Long vtmId; //Virtual Therapeutic Moiety
   private Long vmpId; //Virtual Medicinal Product
@@ -59,17 +74,32 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   private Long tfId; //Trade Family
   private MedicationLevelEnum medicationLevel;
   private boolean orderable;
+  private String barcode;
   private Set<MedicationIngredientLink> ingredients = new HashSet<>();
+  private Set<MedicationIndicationLink> indications = new HashSet<>();
   private Set<MedicationRouteLink> routes = new HashSet<>();
   private Set<MedicationType> types = new HashSet<>();
   private Set<MedicationCustomGroupMember> customGroupMembers = new HashSet<>();
   private SortedSet<MedicationVersion> versions = new TreeSet<>();
+  private Set<MedicationFormulary> formulary = new HashSet<>();
+  private Set<MedicationWarning> warnings = new HashSet<>();
 
   @Override
-  @Index(name = "xpMedicationSort")
   public Integer getSortOrder()
   {
     return sortOrder;
+  }
+
+  @Override
+  public String getCode()
+  {
+    return code;
+  }
+
+  @Override
+  public void setCode(final String code)
+  {
+    this.code = code;
   }
 
   @Override
@@ -85,7 +115,6 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   }
 
   @Override
-  @Index(name = "xpMedicationVtm")
   public Long getVtmId()
   {
     return vtmId;
@@ -98,7 +127,6 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   }
 
   @Override
-  @Index(name = "xpMedicationVmp")
   public Long getVmpId()
   {
     return vmpId;
@@ -111,7 +139,6 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   }
 
   @Override
-  @Index(name = "xpMedicationAmp")
   public Long getAmpId()
   {
     return ampId;
@@ -124,7 +151,6 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   }
 
   @Override
-  @Index(name = "xpMedicationVmpp")
   public Long getVmppId()
   {
     return vmppId;
@@ -137,7 +163,6 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   }
 
   @Override
-  @Index(name = "xpMedicationAmpp")
   public Long getAmppId()
   {
     return amppId;
@@ -150,7 +175,6 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   }
 
   @Override
-  @Index(name = "xpMedicationTf")
   public Long getTfId()
   {
     return tfId;
@@ -164,7 +188,6 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
 
   @Override
   @Enumerated(EnumType.STRING)
-  @Index(name = "xpMedicationMedLevel")
   public MedicationLevelEnum getMedicationLevel()
   {
     return medicationLevel;
@@ -177,7 +200,7 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   }
 
   @Override
-  @Index(name = "xpMedicationOrderable")
+  @ColumnDefault("1")
   public boolean isOrderable()
   {
     return orderable;
@@ -187,6 +210,18 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   public void setOrderable(final boolean orderable)
   {
     this.orderable = orderable;
+  }
+
+  @Override
+  public String getBarcode()
+  {
+    return barcode;
+  }
+
+  @Override
+  public void setBarcode(final String barcode)
+  {
+    this.barcode = barcode;
   }
 
   @Override
@@ -206,6 +241,19 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   public void setIngredients(final Set<MedicationIngredientLink> ingredients)
   {
     this.ingredients = ingredients;
+  }
+
+  @Override
+  @OneToMany(targetEntity = MedicationIndicationLinkImpl.class, mappedBy = "medication", fetch = FetchType.LAZY)
+  public Set<MedicationIndicationLink> getIndications()
+  {
+    return indications;
+  }
+
+  @Override
+  public void setIndications(final Set<MedicationIndicationLink> indications)
+  {
+    this.indications = indications;
   }
 
   @Override
@@ -249,7 +297,7 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
 
   @Override
   @OneToMany(targetEntity = MedicationVersionImpl.class, mappedBy = "medication")
-  @Sort(type = SortType.NATURAL)
+  @SortNatural
   public SortedSet<MedicationVersion> getVersions()
   {
     return versions;
@@ -262,28 +310,29 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   }
 
   @Override
-  public void addVersion(final MedicationVersion version)
+  @OneToMany(targetEntity = MedicationFormularyImpl.class, mappedBy = "medication", fetch = FetchType.LAZY)
+  public Set<MedicationFormulary> getFormulary()
   {
-    SortedSet<MedicationVersion> medicationVersions = getVersions();
-    if (medicationVersions == null)
-    {
-      medicationVersions = new TreeSet<MedicationVersion>();
-      versions = medicationVersions;
-    }
-
-    version.setMedication(this);
-    medicationVersions.add(version);
+    return formulary;
   }
 
   @Override
-  public void removeVersion(final MedicationVersion version)
+  public void setFormulary(final Set<MedicationFormulary> formulary)
   {
-    final Set<MedicationVersion> medicationVersions = getVersions();
+    this.formulary = formulary;
+  }
 
-    if (medicationVersions != null && medicationVersions.remove(version))
-    {
-      version.setDeleted(true);
-    }
+  @Override
+  @OneToMany(targetEntity = MedicationWarningImpl.class, mappedBy = "medication", fetch = FetchType.LAZY)
+  public Set<MedicationWarning> getWarnings()
+  {
+    return warnings;
+  }
+
+  @Override
+  public void setWarnings(final Set<MedicationWarning> warnings)
+  {
+    this.warnings = warnings;
   }
 
   @Override
@@ -291,6 +340,7 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
   {
     super.appendToString(tsb);
     tsb.append("sortOrder", sortOrder)
+        .append("code", code)
         .append("description", description)
         .append("vtmId", vtmId)
         .append("vmpId", vmpId)
@@ -304,6 +354,8 @@ public class MedicationImpl extends AbstractEffectiveEntity implements Medicatio
         .append("types", types)
         .append("customGroupMembers", customGroupMembers)
         .append("versions", versions)
+        .append("formulary", formulary)
+        .append("barcode", barcode)
     ;
   }
 }

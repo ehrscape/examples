@@ -18,13 +18,20 @@
  */
 
 Class.define('app.views.medications.ordering.ComplexTherapyMedicationPane', 'tm.jquery.Container', {
+  statics: {
+    EVENT_TYPE_TITRATION_CHANGE: new tm.jquery.event.EventType({
+      name: 'complexTherapyMedicationPaneTitrationChange', delegateName: null
+    })
+  },
+  cls: "complex-therapy-medication-pane",
   scrollable: 'visible',
   /** configs */
   view: null,
   typeaheadAdvancedMode: false,
   medicationData: null, //optional  MedicationDataDto.java
   addSpacer: false,
-  searchEnabled: false,
+  medicationEditable: false,
+  titratedDoseSupported: false, /* will override medication data if disabled */
   addRemoveEnabled: true,
   addElementEvent: null,
   removeElementEvent: null,
@@ -32,11 +39,15 @@ Class.define('app.views.medications.ordering.ComplexTherapyMedicationPane', 'tm.
   numeratorChangeEvent: null,
   medicationChangedEvent: null,
   focusLostEvent: null, //optional
-  closeDialogFunction: null, //optional
-  templates: null, //optional
-
+  showBnf: false,
+  bnfMaximumPane: null,
+  paracetamolLimitContainer: null,
+  overdosePane: null,
+  selectedRoute: null,
+  additionalMedicationSearchFilter: null,
+  preventUnlicensedMedicationSelection: false,
+  preventTitrationChange: false,
   /** privates */
-  settingValue: false,
   medicationEditableSameGenericOnly: false,
   /** privates: components */
   medicationInfo: null,
@@ -47,22 +58,28 @@ Class.define('app.views.medications.ordering.ComplexTherapyMedicationPane', 'tm.
   medicationField: null,
   medicationTypeLabel: null,
   dosePane: null,
+  universalOrderButton: null,
+  universalOrderingPopupMenu: null,
+  highRiskIconsContainer: null,
+
+  _toggleTitrationButton: null,
 
   /** constructor */
   Constructor: function(config)
   {
     this.callSuper(config);
-    this.setLayout(new tm.jquery.VFlexboxLayout({
-      alignment: new tm.jquery.FlexboxLayoutAlignment({
-        pack: 'start',
-        align: 'stretch'
-      })
-    }));
+
+    this.registerEventTypes('app.views.medications.ordering.ComplexTherapyMedicationPane', [
+      {eventType: app.views.medications.ordering.ComplexTherapyMedicationPane.EVENT_TYPE_TITRATION_CHANGE}
+    ]);
+
     this._buildComponents();
     this._buildGui();
+
     if (this.medicationData)
     {
       this._setMedicationType(this.medicationData.medication.medicationType);
+      this.highRiskIconsContainer.presentHighAlertIcons(this.medicationData);
     }
   },
 
@@ -72,103 +89,134 @@ Class.define('app.views.medications.ordering.ComplexTherapyMedicationPane', 'tm.
     var self = this;
     var appFactory = this.view.getAppFactory();
 
-    var medicationDetailsPane = new app.views.medications.therapy.MedicationDetailsCardPane({view: self.view});
-    var detailsCardTooltip = appFactory.createDefaultPopoverTooltip(
-        self.view.getDictionary("medication"),
-        null,
-        medicationDetailsPane
-    );
-    detailsCardTooltip.onShow = function()
-    {
-      medicationDetailsPane.setMedicationData(self.medicationData);
-    };
-    this.medicationInfo = new tm.jquery.Container({cls: 'info-icon pointer-cursor', width: 20, height: 30, margin: '0 0 0 8', tooltip: detailsCardTooltip});
+    this.medicationInfo = new tm.jquery.Container({
+      cls: 'info-icon pointer-cursor medication-info',
+      width: 20,
+      height: 30,
+      hidden: true
+    });
 
-    this.addButton = new tm.jquery.Container({cls: 'add-icon', width: 30, height: 30});
+    this.addButton = new tm.jquery.Container({cls: 'add-icon add-button', width: 30, height: 30, cursor: "pointer"});
     this.addButton.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function()
     {
       self.addElementEvent(self);
     });
-    this.removeButton = new tm.jquery.Container({cls: 'remove-icon', width: 30, height: 30});
+    this.removeButton = new tm.jquery.Container({
+      cls: 'remove-icon remove-button',
+      width: 30,
+      height: 30,
+      cursor: "pointer"
+    });
     this.removeButton.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function()
     {
       self.removeElementEvent();
     });
-    //this.medicationField = tm.views.medications.MedicationUtils.createMedicationsSearchField(
-    //    this.view,
-    //    636,
-    //    this.typeaheadAdvancedMode ? 'advanced' : 'basic',
-    //    this.medicationData ? this.medicationData.medication : null,
-    //    this.searchEnabled
-    //);
-    this.medicationField = new app.views.medications.MedicationSearchField({
-      view: this.view,
-      width: 636,
-      enabled: this.searchEnabled,
-      preselectedMedication: this.medicationData ? this.medicationData.medication : null,
-      medicationSelectedFunction: function(medicationId)
-      {
-        if (self.templates && self.templates.patientTemplates && self.templates.patientTemplates.length > 0)
-        {
-          var patientTemplates = self.templates.patientTemplates;
-          var templatesContainMedication = tm.views.medications.MedicationUtils.assertTemplatesContainMedication(medicationId, patientTemplates);
-          if (!templatesContainMedication)
-          {
-            var message = self.view.getDictionary('medication.not.in.patient.templates');
-            self.view.getAppFactory().createConfirmSystemDialog(message, function(params)
-            {
-              if (params == true)
-              {
-                self._readMedicationData(medicationId);
-              }
-              else
-              {
-                self.medicationField.clear();
-              }
-            }, 320, 160).show();
-          }
-          else
-          {
-            self._readMedicationData(medicationId);
-          }
-        }
-        self._readMedicationData(medicationId);
-      }});
 
-    //if (this.searchEnabled)
-    //{
-    //  this.medicationField.setSource(this.view.getMedications());
-    //  this.medicationField.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function(component)
-    //  {
-    //    if (!self.settingValue)
-    //    {
-    //      var selection = component.getSelection();
-    //      if (selection)
-    //      {
-    //        self._readMedicationData(selection.id)
-    //      }
-    //      else
-    //      {
-    //        self.dosePane.hide();
-    //        self.dosePane.clear();
-    //      }
-    //    }
-    //  });
-    //}
-    this.medicationTypeLabel = new tm.jquery.Container({cls: 'TextData', width: 151, padding: '5 0 0 40'});
+    this.medicationField = new app.views.medications.common.MedicationSearchField({
+      view: this.view,
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, 'auto'),
+      dropdownWidth: "stretch",
+      enabled: this.isMedicationEditable(),
+      placeholder: this.view.getDictionary("search.medication") + "...",
+      selection: this.medicationData ? this.medicationData.medication : null,
+      additionalFilter: this.additionalMedicationSearchFilter,
+      limitSimilarMedication: this.isMedicationEditableSameGenericOnly() && self.getMedicationData() ?
+          this.getMedicationData().getMedication() :
+          null,
+      dropdownAppendTo: this.view.getAppFactory().getDefaultRenderToElement() /* due to the dialog use */
+    });
+
+    this.medicationField.on(tm.jquery.ComponentEvent.EVENT_TYPE_SELECT, function(component)
+    {
+      var medication = component.getSelectionMedication();
+      if (medication)
+      {
+        self._readMedicationData(medication.getId());
+      }
+      else
+      {
+        self.setDoseVisible(false);
+      }
+    });
+
+    this.highRiskIconsContainer = new app.views.medications.ordering.HighRiskMedicationIconsContainer({
+      view: this.view
+    });
+
+    this.universalOrderingPopupMenu = appFactory.createPopupMenu();
+
+    this.universalOrderingPopupMenu.addMenuItem(new tm.jquery.MenuItem({
+      cls: "open-universal-ordering",
+      text: this.view.getDictionary("universal.form"),
+      handler: function()
+      {
+        self._openUniversalMedicationDataDialog();
+      },
+      iconCls: 'icon-add-universal'
+    }));
+
+    this.universalOrderButton = new tm.jquery.Image({
+      cls: 'icon-show-universal-ordering',
+      width: 46,
+      height: 34,
+      cursor: 'pointer'
+    });
+    this.universalOrderButton.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function(component, componentEvent, elementEvent)
+    {
+      if (component.isEnabled())
+      {
+        self.universalOrderingPopupMenu.show(elementEvent);
+      }
+    });
+
+    this.bnfMaximumPane = new app.views.medications.ordering.BnfMaximumPane({
+      view: this.view,
+      alignSelf: "center",
+      percentage: this.bnfMaximumPercentage,
+      hidden: !this.isShowBnf()
+    });
+
+    this.paracetamolLimitContainer = new app.views.medications.ordering.ParacetamolLimitContainer({view: this.view});
+
+    this.overdosePane = new app.views.medications.ordering.OverdoseContainer({
+      view: this.view,
+      alignSelf: "center",
+      padding: "5 0 0 0",
+      hidden: true
+    });
+
+    if (this.medicationData)
+    {
+      this._setUpOverdosePane();
+    }
+
+    this.medicationTypeLabel = new tm.jquery.Container({
+      cls: 'TextData medication-type-label',
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto"),
+      padding: '5 0 0 40'
+    });
+
     this.dosePane = new app.views.medications.ordering.DosePane({
+      cls: "dose-pane with-large-input",
       margin: '0 0 0 5',
       view: this.view,
       pack: 'end',
-      width: 447,
-      denominatorAlwaysVolume: false, //version for england - check before merge to master
+      flex: tm.jquery.flexbox.item.Flex.create(0, 0, "auto"),
+      denominatorAlwaysVolume: true,
+      addDosageCalculationPane: true,
+      medicationData: this.medicationData,
+      addDosageCalcBtn: true,
+      showRounding: true,
       volumeChangedEvent: function()
       {
         self.volumeChangedEvent();
+        self._calculateOverdose()
       },
       numeratorChangeEvent: function()
       {
         self.numeratorChangeEvent();
+        self._calculateOverdose();
+        //self.volumeChangedEvent();
       },
       focusLostEvent: function()
       {
@@ -180,41 +228,82 @@ Class.define('app.views.medications.ordering.ComplexTherapyMedicationPane', 'tm.
     });
     if (this.medicationData)
     {
-      this.dosePane.setMedicationData(this.medicationData);
+      this._calculateOverdose();
     }
     else
     {
-      this.dosePane.hide();
-      this.dosePane.clear();
+      self.setDoseVisible(false);
     }
+
+    this._toggleTitrationButton = new tm.jquery.ToggleButton({
+      cls: 'toggle-titration-button',
+      iconCls: 'icon-titration-dosage-24',
+      alignSelf: "center",
+      enabled: !this.isPreventTitrationChange(),
+      tooltip: appFactory.createDefaultHintTooltip(this.view.getDictionary("dose.titration"), "bottom"),
+      handler: function(component)
+      {
+        component.isPressed() ? self._markAsTitrationDosing() : self._unmarkAsTitrationDosing();
+      }
+    });
+    this._setTitrationButtonVisibility();
   },
 
   _buildGui: function()
   {
-    var mainContainer = new tm.jquery.Container({layout: new tm.jquery.HFlexboxLayout(), height: 67, scrollable: 'visible', padding: '0 0 0 20'});
+    this.setLayout(tm.jquery.VFlexboxLayout.create("flex-start", "stretch"));
+
+    var mainContainer = new tm.jquery.Container({
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "center"),
+      height: 80,
+      scrollable: 'visible',
+      padding: '0 0 0 20'
+    });
+
     if (this.addSpacer)
     {
       this.add(new tm.jquery.Spacer({type: 'vertical', size: 7}));
     }
 
-    var rowsContainer = new tm.jquery.Container({layout: new tm.jquery.VFlexboxLayout(), height: 67, scrollable: 'visible'});
-    var searchContainer = new tm.jquery.Container({layout: new tm.jquery.HFlexboxLayout(), height: 30, scrollable: 'visible'});
+    var rowsContainer = new tm.jquery.Container({
+      layout: tm.jquery.VFlexboxLayout.create("flex-start", "stretch", 0),
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto"),
+      margin: '0 15 0 0',
+      height: 80,
+      scrollable: 'visible'
+    });
+
+    var searchContainer = new tm.jquery.Container({
+      layout: new tm.jquery.HFlexboxLayout(),
+      height: 30,
+      scrollable: 'visible'
+    });
     searchContainer.add(this.medicationField);
+    searchContainer.add(this.highRiskIconsContainer);
     searchContainer.add(this.medicationInfo);
+    searchContainer.add(this.universalOrderButton);
     rowsContainer.add(searchContainer);
     rowsContainer.add(new tm.jquery.Spacer({type: 'vertical', size: 7}));
 
-    this.doseContainer = new tm.jquery.Container({layout: new tm.jquery.HFlexboxLayout({
-      alignment: new tm.jquery.FlexboxLayoutAlignment({
-        pack: 'end',
-        align: 'start'
-      })
-    })});
+    this.doseContainer = new tm.jquery.Container({
+      layout: tm.jquery.HFlexboxLayout.create("flex-end", "flex-start"),
+      scrollable: "visible"
+    });
 
-    this.doseContainer.add(this.addButton);
-    this.doseContainer.add(this.removeButton);
+    var addRemoveBtnsContainer = new tm.jquery.Container({
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "flex-start"),
+      flex: tm.jquery.flexbox.item.Flex.create(0, 0, "60px")
+    });
+    addRemoveBtnsContainer.add(this.addButton);
+    addRemoveBtnsContainer.add(this.removeButton);
+    this.doseContainer.add(addRemoveBtnsContainer);
     this.doseContainer.add(this.medicationTypeLabel);
+    this.doseContainer.add(this.bnfMaximumPane);
+    this.doseContainer.add(this.paracetamolLimitContainer);
+    this.doseContainer.add(this.overdosePane);
     this.doseContainer.add(this.dosePane);
+    this.doseContainer.add(this._toggleTitrationButton);
+
     rowsContainer.add(this.doseContainer);
     mainContainer.add(rowsContainer);
     this.setAddRemoveButtonsVisible(this.addRemoveEnabled);
@@ -229,90 +318,179 @@ Class.define('app.views.medications.ordering.ComplexTherapyMedicationPane', 'tm.
     this.medicationTypeLabel.setHtml(this.view.getDictionary('MedicationTypeEnum.' + medicationType));
   },
 
+  displayBnf: function(value)
+  {
+    this.showBnf = value;
+    value == true ? this.bnfMaximumPane.show() : this.bnfMaximumPane.hide();
+  },
+
+  /**
+   * @returns {boolean}
+   */
+  isShowBnf: function()
+  {
+    return this.showBnf === true;
+  },
+
+  _setUpOverdosePane: function()
+  {
+    var self = this;
+    this.overdosePane.setMedicationDataValues(self.medicationData);
+    if (this.overdosePane.isTabletOrCapsule())
+    {
+      this.overdosePane.show();
+    }
+  },
+
+  _calculateOverdose: function()
+  {
+    var quantity = this.dosePane.getDose().quantity;
+    this.overdosePane.calculateOverdose(quantity);
+  },
+
+  /**
+   * @param {string} medicationId
+   * @param {function|null} [callback=null]
+   * @private
+   */
   _readMedicationData: function(medicationId, callback)
   {
     var self = this;
-    var appFactory = this.view.getAppFactory();
-    var medicationDataUrl =
-        this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_MEDICATION_DATA;
-    var params = {medicationId: medicationId};
-    this.view.loadViewData(medicationDataUrl, params, null, function(medicationData)
+    var view = this.getView();
+    var appFactory = view.getAppFactory();
+
+    view.getRestApi().loadMedicationData(medicationId).then(function onDataLoad(medicationData)
     {
       if (medicationData)
       {
-        self.medicationData = medicationData;
-        self.dosePane.show();
-        self.dosePane.setMedicationData(medicationData);
-        self._setMedicationType(medicationData.medication.medicationType);
-        self.requestFocusToDose();
-        if (callback)
+        if (self.preventUnlicensedMedicationSelection && medicationData.isUnlicensedMedication())
         {
-          callback();
+          self.medicationField.abortUnlicensedMedicationSelection();
         }
-        self.medicationChangedEvent(medicationData);
+        else
+        {
+          self.medicationData = medicationData;
+          self.dosePane.show();
+          self.dosePane.setMedicationData(medicationData);
+          self._setUpOverdosePane();
+          self._setMedicationType(medicationData.medication.medicationType);
+          self.displayBnf(!tm.jquery.Utils.isEmpty(medicationData.defaultRoute) &&
+              !tm.jquery.Utils.isEmpty(medicationData.defaultRoute.bnfMaximumDto));
+          self.requestFocusToDose();
+          self.hideMedicationInfo(false);
+          self._setTitrationButtonVisibility();
+          if (callback)
+          {
+            callback();
+          }
+          self.medicationChangedEvent(medicationData);
+          self.highRiskIconsContainer.presentHighAlertIcons(medicationData);
+        }
       }
       else
       {
-        var message = self.view.getDictionary('prescribed.medication.no.longer.available') + " <br>" +
-            self.view.getDictionary('abort.therapy.order.alternative.medication');
+        var message = view.getDictionary('prescribed.medication.no.longer.available') + " <br>" +
+            view.getDictionary('stop.therapy.order.alternative.medication');
         appFactory.createWarningSystemDialog(message, 320, 150).show();
-        if (self.closeDialogFunction)
-        {
-          self.closeDialogFunction();
-        }
       }
     });
+  },
+
+  /**
+   * @param {app.views.medications.common.dto.Medication} medication
+   */
+  setMedication: function(medication)
+  {
+    this.medicationField.setSelection(medication, true);
+  },
+
+  _openUniversalMedicationDataDialog: function()
+  {
+    var self = this;
+    var appFactory = this.view.getAppFactory();
+
+    var universalMedicationDataContainer = new app.views.medications.ordering.UniversalMedicationDataContainer({
+      view: this.view,
+      cls: 'universal-medication-data-container'
+    });
+    var universalMedicationDataDialog = appFactory.createDataEntryDialog(
+        self.view.getDictionary("universal.form"),
+        null,
+        universalMedicationDataContainer,
+        function(resultData)
+        {
+          if (resultData)
+          {
+            var medicationData = resultData.value;
+            self.medicationData = medicationData;
+            self.dosePane.show();
+            self.dosePane.setMedicationData(medicationData);
+            self._setMedicationType(medicationData.medication.medicationType);
+            self.requestFocusToDose();
+            self.medicationChangedEvent(medicationData);
+            self.medicationField.setEnabled(false);
+          }
+        },
+        468,
+        240
+    );
+    if (this.view.getDoseForms().length == 0)
+    {
+      this.view.loadDoseForms();
+    }
+    universalMedicationDataDialog.show();
   },
 
   /** public methods */
   getVolume: function()
   {
-    var dose = this.dosePane.getDose();
-    if (dose.quantityDenominator)
+    var dose = this.dosePane.getDoseWithUnits();
+    if (dose.quantityDenominator && tm.views.medications.MedicationUtils.isUnitVolumeUnit(dose.denominatorUnit))
     {
       return dose.quantityDenominator;
+    }
+    else if (tm.views.medications.MedicationUtils.isUnitVolumeUnit(dose.quantityUnit))
+    {
+      return dose.quantity;
     }
     return 0;
   },
 
-  setVolume: function(volume)
+  setVolume: function(volume, preventEvent)
   {
-    this.dosePane.setDoseDenominator(volume);
+    this.dosePane.setVolume(volume, preventEvent);
   },
 
+  /**
+   * @returns {app.views.medications.common.dto.MedicationData|null}
+   */
   getMedicationData: function()
   {
     return this.medicationData;
   },
 
-  setMedicationAndDose: function(medication, numerator, volume, medicationLoadedEvent)
+  setUniversalMedicationAndDose: function(medicationData, numerator, volume, preventEvents)
   {
     var self = this;
-    if (medication)
+    var enums = app.views.medications.TherapyEnums;
+    if (medicationData)
     {
-      this._readMedicationData(medication.id, function()
-      {
-        setTimeout(function()
-        {
-          self.settingValue = true;
-          self.medicationField.setMedication(medication);
-          self.settingValue = false;
-        }, 100);
-
-        self.dosePane.setDoseNumerator(numerator);
-        self.dosePane.setDoseDenominator(volume);
-        if (medicationLoadedEvent)
-        {
-          medicationLoadedEvent();
-        }
-      });
+      self.medicationData = medicationData;
+      self.setDoseVisible(true);
+      self.dosePane.setMedicationData(medicationData);
+      self._setMedicationType(medicationData.medication.medicationType);
+      self.setAddRemoveButtonsVisible(false);
+      self.requestFocusToDose();
+      self.medicationChangedEvent(medicationData);
+      self.dosePane.setDoseNumerator(numerator, preventEvents);
+      self.dosePane.setDoseDenominator(volume, preventEvents);
     }
   },
 
-  setDose: function(numerator, volume)
+  setDose: function(numerator, volume, preventEvent)
   {
-    this.dosePane.setDoseNumerator(numerator);
-    this.dosePane.setDoseDenominator(volume);
+    this.dosePane.setDoseNumerator(numerator, preventEvent);
+    this.dosePane.setDoseDenominator(volume, preventEvent);
   },
 
   getInfusionIngredient: function()
@@ -320,13 +498,14 @@ Class.define('app.views.medications.ordering.ComplexTherapyMedicationPane', 'tm.
     var dose = this.dosePane.getDose();
     if (this.medicationData)
     {
+      var doseUnits = this.dosePane.getDoseUnits();
       return {
-        medication: this.medicationData.medication,
+        medication: this.medicationData.getMedication(),
         quantity: dose.quantity,
-        quantityUnit: tm.views.medications.MedicationUtils.getStrengthNumeratorUnit(this.medicationData),
-        volume: dose.quantityDenominator,
-        volumeUnit: 'ml',
-        doseForm: this.medicationData.doseForm
+        quantityUnit: doseUnits.quantityUnit,
+        quantityDenominator: dose.quantityDenominator,
+        quantityDenominatorUnit: doseUnits.denominatorUnit,
+        doseForm: this.medicationData.getDoseForm()
       }
     }
     return null;
@@ -351,7 +530,7 @@ Class.define('app.views.medications.ordering.ComplexTherapyMedicationPane', 'tm.
       formFields = formFields.concat(this.dosePane.getDosePaneValidations());
     }
     formFields.push(new tm.jquery.FormField({
-      component: self.medicationField.getTextField(),
+      component: self.medicationField,
       required: true
     }));
     return formFields;
@@ -361,67 +540,302 @@ Class.define('app.views.medications.ordering.ComplexTherapyMedicationPane', 'tm.
   {
     if (visible)
     {
-      this.dosePane.show();
+      this.isRendered() ? this.dosePane.show() : this.dosePane.setHidden(false);
     }
     else
     {
-      this.dosePane.hide();
-      this.dosePane.clear();
+      this.isRendered() ? this.dosePane.hide() : this.dosePane.setHidden(true);
+      this.dosePane.clear(true);
     }
   },
 
-  setPaneEditable: function(showAddRemoveButtons, medicationEditable, medicationEditableSameGenericOnly, doseEditable, repaint)
+  /**
+   * @param {boolean} showAddRemoveButtons
+   * @param {boolean} medicationEditable
+   * @param {boolean} medicationEditableSameGenericOnly
+   * @param {boolean} doseEditable
+   */
+  setPaneEditable: function(showAddRemoveButtons, medicationEditable, medicationEditableSameGenericOnly, doseEditable)
   {
     this.setAddRemoveButtonsVisible(showAddRemoveButtons);
     this.medicationField.setEnabled(medicationEditable);
     this.dosePane.setPaneEditable(doseEditable);
-    if (repaint)
+
+    if (medicationEditableSameGenericOnly && this.getMedicationData())
     {
-      this.doseContainer.repaint();
+      this.medicationField.setLimitBySimilar(this.getMedicationData().getMedication());
+      this.setMedicationEditableSameGenericOnly(true);
     }
-    if (this.medicationEditableSameGenericOnly != medicationEditableSameGenericOnly)
+    else
     {
-      //this._loadSimilarMedications();
-      //this.medicationEditableSameGenericOnly = medicationEditableSameGenericOnly
+      this.medicationField.setLimitBySimilar(null);
+      this.setMedicationEditableSameGenericOnly(false);
     }
+    this.setMedicationEditable(medicationEditable);
   },
 
-  setTemplates: function(templates)
+  _getSelectedRoute: function()
   {
-    this.templates = templates;
+    return tm.jquery.Utils.isEmpty(this.selectedRoute) ? [] : [this.selectedRoute];
   },
 
-  _loadSimilarMedications: function()
+  _showUniversalMedicationEditButton: function()
   {
-    //Similar medications have same generic, route, atc and custom group
-    var self = this;
-    if (this.medicationData)
+    this.universalOrderButton.show();
+    this.medicationInfo.hide();
+    this.universalOrderingPopupMenu.getMenuItems()[0].setText(this.view.getDictionary("edit"));
+  },
+
+  _setTitrationButtonVisibility: function()
+  {
+    var isVisible = this.isTitratedDoseSupported() && this.isTitrationSupportedByMedication();
+
+    if (isVisible)
     {
-      var medicationsUrl =
-          this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_FIND_SIMILAR_MEDICATIONS;
-      var params = {
-        medicationId: this.medicationData.medication.id,
-        routeCode: null
-      };
-      this.view.loadViewData(medicationsUrl, params, null, function(similarMedications)
+      this.isRendered() ? this._toggleTitrationButton.show() : this._toggleTitrationButton.setHidden(false);
+    }
+    else
+    {
+      if (this._toggleTitrationButton.isPressed())
       {
-        self.medicationField.setSource(similarMedications);
-      });
+        this._toggleTitrationButton.setPressed(false);
+      }
+      this.isRendered() ? this._toggleTitrationButton.hide() : this._toggleTitrationButton.setHidden(true);
     }
+  },
+
+  /**
+   * @param {boolean} preventEvent
+   * @private
+   */
+  _markAsTitrationDosing: function(preventEvent)
+  {
+    this.setDoseVisible(false);
+    if (!preventEvent)
+    {
+      this._signalTitrationChangedEvent();
+    }
+  },
+
+  /**
+   * @param {boolean} preventEvent
+   * @private
+   */
+  _unmarkAsTitrationDosing: function(preventEvent)
+  {
+    this.setDoseVisible(true);
+    if (!preventEvent)
+    {
+      this._signalTitrationChangedEvent();
+    }
+  },
+
+  _signalTitrationChangedEvent: function()
+  {
+    this.fireEvent(new tm.jquery.ComponentEvent({
+      eventType: app.views.medications.ordering.ComplexTherapyMedicationPane.EVENT_TYPE_TITRATION_CHANGE,
+      eventData: {selected: this._toggleTitrationButton.isPressed()}
+    }), null);
+  },
+
+  _showMedicationInfoPopup: function()
+  {
+    var appFactory = this.getView().getAppFactory();
+
+    var medicationInfoContent = new app.views.medications.common.MedicationDetailsContainer({
+      view: this.getView(),
+      medicationData: [this.medicationData],
+      selectedRoute: this._getSelectedRoute()
+    });
+
+    var medicationInfoPopup = appFactory.createDefaultPopoverTooltip(
+        this.getView().getDictionary("medication"),
+        null,
+        medicationInfoContent
+    );
+
+    this.medicationInfo.setTooltip(medicationInfoPopup);
+
+    setTimeout(function()
+    {
+      medicationInfoPopup.show();
+    }, 10);
   },
 
   setAddRemoveButtonsVisible: function(visible)
   {
     if (visible)
     {
-      this.addButton.setHeight(30);
-      this.removeButton.setHeight(30);
+      this.addButton.isRendered() ? this.addButton.show(): this.addButton.setHidden(false);
+      this.removeButton.isRendered() ? this.removeButton.show() : this.removeButton.setHidden(false);
     }
     else
     {
-      this.addButton.setHeight(0);
-      this.removeButton.setHeight(0);
+      this.addButton.isRendered() ? this.addButton.hide(): this.addButton.setHidden(true);
+      this.removeButton.isRendered() ? this.removeButton.hide() : this.removeButton.setHidden(true);
     }
+  },
+
+  setDefinedBnfValuesAndSelectedRoute: function(medicationData, route)
+  {
+    this.bnfMaximumPane.setBnfValuesAndNumeratorUnit(medicationData, route);
+    this.selectedRoute = route;
+  },
+
+  setBnfPercentage: function(percentage)
+  {
+    this.bnfMaximumPane.setPercentage(percentage);
+  },
+
+  calculateBnfPercentage: function(quantity, timesPerDay, timesPerWeek, variable)
+  {
+    return this.bnfMaximumPane.calculatePercentage(quantity, timesPerDay, timesPerWeek, variable);
+  },
+
+  setCalculatedParacetamolLimit: function(calculatedParacetamolRule)
+  {
+    this.paracetamolLimitContainer.setCalculatedParacetamolLimit(calculatedParacetamolRule);
+    if (this.paracetamolLimitContainer.hasContent())
+    {
+      this.paracetamolLimitContainer.show();
+    }
+  },
+
+  getBnfPercentage: function()
+  {
+    return this.bnfMaximumPane.getPercentage();
+  },
+
+  clearBnf: function()
+  {
+    this.bnfMaximumPane.clear();
+  },
+
+  /**
+   * @param {boolean} hide
+   */
+  hideMedicationInfo: function(hide)
+  {
+    var self = this;
+    if (hide)
+    {
+      this._showUniversalMedicationEditButton();
+    }
+    else
+    {
+      this.universalOrderButton.hide();
+      this.medicationInfo.show();
+      this.medicationInfo.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function()
+      {
+        self._showMedicationInfoPopup();
+      });
+    }
+  },
+
+  /**
+   * If titration is not supported, it will override the value from medication data.
+   * @returns {boolean}
+   */
+  isTitratedDoseSupported: function()
+  {
+    return this.titratedDoseSupported === true;
+  },
+
+  /**
+   * If not supported, titrated dose will not be possible regardless if the medication supports it.
+   * @param {boolean} value
+   */
+  setTitratedDoseSupported: function(value)
+  {
+    this.titratedDoseSupported = value;
+    this._setTitrationButtonVisibility();
+  },
+
+  /**
+   * Is titration possible? Based on the active medication data.
+   * @returns {boolean}
+   */
+  isTitrationSupportedByMedication: function()
+  {
+    return this.medicationData && !tm.jquery.Utils.isEmpty(this.medicationData.getTitration());
+  },
+
+  /**
+   * @returns {boolean}
+   */
+  isMedicationEditable: function()
+  {
+    return this.medicationEditable === true;
+  },
+
+  /**
+   * @param {boolean} value
+   */
+  setMedicationEditable: function(value)
+  {
+    this.medicationEditable = value;
+  },
+
+  /**
+   * @param {app.views.medications.common.dto.MedicationData} medicationData
+   */
+  setMedicationData: function(medicationData)
+  {
+    this.medicationData = medicationData;
+  },
+
+  /**
+    * @param value
+   */
+  setMedicationEditableSameGenericOnly: function(value)
+  {
+    this.medicationEditableSameGenericOnly = value;
+  },
+
+  /**
+   * @returns {boolean}
+   */
+  isMedicationEditableSameGenericOnly: function()
+  {
+    return this.medicationEditableSameGenericOnly === true;
+  },
+
+  /**
+   * @returns {string|null}
+   */
+  getTitrationDoseType: function()
+  {
+    return this._toggleTitrationButton.isPressed() ? this.medicationData.getTitration() : null;
+  },
+
+  /**
+   * @param {string} type
+   * @param {boolean} preventEvent
+   */
+  setTitrationDoseType: function(type, preventEvent)
+  {
+    var titrationActive = !tm.jquery.Utils.isEmpty(type);
+    if (this._toggleTitrationButton.isPressed() !== titrationActive)
+    {
+      this._toggleTitrationButton.setPressed(titrationActive, preventEvent);
+      titrationActive ? this._markAsTitrationDosing(preventEvent) : this._unmarkAsTitrationDosing(preventEvent);
+    }
+  },
+
+  /**
+   * @returns {boolean}
+   */
+  isPreventTitrationChange: function()
+  {
+    return this.preventTitrationChange === true;
+  },
+
+  /**
+   * @returns {app.views.common.AppView}
+   */
+  getView: function()
+  {
+    return this.view;
   }
 });
 

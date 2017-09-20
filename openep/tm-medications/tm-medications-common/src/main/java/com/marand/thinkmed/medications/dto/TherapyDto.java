@@ -23,58 +23,69 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-import com.marand.maf.core.JsonSerializable;
-import com.marand.maf.core.data.object.DataObject;
-import com.marand.maf.core.formatter.Displayable;
-import com.marand.maf.core.formatter.DisplayableFormatters;
+import com.marand.thinkmed.api.core.JsonSerializable;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import com.marand.thinkmed.medications.MedicationOrderFormType;
-import com.marand.thinkmed.medications.TherapyTag;
+import com.marand.thinkmed.medications.PrescriptionLocalDetailsDto;
+import com.marand.thinkmed.medications.SelfAdministeringActionEnum;
+import com.marand.thinkmed.medications.TherapyDoseTypeEnum;
+import com.marand.thinkmed.medications.TherapyTagEnum;
+import com.marand.thinkmed.medications.dto.supply.PrescriptionSupplyDto;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.joda.time.DateTime;
 
 /**
  * @author Mitja Lapajne
  */
-public abstract class TherapyDto extends DataObject implements JsonSerializable
+public abstract class TherapyDto extends DataTransferObject implements JsonSerializable
 {
   private String compositionUid;
   private String ehrOrderName;
   private MedicationOrderFormType medicationOrderFormType;
   private boolean variable;
   private String therapyDescription;
-  private MedicationRouteDto route;
+  private List<MedicationRouteDto> routes = new ArrayList<>();
   private DosingFrequencyDto dosingFrequency;
   private Integer dosingDaysFrequency; //every X-th day
   private List<String> daysOfWeek;
-  @Displayable({DisplayableFormatters.ShortDate.class, DisplayableFormatters.ShortTime.class, DisplayableFormatters.ShortDateTime.class})
   private DateTime start;
-  @Displayable({DisplayableFormatters.ShortDate.class, DisplayableFormatters.ShortTime.class, DisplayableFormatters.ShortDateTime.class})
   private DateTime end;
   private Boolean whenNeeded;
   private String comment;
-  private String clinicalIndication;
+  private IndicationDto clinicalIndication;
   private String prescriberName;
   private String composerName;
+  private String startCriterion;
+  private String applicationPrecondition;
+  private Integer reviewReminderDays;
 
   private String frequencyDisplay;
   private String daysFrequencyDisplay;
   private String whenNeededDisplay;
   private String startCriterionDisplay;
   private String daysOfWeekDisplay;
+  private String applicationPreconditionDisplay;
+
   private String formattedTherapyDisplay;
   private Integer pastDaysOfTherapy;
 
-  private String linkFromTherapy;
-  private String linkToTherapy;
+  private String linkName;
 
   private Integer maxDailyFrequency;
 
   private DateTime createdTimestamp;
 
-  private List<TherapyTag> tags = new ArrayList<>();
+  private List<TherapyTagEnum> tags = new ArrayList<>();
   private List<String> criticalWarnings = new ArrayList<>();
+  private boolean linkedToAdmission;
+  private Integer bnfMaximumPercentage;
 
-  private List<String> startCriterions = new ArrayList<>();
+  private TherapyDoseTypeEnum doseType;
+  private SelfAdministeringActionEnum selfAdministeringActionEnum;
+  private DateTime selfAdministeringLastChange;
+
+  private PrescriptionLocalDetailsDto prescriptionLocalDetails;
+  private PrescriptionSupplyDto prescriptionSupply;
 
   protected TherapyDto(final MedicationOrderFormType type, final boolean variable)
   {
@@ -132,14 +143,14 @@ public abstract class TherapyDto extends DataObject implements JsonSerializable
     this.therapyDescription = therapyDescription;
   }
 
-  public MedicationRouteDto getRoute()
+  public List<MedicationRouteDto> getRoutes()
   {
-    return route;
+    return routes;
   }
 
-  public void setRoute(final MedicationRouteDto route)
+  public void setRoutes(final List<MedicationRouteDto> routes)
   {
-    this.route = route;
+    this.routes = routes;
   }
 
   public DosingFrequencyDto getDosingFrequency()
@@ -202,16 +213,6 @@ public abstract class TherapyDto extends DataObject implements JsonSerializable
     this.whenNeeded = whenNeeded;
   }
 
-  public List<String> getStartCriterions()
-  {
-    return startCriterions;
-  }
-
-  public void setStartCriterions(final List<String> startCriterions)
-  {
-    this.startCriterions = startCriterions;
-  }
-
   public String getComment()
   {
     return comment;
@@ -222,12 +223,12 @@ public abstract class TherapyDto extends DataObject implements JsonSerializable
     this.comment = comment;
   }
 
-  public String getClinicalIndication()
+  public IndicationDto getClinicalIndication()
   {
     return clinicalIndication;
   }
 
-  public void setClinicalIndication(final String clinicalIndication)
+  public void setClinicalIndication(final IndicationDto clinicalIndication)
   {
     this.clinicalIndication = clinicalIndication;
   }
@@ -250,6 +251,36 @@ public abstract class TherapyDto extends DataObject implements JsonSerializable
   public void setComposerName(final String composerName)
   {
     this.composerName = composerName;
+  }
+
+  public String getStartCriterion()
+  {
+    return startCriterion;
+  }
+
+  public void setStartCriterion(final String startCriterion)
+  {
+    this.startCriterion = startCriterion;
+  }
+
+  public String getApplicationPrecondition()
+  {
+    return applicationPrecondition;
+  }
+
+  public void setApplicationPrecondition(final String applicationPrecondition)
+  {
+    this.applicationPrecondition = applicationPrecondition;
+  }
+
+  public Integer getReviewReminderDays()
+  {
+    return reviewReminderDays;
+  }
+
+  public void setReviewReminderDays(final Integer reviewReminderDays)
+  {
+    this.reviewReminderDays = reviewReminderDays;
   }
 
   public String getFrequencyDisplay()
@@ -312,6 +343,16 @@ public abstract class TherapyDto extends DataObject implements JsonSerializable
     return formattedTherapyDisplay;
   }
 
+  public String getApplicationPreconditionDisplay()
+  {
+    return applicationPreconditionDisplay;
+  }
+
+  public void setApplicationPreconditionDisplay(final String applicationPreconditionDisplay)
+  {
+    this.applicationPreconditionDisplay = applicationPreconditionDisplay;
+  }
+
   public void setFormattedTherapyDisplay(final String formattedTherapyDisplay)
   {
     this.formattedTherapyDisplay = formattedTherapyDisplay;
@@ -322,24 +363,14 @@ public abstract class TherapyDto extends DataObject implements JsonSerializable
     this.pastDaysOfTherapy = pastDaysOfTherapy;
   }
 
-  public String getLinkFromTherapy()
+  public String getLinkName()
   {
-    return linkFromTherapy;
+    return linkName;
   }
 
-  public void setLinkFromTherapy(final String linkFromTherapy)
+  public void setLinkName(final String linkName)
   {
-    this.linkFromTherapy = linkFromTherapy;
-  }
-
-  public String getLinkToTherapy()
-  {
-    return linkToTherapy;
-  }
-
-  public void setLinkToTherapy(final String linkToTherapy)
-  {
-    this.linkToTherapy = linkToTherapy;
+    this.linkName = linkName;
   }
 
   public Integer getMaxDailyFrequency()
@@ -362,17 +393,17 @@ public abstract class TherapyDto extends DataObject implements JsonSerializable
     this.createdTimestamp = createdTimestamp;
   }
 
-  public List<TherapyTag> getTags()
+  public List<TherapyTagEnum> getTags()
   {
     return tags;
   }
 
-  public void setTags(final List<TherapyTag> tags)
+  public void setTags(final List<TherapyTagEnum> tags)
   {
     this.tags = tags;
   }
 
-  public void addTag(final TherapyTag tag)
+  public void addTag(final TherapyTagEnum tag)
   {
     tags.add(tag);
   }
@@ -387,6 +418,97 @@ public abstract class TherapyDto extends DataObject implements JsonSerializable
     this.criticalWarnings = criticalWarnings;
   }
 
+  public boolean isLinkedToAdmission()
+  {
+    return linkedToAdmission;
+  }
+
+  public void setLinkedToAdmission(final boolean linkedToAdmission)
+  {
+    this.linkedToAdmission = linkedToAdmission;
+  }
+
+  public Integer getBnfMaximumPercentage()
+  {
+    return bnfMaximumPercentage;
+  }
+
+  public void setBnfMaximumPercentage(final Integer bnfMaximumPercentage)
+  {
+    this.bnfMaximumPercentage = bnfMaximumPercentage;
+  }
+
+  public PrescriptionLocalDetailsDto getPrescriptionLocalDetails()
+  {
+    return prescriptionLocalDetails;
+  }
+
+  public void setPrescriptionLocalDetails(final PrescriptionLocalDetailsDto prescriptionLocalDetails)
+  {
+    this.prescriptionLocalDetails = prescriptionLocalDetails;
+  }
+
+  public PrescriptionSupplyDto getPrescriptionSupply()
+  {
+    return prescriptionSupply;
+  }
+
+  public void setPrescriptionSupply(final PrescriptionSupplyDto prescriptionSupply)
+  {
+    this.prescriptionSupply = prescriptionSupply;
+  }
+
+  public TherapyDoseTypeEnum getDoseType()
+  {
+    return doseType;
+  }
+
+  public void setDoseType(final TherapyDoseTypeEnum doseType)
+  {
+    this.doseType = doseType;
+  }
+
+  public SelfAdministeringActionEnum getSelfAdministeringActionEnum()
+  {
+    return selfAdministeringActionEnum;
+  }
+
+  public void setSelfAdministeringActionEnum(final SelfAdministeringActionEnum selfAdministeringActionEnum)
+  {
+    this.selfAdministeringActionEnum = selfAdministeringActionEnum;
+  }
+
+  public DateTime getSelfAdministeringLastChange()
+  {
+    return selfAdministeringLastChange;
+  }
+
+  public void setSelfAdministeringLastChange(final DateTime selfAdministeringLastChange)
+  {
+    this.selfAdministeringLastChange = selfAdministeringLastChange;
+  }
+
+  public String getTherapyId()
+  {
+    Preconditions.checkNotNull(compositionUid, "compositionUid must not be null!");
+    Preconditions.checkNotNull(ehrOrderName, "ehrOrderName must not be null!");
+
+    return (compositionUid.contains("::") ? compositionUid.substring(0, compositionUid.indexOf("::")) : compositionUid)
+        + '|'
+        + ehrOrderName;
+  }
+
+  public boolean isWithRate()
+  {
+    return TherapyDoseTypeEnum.WITH_RATE.contains(doseType);
+  }
+
+  public abstract boolean isNormalInfusion();
+
+  public abstract List<MedicationDto> getMedications();
+
+  public abstract Long getMainMedicationId();
+
   @Override
   protected void appendToString(final ToStringBuilder tsb)
   {
@@ -395,31 +517,40 @@ public abstract class TherapyDto extends DataObject implements JsonSerializable
         .append("ehrOrderName", ehrOrderName)
         .append("medicationOrderFormType", medicationOrderFormType)
         .append("therapyDescription", therapyDescription)
-        .append("route", route)
+        .append("route", routes)
         .append("dosingFrequency", dosingFrequency)
         .append("dosingDaysFrequency", dosingDaysFrequency)
         .append("daysOfWeek", daysOfWeek)
         .append("start", start)
         .append("end", end)
         .append("whenNeeded", whenNeeded)
-        .append("startCriterions", startCriterions)
         .append("comment", comment)
         .append("clinicalIndication", clinicalIndication)
         .append("prescriberName", prescriberName)
         .append("composerName", composerName)
+        .append("startCriterion", startCriterion)
+        .append("applicationPrecondition", applicationPrecondition)
+        .append("reviewReminderDays", reviewReminderDays)
         .append("frequencyDisplay", frequencyDisplay)
         .append("daysFrequencyDisplay", daysFrequencyDisplay)
         .append("whenNeededDisplay", whenNeededDisplay)
         .append("startCriterionDisplay", startCriterionDisplay)
         .append("daysOfWeekDisplay", daysOfWeekDisplay)
+        .append("applicationPreconditionDisplay", applicationPreconditionDisplay)
         .append("formattedTherapyDisplay", formattedTherapyDisplay)
         .append("antibioticDays", pastDaysOfTherapy)
-        .append("linkToTherapy", linkToTherapy)
-        .append("linkFromTherapy", linkFromTherapy)
+        .append("linkName", linkName)
         .append("maxDailyFrequency", maxDailyFrequency)
         .append("createdTimestamp", createdTimestamp)
         .append("tags", tags)
         .append("criticalWarnings", criticalWarnings)
+        .append("linkedToAdmission", linkedToAdmission)
+        .append("bnfMaximumPercentage", bnfMaximumPercentage)
+        .append("prescriptionLocalDetails", prescriptionLocalDetails)
+        .append("prescriptionSupply", prescriptionSupply)
+        .append("selfAdministeringActionEnum", selfAdministeringActionEnum)
+        .append("selfAdministeringLastChange", selfAdministeringLastChange)
+        .append("doseType", doseType)
     ;
   }
 }

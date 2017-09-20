@@ -1,0 +1,93 @@
+﻿.v-therapy-view .monograph body, .v-therapy-view .monograph tbody {
+    margin: .5em;
+}
+
+.v-therapy-view .monograph sup{
+
+}
+
+.v-therapy-view .monograph .ReferenceLink{
+    font-size: 70%;
+}
+
+.v-therapy-view .monograph table {
+    width: 100%;
+}
+
+.v-therapy-view .monograph .CodeList {
+    vertical-align: top;
+    font-size: smaller;
+    padding-bottom: .5em;
+}
+
+.v-therapy-view .monograph .CodeTitle {
+    width: 100%;
+    padding: .25em;
+    background-color: #99ccff;
+    font-weight: bold;
+}
+
+.v-therapy-view .monograph .CodeItem {
+    padding-right: 2em;
+    padding-left: 1em;
+    font-size: xx-small;
+}
+
+.v-therapy-view .monograph .CodeItemSelected {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.v-therapy-view .monograph .Section {
+    margin-bottom: 1em;
+    width: 100%;
+}
+
+.v-therapy-view .monograph .SectionTitle {
+    width: 100%;
+    padding: .25em;
+    background-color: #99ccff;
+    font-size: 10pt;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+.v-therapy-view .monograph .Title {
+    color: white;
+    background-color: #6f8fa5;
+    padding: .5em;
+    font-size: 12pt;
+    font-weight: bold;
+    text-align: center;
+}
+
+.v-therapy-view .monograph #codes {
+    background-color: #e7f3fb;
+}
+
+.v-therapy-view .monograph .Reference {
+    padding-left: 1em;
+}
+
+.v-therapy-view .monograph .ReferenceIndex {
+    padding-right: .5em;
+}
+
+.v-therapy-view .monograph .Footer {
+    font-size: xx-small;
+    background-color: #e7f3fb;
+    margin-top: 2em;
+    border-style: solid none solid none;
+    border-width: thin;
+    border-top-color: #6f8fa5;
+    border-bottom-color: #6f8fa5;
+}
+
+.v-therapy-view .monograph .Disclaimer {
+    margin-bottom: 1em;
+}
+
+.v-therapy-view .monograph .Copyright {
+    width: 90%;
+    text-align: center;
+}

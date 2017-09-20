@@ -22,6 +22,7 @@ package com.marand.thinkmed.api.core;
 /**
 * @author Bostjan Vester
 */
-public interface GrammaticalGender
+public enum GrammaticalGender
 {
+  MALE, FEMALE, UNDEFINED
 }

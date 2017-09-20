@@ -29,12 +29,16 @@ import com.marand.thinkmed.medications.model.Medication;
 import com.marand.thinkmed.medications.model.MedicationIngredient;
 import com.marand.thinkmed.medications.model.MedicationIngredientLink;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xfMedicationIngredientLinkIng", columnList = "ingredient_id"),
+    @Index(name = "xfMedicationIngredientLinkMed", columnList = "medication_id")})
 public class MedicationIngredientLinkImpl extends AbstractEffectiveEntity implements MedicationIngredientLink
 {
   private MedicationIngredient ingredient;
@@ -47,7 +51,6 @@ public class MedicationIngredientLinkImpl extends AbstractEffectiveEntity implem
 
   @Override
   @ManyToOne(targetEntity = MedicationIngredientImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedicationIngredientLinkIng")
   public MedicationIngredient getIngredient()
   {
     return ingredient;
@@ -61,7 +64,6 @@ public class MedicationIngredientLinkImpl extends AbstractEffectiveEntity implem
 
   @Override
   @ManyToOne(targetEntity = MedicationImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedicationIngredientLinkMed")
   public Medication getMedication()
   {
     return medication;

@@ -34,10 +34,10 @@ Class.define('app.views.medications.ordering.MedicationsTitleHeader', 'tm.jquery
   {
     this.callSuper(config);
     var self = this;
-    var appFactory = this.view.getAppFactory();
-    this.setLayout(appFactory.createDefaultHFlexboxLayout("start", "center"));
-    var cls = this.disabled ? 'PortletHeading2 cancelled' : 'PortletHeading2';
-    this.add(new tm.jquery.Container({cls: cls, html: this.title, flex: 1}), {region: 'center'});
+    this.setLayout(tm.jquery.HFlexboxLayout.create("flex-start", "center"));
+    var cls = this.disabled ? 'TextLabel bold cancelled' : 'TextLabel bold';
+    this.add(new tm.jquery.Container({
+      cls: cls, html: this.title, flex: tm.jquery.flexbox.item.Flex.create(1, 0, "auto")}), {region: 'center'});
     if (this.additionalDataContainer)
     {
       this.add(this.additionalDataContainer)
@@ -46,7 +46,8 @@ Class.define('app.views.medications.ordering.MedicationsTitleHeader', 'tm.jquery
     {
       var menuButton = new tm.jquery.Container({
         width: 16, height: 16,
-        cls: 'menu-icon'
+        cls: 'menu-icon',
+        cursor: 'pointer'
       });
       menuButton.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function(component, componentEvent, elementEvent)
       {

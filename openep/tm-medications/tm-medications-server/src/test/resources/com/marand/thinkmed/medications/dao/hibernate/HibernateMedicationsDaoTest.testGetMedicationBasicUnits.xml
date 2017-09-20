@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!--
+<!DOCTYPE dataset SYSTEM "dbunit_dataset.dtd"><!--
   ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
   ~
   ~ This file is part of Think!Med Clinical Medication Management.
@@ -18,10 +17,9 @@
   ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="../../../../../../../../../../../ispek-unitils/unitils/dataset_xsd/dataset.xsd">
+<dataset>
 
-    <MEDICATION_BASIC_UNIT ID="1" VERSION="0" CODE="1" NAME="kg" DELETED_ID="[null]"/>
-    <MEDICATION_BASIC_UNIT ID="2" VERSION="0" CODE="2" NAME="ml" DELETED_ID="[null]"/>
+    <MEDICATION_BASIC_UNIT ID="1" VERSION="0" CODE="1" NAME="kg"/>
+    <MEDICATION_BASIC_UNIT ID="2" VERSION="0" CODE="2" NAME="mL"/>
     <MEDICATION_BASIC_UNIT ID="3" VERSION="0" CODE="3" NAME="mmol" DELETED_ID="3"/>
 </dataset>

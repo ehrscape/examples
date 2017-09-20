@@ -1,0 +1,25 @@
+<div>
+    <div ng-click="showFilter()" class="selectorBtn">
+        <div class="downArrow"/>
+        {{selectedFilter === 'open' ? openedFilter : closedFilter}}
+    </div>
+    <br>
+    <div class="filterBody" ng-show="opened">
+        <ul style="list-style-type: none; margin-left: 10px;">
+            <li class="pointer"
+                style=" margin-top: 8px;"
+                data-ng-click="filterOpened();">
+                <img class="open-close-filter-selected"
+                     data-ng-class="{'hideImg': selectedFilter === 'close'}"/>
+                {{openedFilter}}
+            </li>
+            <li class="pointer"
+                style=" margin-top: 8px;"
+                data-ng-click="filterClosed();" >
+                <img class="open-close-filter-selected"
+                     data-ng-class="{'hideImg': selectedFilter === 'open'}"/>
+                {{closedFilter}}
+            </li>
+        </ul>
+    </div>
+</div>

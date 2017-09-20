@@ -1,0 +1,201 @@
+<div class="section" data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch">
+    <div data-tm-flex-item="0 0 auto" class="title TextData">{{::vm.getSectionTitle()}}</div>
+    <div class="prescription-therapy" data-tm-flex-layout="row" data-justify-content="flex-start"
+         data-align-items="flex-start" data-tm-flex-item="0 0 auto"
+         data-ng-repeat="prescription in vm.getSectionTherapies() | filter:prescription.getPrescriptionDocumentType() | orderBy: '-'">
+        <div class="description" data-tm-flex-item="1 1 auto" data-tm-flex-layout="column"
+             data-justify-content="flex-start"
+             data-align-items="stretch">
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getDispenseId()">
+                <span class="TextLabel light">{{::'dispense.id' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getDispenseId()}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getPharmacistBPI()">
+                <span class="TextLabel light">{{::'pharmacist.bpi' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getPharmacistBPI()}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getIssuingOrgBPI()">
+                <span class="TextLabel light">{{::'issuing.institution.bpi' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getIssuingOrgBPI() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getIssueDate()">
+                <span class="TextLabel light">{{::'dispense.supply.date' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getIssueDate() | tmDateFilter}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="vm.getPrescriptionDate()">
+                <span class="TextLabel light">{{::'prescription.date' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{vm.getPrescriptionDate() | tmDateFilter}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getValidityDate()">
+                <span class="TextLabel light">{{::'validity.date' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getValidityDate() | tmDateFilter}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getNationalPrescribedMedicationCode()">
+                <span class="TextLabel light">{{::'prescribed.medication.code' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getNationalPrescribedMedicationCode() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getShortPrescribedMedicationName()">
+                <span class="TextLabel light">{{::'prescribed.medication.name' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getShortPrescribedMedicationName() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getPrescribedMedicationQuantity()">
+                <span class="TextLabel light">{{::'dose' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getPrescribedMedicationQuantity()}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getPrescribedUnit()">
+                <span class="TextLabel light">{{::'prescribed.unit' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getPrescribedUnit() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getNotificationToPatient()">
+                <span class="TextLabel light">{{::'instruction.to.patient' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getNotificationToPatient() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto" style="position: relative;"
+                 data-ng-if="prescription.getPrescriptionSupplyType()">
+                <span class="TextLabel light">{{::'type.of.supply' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                <span class="TextData">
+                                    {{prescription.getPrescriptionSupplyType() | tmMedsEnumTranslationFilter : 'TypeOfSupply' | lowercase}}
+                                </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getNumberOfPrescribedUnits()">
+                <span class="TextLabel light">{{::'supply.quantity' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getNumberOfPrescribedUnits() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getPrescribedRepeats()">
+                <i class="floating-icon-left renewable-prescription-icon"></i>
+                <span class="TextLabel light">{{::'prescribed.repeats' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getPrescribedRepeats() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto" style="position: relative;"
+                 data-ng-if="prescription.getStatus()">
+                <i class="floating-icon-left prescription-status-icon {{prescription.getStatus() | lowercase}}"></i>
+                <span class="TextLabel light">{{::'prescription.status' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                <span class="TextData">
+                                    {{prescription.getStatus() | tmMedsEnumTranslationFilter : 'PrescriptionStatus' | lowercase}}
+                                </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getNotificationToPharmacist()">
+                <span class="TextLabel light">{{::'instruction.to.pharmacist' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getNotificationToPharmacist() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto" style="position: relative;"
+                 data-ng-if="prescription.getIllnessConditionType()">
+                <span class="TextLabel light">{{::'additional.information' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getIllnessConditionType() | tmMedsEnumTranslationFilter : 'IllnessConditionType' | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.isDoNotChange()">
+                <span class="TextLabel light">{{::'do.not.switch' | tmDictionaryTermFilter | uppercase}}</span>
+                <i class="checked-icon"></i>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.isPrescribedMedicationSwitched()">
+                <span class="TextLabel light">{{::'prescribed.medication.switched' | tmDictionaryTermFilter | uppercase}}</span>
+                <i class="checked-icon"></i>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getPrescriptionId()">
+                <span class="TextLabel light">{{::'prescription.id' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getPrescriptionId()}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getPrescriberBPI()">
+                <span class="TextLabel light">{{::'prescriber.bpi' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getPrescriberBPI()}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getPrescribingOrgBPI()">
+                <span class="TextLabel light">{{::'prescribing.institution.bpi' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getPrescribingOrgBPI() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getNationalMedicationCode()">
+                <span class="TextLabel light">{{::'medication.code' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getNationalMedicationCode() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getShortMedicationName()">
+                <span class="TextLabel light">{{::'medication.name' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getShortMedicationName() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getMedicationIssuingMode()">
+                <span class="TextLabel light">{{::'type.of.dispense' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getMedicationIssuingMode() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.getNotificationToDoctor()">
+                <span class="TextLabel light">{{::'instruction.to.doctor' | tmDictionaryTermFilter | uppercase}}&nbsp;</span>
+                                    <span class="TextData">
+                                        {{prescription.getNotificationToDoctor() | lowercase}}
+                                    </span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.isRenewable()">
+                <span class="TextLabel light">{{::'renewable.prescription' | tmDictionaryTermFilter | uppercase}}</span>
+                <i class="checked-icon"></i>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescription.isIssuedWithoutPrescription()">
+                <span class="TextLabel light">{{::'dispense.without.order' | tmDictionaryTermFilter | uppercase}}</span>
+                <i class="checked-icon"></i>
+            </div>
+        </div>
+    </div>
+</div>

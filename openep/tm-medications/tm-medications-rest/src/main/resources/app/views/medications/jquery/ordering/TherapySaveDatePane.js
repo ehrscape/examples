@@ -18,6 +18,7 @@
  */
 
 Class.define('app.views.medications.ordering.TherapySaveDatePane', 'tm.jquery.Container', {
+  cls: 'therapy-save-date-pane',
 
   /** configs */
   saveDateTime: null,
@@ -30,7 +31,7 @@ Class.define('app.views.medications.ordering.TherapySaveDatePane', 'tm.jquery.Co
   Constructor: function(config)
   {
     this.callSuper(config);
-    this.setLayout(tm.jquery.HFlexboxLayout.create("start", "start", 5));
+    this.setLayout(tm.jquery.HFlexboxLayout.create("flex-start", "flex-start", 5));
     this._buildComponents();
     this._buildGui();
   },
@@ -38,9 +39,23 @@ Class.define('app.views.medications.ordering.TherapySaveDatePane', 'tm.jquery.Co
   /** private methods */
   _buildComponents: function()
   {
-    var saveDateTime = this.saveDateTime ? this.saveDateTime : new Date();
-    this.saveDateField = new tm.jquery.DatePicker({date: saveDateTime});
-    this.saveTimeField = new tm.jquery.TimePicker({time: saveDateTime});
+    var saveDateTime = this.saveDateTime ? this.saveDateTime : CurrentTime.get();
+    this.saveDateField = new tm.jquery.DatePicker({
+      cls: "save-date-field",
+      date: saveDateTime,
+      currentTimeProvider: function()
+      {
+        return CurrentTime.get();
+      }
+    });
+    this.saveTimeField = new tm.jquery.TimePicker({
+      cls: "save-time-field",
+      time: saveDateTime,
+      currentTimeProvider: function()
+      {
+        return CurrentTime.get();
+      }
+    });
   },
 
   _buildGui: function()

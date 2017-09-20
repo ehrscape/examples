@@ -26,5 +26,6 @@ public enum MedicationsExternalValueType
 {
   UNIT,
   ROUTE,
-  ALLERGY
+  ALLERGY,
+  DISEASE
 }

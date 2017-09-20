@@ -21,6 +21,7 @@ package com.marand.thinkmed.medicationsexternal.plugin;
 
 import java.util.List;
 
+import com.marand.thinkmed.api.externals.data.object.NamedExternalDto;
 import com.marand.thinkmed.medicationsexternal.dto.DoseRangeCheckDto;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationForWarningsSearchDto;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationsWarningDto;
@@ -37,14 +38,15 @@ public interface MedicationExternalDataPlugin
   List<MedicationsWarningDto> findMedicationWarnings(
       long patientAgeInDays,
       Double patientWeightInKg,
-      Integer gabInWeeks,
       Double bsaInM2,
       boolean isFemale,
-      List<String> diseaseTypeCodes,
-      List<String> allergiesExternalValues,
+      List<NamedExternalDto> diseaseTypeValues,
+      List<NamedExternalDto> allergiesExternalValues,
       List<MedicationForWarningsSearchDto> medicationSummaries);
 
   boolean isWarningsProvider();
+
+  boolean requiresDiseaseCodesTranslation();
 
   boolean isMedicationOverviewProvider();
 

@@ -51,7 +51,7 @@ Class.define('app.views.medications.ordering.EditPastDaysOfTherapyContainer', 'a
   _buildComponents: function()
   {
     var self = this;
-    this.pastDaysOfTherapyField = new tm.jquery.TextField({width: 68});
+    this.pastDaysOfTherapyField = new tm.jquery.TextField({cls: 'day-of-therapy-field', width: 68});
 
     this.validationForm = new tm.jquery.Form({
       onValidationSuccess: function()
@@ -75,7 +75,8 @@ Class.define('app.views.medications.ordering.EditPastDaysOfTherapyContainer', 'a
   {
     var self = this;
 
-    var pastDaysOfTherapy = this.pastDaysOfTherapyField.getValue() == 0 ? null : this.pastDaysOfTherapyField.getValue();
+    var value = this.pastDaysOfTherapyField.getValue();
+    var pastDaysOfTherapy = (value && (!tm.jquery.Utils.isNumeric(value)) || value <= 0) ? null : value;
 
     var saveUrl = this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_SAVE_CONSECUTIVE_DAYS;
     var params = {

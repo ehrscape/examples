@@ -1,0 +1,14 @@
+<tm-dialog class="external-prescriptions-dialog-content"
+           data-dialog-title="{{::'outpatient.prescription.list' | tmDictionaryTermFilter }}" data-dialog-width="1920"
+           data-dialog-height="1080" data-confirm-handler="vm.close()">
+    <div data-tm-flex-layout="row" data-justify-content="flex-start" data-align-items="stretch"
+         data-tm-flex-item="1 1 auto"
+         class="main-container" style="height: 1px;">
+
+        <tm-meds-index-column-list class="index-column" data-tm-flex-item="0 0 280px"></tm-meds-index-column-list>
+        <tm-meds-multi-document-column class="list-column" data-tm-flex-item="1 1 auto"
+                                       data-ng-show="vm.showList()"></tm-meds-multi-document-column>
+        <tm-meds-single-document-column class="single-document-column" data-tm-flex-item="1 1 auto"
+                                        data-ng-if="!vm.showList()"></tm-meds-single-document-column>
+    </div>
+</tm-dialog>

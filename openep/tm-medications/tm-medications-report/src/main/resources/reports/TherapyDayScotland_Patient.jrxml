@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.2.2.final using JasperReports Library version 6.2.2  -->
+<!-- 2016-05-19T09:20:50 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TherapyDay" pageWidth="786" pageHeight="539" orientation="Landscape" columnWidth="786" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="com.marand.ispek.common.Dictionary" whenResourceMissingType="Key" uuid="8d713aa8-1f3a-4536-a167-162361f93792">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<template><![CDATA[$P{initData}.getStylesDir() + "TherapyDay_Styles.jrtx"]]></template>
+	<parameter name="initData" class="com.marand.ispek.print.jasperreports.IspekJasperReportInitData" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.ispek.print.jasperreports.SampleIspekJRDataSourceFactory.createInitData()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="labelFieldDelimiter" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[": "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="patientData" class="com.marand.thinkmed.medications.connector.data.object.PatientDataForTherapyReportDto" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.thinkmed.medications.client.SampleMedicationsJRDataSourceFactory.createPatientData()]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<variable name="inpatient" class="java.lang.Boolean">
+		<variableExpression><![CDATA[$P{patientData}.isInpatient()]]></variableExpression>
+	</variable>
+	<pageHeader>
+		<band height="33">
+			<subreport>
+				<reportElement x="0" y="0" width="786" height="33" isPrintWhenDetailOverflows="true" uuid="be5d634d-792d-435e-a3dd-95cff2012a8b"/>
+				<parametersMapExpression><![CDATA[$P{REPORT_PARAMETERS_MAP}]]></parametersMapExpression>
+				<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.JREmptyDataSource()]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{initData}.getCommonSubreportsDir() + "Ispek_PageHeader_landscape.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="5"/>
+		<band height="77" splitType="Stretch">
+			<rectangle>
+				<reportElement style="lineOutside" x="0" y="0" width="786" height="77" uuid="8ee82d8d-2de9-4cc0-b6cd-5d4a6ecc96af"/>
+			</rectangle>
+			<textField isBlankWhenNull="true">
+				<reportElement style="dataNormal" x="164" y="23" width="119" height="22" uuid="843d4481-6c33-47e0-bf46-f2a105baf523"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getPatientHospitalizationDataDisplay($P{patientData}, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement style="lineInside" x="163" y="0" width="1" height="77" uuid="2fac58d6-f735-4d43-809e-990f8947248e"/>
+			</line>
+			<line>
+				<reportElement style="lineInside" x="403" y="22" width="1" height="55" uuid="870abec4-e903-4631-a48b-cb7a99499f7c"/>
+			</line>
+			<line>
+				<reportElement style="lineInside" x="163" y="22" width="623" height="1" uuid="55759a1d-da76-48d8-9c95-5f42de0c7498"/>
+			</line>
+			<line>
+				<reportElement style="lineInside" x="542" y="0" width="1" height="22" uuid="5e3fd3d7-1b3b-4ab3-81a2-f6746e3de240"/>
+			</line>
+			<line>
+				<reportElement style="lineInside" x="785" y="-6" width="1" height="22" uuid="c23cb4ad-f938-47ae-96a8-e27859d5df70"/>
+			</line>
+			<line>
+				<reportElement style="lineInside" x="283" y="22" width="1" height="55" uuid="2b6ed049-304f-475f-bd45-b0a95a780793"/>
+			</line>
+			<line>
+				<reportElement style="lineInside" x="523" y="22" width="1" height="55" uuid="934bc2a1-7f08-4108-b91f-b617d26ea864"/>
+			</line>
+			<line>
+				<reportElement style="lineInside" x="658" y="22" width="1" height="55" uuid="6409b14d-a2aa-4d41-a9b4-59234c66c1a7"/>
+			</line>
+			<line>
+				<reportElement style="lineInside" x="163" y="45" width="121" height="1" uuid="1008322d-a9a7-4068-8233-b9be350c8f77"/>
+			</line>
+			<textField isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="164" y="0" width="378" height="10" uuid="10d89b8c-b84b-4af6-8b85-a934bd9e6478"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textFieldExpression><![CDATA[$R{clinical.department}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="164" y="46" width="119" height="18" uuid="6031e6c0-ef42-4b99-a2b9-274fce24eaf5"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textFieldExpression><![CDATA[$R{days.after.operation} + " /\n" + $R{days.after.birth}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="284" y="23" width="119" height="18" uuid="dd032ce1-1728-4d67-a62e-c41373edce16">
+					<printWhenExpression><![CDATA[$V{inpatient}]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[$R{charge.nurse}
++ "<BR>"
++ "<I>"
++ '('
++ $R{name}
++ ", "
++ $R{last.name}
++ ", "
++ $R{signature}
++ ')'
++ "</I>"
++ ':']]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="404" y="23" width="118" height="18" uuid="6752c122-a4e3-4afd-b7b9-5201bb14e4ec"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[$R{supervisory.physician}
++ "<BR>"
++ "<I>"
++ '('
++ $R{name}
++ ", "
++ $R{last.name}
++ ", "
++ $R{signature}
++ ')'
++ "</I>"
++ ':']]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="524" y="23" width="134" height="10" uuid="62cfb564-0c16-4a70-9a27-42aec5cc371c"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textFieldExpression><![CDATA[$R{occupational.diagnosis}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="659" y="23" width="126" height="10" uuid="b7279e42-289b-4470-b5d1-4daa5cdec390"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textFieldExpression><![CDATA[$R{known.allergies}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="543" y="0" width="243" height="10" uuid="dca5dbe4-9fd9-464d-b791-f4e0fdd2ec7e">
+					<printWhenExpression><![CDATA[$V{inpatient}]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textFieldExpression><![CDATA[$R{room.and.bed}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="dataNumberNormal" x="164" y="58" width="119" height="18" uuid="de2ca9e6-fb19-4f2b-8b21-2431f507b7c4">
+					<printWhenExpression><![CDATA[$P{patientData}.getOperationDaysAfter() != null]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="none"/>
+				<textFieldExpression><![CDATA[$P{patientData}.getOperationDaysAfter()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="dataNormal" x="543" y="9" width="243" height="13" uuid="1d1b3ffb-446a-47f8-84a2-8c008133c0f9">
+					<printWhenExpression><![CDATA[$V{inpatient}]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="none"/>
+				<textFieldExpression><![CDATA[$P{patientData}.getRoomAndBed()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="dataNormal" x="1" y="0" width="162" height="76" uuid="06043901-754f-4ae3-8ac2-cce0a57d0123"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getPatientDataDisplay($P{patientData}, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="dataNormal" x="284" y="40" width="119" height="36" uuid="c3fb78cf-93a5-445b-abba-2ea21a4fc36f">
+					<printWhenExpression><![CDATA[$V{inpatient}]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textFieldExpression><![CDATA[$P{patientData}.getChargeNurse()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="dataNormal" x="404" y="40" width="119" height="36" uuid="5d791a33-36f9-4932-bbed-573713e95888"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textFieldExpression><![CDATA[$P{patientData}.getSupervisoryCareProfessional()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="dataNormal" x="164" y="9" width="378" height="13" uuid="aa132a42-d313-459f-9093-ba66db39757c"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[$P{patientData}.getOrganization()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="dataNormal" x="524" y="32" width="134" height="44" uuid="66d657c9-4ea9-4e0a-b019-01bf4250c3fb"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="none"/>
+				<textFieldExpression><![CDATA[$P{patientData}.getStringDiseases()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="dataNormal" x="659" y="32" width="126" height="44" uuid="cd7caccc-9c78-4cd4-9a9a-8c87eac25674"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getPatientAllergies($P{patientData})
+    .replace("]", "")]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="5"/>
+	</detail>
+</jasperReport>

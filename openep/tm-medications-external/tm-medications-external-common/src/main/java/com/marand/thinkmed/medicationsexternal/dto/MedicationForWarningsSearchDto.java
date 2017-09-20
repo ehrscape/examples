@@ -19,20 +19,20 @@
 
 package com.marand.thinkmed.medicationsexternal.dto;
 
-import com.marand.maf.core.data.object.IdentityDo;
+import com.marand.maf.core.data.object.NamedIdentityDto;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.joda.time.Interval;
 
 /**
  * @author Bostjan Vester
  */
-public class MedicationForWarningsSearchDto extends IdentityDo
+public class MedicationForWarningsSearchDto extends NamedIdentityDto
 {
   private String externalId;
-  private String description;
   private Double doseAmount;
   private String doseUnit;
   private String routeCode;
+  private String shortName;
   private int frequency;
   private String frequencyUnit;
   private Interval effective;
@@ -48,16 +48,6 @@ public class MedicationForWarningsSearchDto extends IdentityDo
   public void setExternalId(final String externalId)
   {
     this.externalId = externalId;
-  }
-
-  public String getDescription()
-  {
-    return description;
-  }
-
-  public void setDescription(final String description)
-  {
-    this.description = description;
   }
 
   public Double getDoseAmount()
@@ -88,6 +78,16 @@ public class MedicationForWarningsSearchDto extends IdentityDo
   public void setRouteCode(final String routeCode)
   {
     this.routeCode = routeCode;
+  }
+
+  public String getShortName()
+  {
+    return shortName;
+  }
+
+  public void setShortName(final String shortName)
+  {
+    this.shortName = shortName;
   }
 
   public int getFrequency()
@@ -156,7 +156,6 @@ public class MedicationForWarningsSearchDto extends IdentityDo
     super.appendToString(tsb);
     tsb
         .append("externalId", externalId)
-        .append("description", description)
         .append("doseAmount", doseAmount)
         .append("routeCode", routeCode)
         .append("frequency", frequency)

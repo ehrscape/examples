@@ -28,12 +28,16 @@ import com.marand.thinkmed.medications.model.Medication;
 import com.marand.thinkmed.medications.model.MedicationCustomGroup;
 import com.marand.thinkmed.medications.model.MedicationCustomGroupMember;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xfMedCustomGroupMed", columnList = "medication_id"),
+    @Index(name = "xfMedCustomGroupGroup", columnList = "medication_custom_group_id")})
 public class MedicationCustomGroupMemberImpl extends AbstractPermanentEntity implements MedicationCustomGroupMember
 {
   private Medication medication;
@@ -41,7 +45,6 @@ public class MedicationCustomGroupMemberImpl extends AbstractPermanentEntity imp
 
   @Override
   @ManyToOne(targetEntity = MedicationImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedCustomGroupMed")
   public Medication getMedication()
   {
     return medication;
@@ -55,7 +58,6 @@ public class MedicationCustomGroupMemberImpl extends AbstractPermanentEntity imp
 
   @Override
   @ManyToOne(targetEntity = MedicationCustomGroupImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedCustomGroupGroup")
   public MedicationCustomGroup getMedicationCustomGroup()
   {
     return medicationCustomGroup;

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <import resource="classpath:/com/marand/maf_test/tc-default.xml"/>
+    <import resource="classpath:ac-entity-context.xml"/>
+    <import resource="classpath:/com/marand/thinkmed/medications/connector/impl/local/model/impl/ac-hibernate-packages.xml"/>
+    <import resource="classpath:/com/marand/maf_test/server/tc-domain-permission-context.xml"/>
+
+    <bean id="eventHandler" class="com.marand.thinkmed.medications.connector.impl.local.eventhandler.DataChangeEventHandler">
+        <property name="sessionFactory" ref="hibernateSessionFactory"/>
+    </bean>
+
+</beans>

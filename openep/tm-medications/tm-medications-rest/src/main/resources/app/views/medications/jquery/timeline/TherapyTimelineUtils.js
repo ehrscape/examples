@@ -18,80 +18,62 @@
  */
 
 Class.define('tm.views.medications.TherapyTimelineUtils', 'tm.jquery.Object', {
-
-  /** statics */
-  statics: {
-    overrideTimelineOnMouseMove: function(timeline)
-    {
-      timeline.onMouseMove = function(event)
-      {
-        event = event || window.event;
-
-        var params = this.eventParams,
-            size = this.size,
-            dom = this.dom;
-        var mouseX = links.Timeline.getPageX(event);
-        var diffX = mouseX - params.mouseX;
-
-        var interval = (params.end.valueOf() - params.start.valueOf());
-        var diffMillisecs = Math.round((-diffX) / size.contentWidth * interval);
-        var previousLeft = params.previousLeft || 0;
-        var currentLeft = parseFloat(dom.items.frame.style.left) || 0;
-        var previousOffset = params.previousOffset || 0;
-        var frameOffset = previousOffset + (currentLeft - previousLeft);
-        var frameLeft = -diffMillisecs / interval * size.contentWidth + frameOffset;
-        var move = parseFloat(dom.items.frame.style.left) || frameLeft;
-        if (Math.abs(move) > 50)
+      /** statics */
+      statics: {
+        /* limits the redraw, only triggered after 50px move */
+        overrideTimelinePanMove: function (timeline)
         {
-          links.Timeline.prototype.onMouseMove.call(timeline, event);
-        }
-      };
-    },
+          timeline.removeAllListeners('panmove');
+          timeline.on('panmove', function (event)
+          {
+            var self = this;
+            this.range.props.touch.dragging = true;
 
-    //fixes zoom step in swing webkit
-    overrideTimelineOnMouseWheel: function(timeline)
-    {
-      timeline.onMouseWheel = function(event)
-      {
-        if (event.altKey === true)
-        {
-          if (event.wheelDelta == 4800 || event.wheelDelta == -4800) //fix for JavaFX Webkit in Swing
-          {
-            var zoomFactor = event.wheelDelta > 0 ? 0.2 : -0.2;
-            var frameLeft = links.Timeline.getAbsoluteLeft(this.dom.content);
-            var mouseX = links.Timeline.getPageX(event);
-            var zoomAroundDate =
-                (mouseX != undefined && frameLeft != undefined) ?
-                    this.screenToTime(mouseX - frameLeft) :
-                    undefined;
-            this.zoom(zoomFactor, zoomAroundDate);
-            this.trigger("rangechange");
-            this.trigger("rangechanged");
-            links.Timeline.preventDefault(event);
-          }
-          else
-          {
-            links.Timeline.prototype.onMouseWheel.call(timeline, event);
-          }
-        }
-      };
-    },
+            var direction = this.range.options.direction;
+            var delta = direction == 'horizontal' ? event.deltaX : event.deltaY;
+            delta -= this.range.deltaDifference;
 
-    //row height is always header height
-    overrideTimelineReflowItems: function(timeline)
-    {
-      timeline.reflowItems = function()
-      {
-        var groups = this.groups;
-        if (groups)
-        {
-          groups.forEach(function(group)
-          {
-            group.itemsHeight = group.labelHeight;
+            // we ignore moving for each 25px to reduce the amount of redraws, but since fast swipes can cause
+            // an overload in redraws, we also add a small timer delay, to reduce the amount of redraws when
+            // velocity is high .. could probably use hammer.js's velocity in the px calculation?
+            if (Math.abs(delta - this.range.previousDelta) > 25)
+            {
+              clearTimeout(timeline._moveTimer);
+              timeline._moveTimer = setTimeout(function(){
+                self.range._onDrag.call(self.range, event);
+              }, 5);
+            }
           });
+        },
+        /* zoom only works when using the ALT key */
+        overrideTimelineOnMouseWheel: function (timeline)
+        {
+          timeline.removeAllListeners('mousewheel');
+          timeline.on('mousewheel', function(event)
+          {
+            if (event.altKey === true)
+            {
+              this.range._onMouseWheel.call(this.range, event);
+            }
+          });
+        },
+
+        //row height is always header height
+        overrideTimelineReflowItems: function (timeline)
+        {
+          timeline.reflowItems = function ()
+          {
+            var groups = this.groups;
+            if (groups)
+            {
+              groups.forEach(function (group)
+              {
+                group.itemsHeight = group.labelHeight;
+              });
+            }
+            return false;
+          };
         }
-        return false;
-      };
+      }
     }
-  }}
 );

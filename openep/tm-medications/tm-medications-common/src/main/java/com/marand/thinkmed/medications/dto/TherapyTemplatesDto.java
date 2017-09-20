@@ -22,15 +22,15 @@ package com.marand.thinkmed.medications.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.marand.maf.core.JsonSerializable;
-import com.marand.maf.core.data.object.DataObject;
+import com.marand.thinkmed.api.core.JsonSerializable;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
 
-public class TherapyTemplatesDto extends DataObject implements JsonSerializable
+public class TherapyTemplatesDto extends DataTransferObject implements JsonSerializable
 {
   private List<TherapyTemplateDto> userTemplates = new ArrayList<>();
   private List<TherapyTemplateDto> organizationTemplates = new ArrayList<>();

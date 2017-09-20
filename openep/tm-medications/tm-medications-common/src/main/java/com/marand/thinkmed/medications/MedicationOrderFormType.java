@@ -29,6 +29,7 @@ public enum MedicationOrderFormType
 {
   SIMPLE,
   COMPLEX,
+  OXYGEN,
   DESCRIPTIVE;
 
   public static final Set<MedicationOrderFormType> SIMPLE_ORDERS = EnumSet.of(SIMPLE, DESCRIPTIVE);

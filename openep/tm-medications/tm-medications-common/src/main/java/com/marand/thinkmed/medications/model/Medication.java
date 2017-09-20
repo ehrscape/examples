@@ -31,6 +31,10 @@ import com.marand.thinkmed.medications.MedicationLevelEnum;
  */
 public interface Medication extends EffectiveEntity
 {
+  String getCode();
+
+  void setCode(String code);
+
   String getDescription();
 
   void setDescription(final String description);
@@ -71,9 +75,17 @@ public interface Medication extends EffectiveEntity
 
   void setSortOrder(Integer sortOrder);
 
+  String getBarcode();
+
+  void setBarcode(String barcode);
+
   Set<MedicationIngredientLink> getIngredients();
 
   void setIngredients(Set<MedicationIngredientLink> ingredients);
+
+  Set<MedicationIndicationLink> getIndications();
+
+  void setIndications(Set<MedicationIndicationLink> indications);
 
   Set<MedicationRouteLink> getRoutes();
 
@@ -91,7 +103,11 @@ public interface Medication extends EffectiveEntity
 
   void setVersions(SortedSet<MedicationVersion> versions);
 
-  void removeVersion(final MedicationVersion version);
+  Set<MedicationFormulary> getFormulary();
 
-  void addVersion(final MedicationVersion version);
+  void setFormulary(Set<MedicationFormulary> formulary);
+
+  Set<MedicationWarning> getWarnings();
+
+  void setWarnings(Set<MedicationWarning> medicationWarnings);
 }

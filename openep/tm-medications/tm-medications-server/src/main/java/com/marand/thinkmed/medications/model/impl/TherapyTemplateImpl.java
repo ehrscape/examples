@@ -29,23 +29,29 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 
 import com.marand.maf.core.hibernate.entity.AbstractPermanentEntity;
+import com.marand.thinkmed.medications.TherapyTemplateModeEnum;
 import com.marand.thinkmed.medications.TherapyTemplateTypeEnum;
 import com.marand.thinkmed.medications.model.TherapyTemplate;
 import com.marand.thinkmed.medications.model.TherapyTemplateElement;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xpTherapyTemplateCareProvider", columnList = "care_provider_id"),
+    @Index(name = "xfTherapyTemplatePatient", columnList = "patient_id")})
 public class TherapyTemplateImpl extends AbstractPermanentEntity implements TherapyTemplate
 {
   private String name;
   private TherapyTemplateTypeEnum type;
-  private Long userId;
-  private Long departmentId;
-  private Long patientId;
+  private TherapyTemplateModeEnum templateMode;
+  private String userId;
+  private String careProviderId;
+  private String patientId;
   private Set<TherapyTemplateElement> therapyTemplateElements = new HashSet<>();
 
   @Override
@@ -75,39 +81,50 @@ public class TherapyTemplateImpl extends AbstractPermanentEntity implements Ther
   }
 
   @Override
-  public Long getUserId()
+  @Enumerated(EnumType.STRING)
+  public TherapyTemplateModeEnum getTemplateMode()
+  {
+    return templateMode;
+  }
+
+  @Override
+  public void setTemplateMode(final TherapyTemplateModeEnum templateMode)
+  {
+    this.templateMode = templateMode;
+  }
+
+  @Override
+  public String getUserId()
   {
     return userId;
   }
 
   @Override
-  public void setUserId(final Long userId)
+  public void setUserId(final String userId)
   {
     this.userId = userId;
   }
 
   @Override
-  @Index(name = "xfTherapyTemplateDepartment")
-  public Long getDepartmentId()
+  public String getCareProviderId()
   {
-    return departmentId;
+    return careProviderId;
   }
 
   @Override
-  public void setDepartmentId(final Long departmentId)
+  public void setCareProviderId(final String careProviderId)
   {
-    this.departmentId = departmentId;
+    this.careProviderId = careProviderId;
   }
 
   @Override
-  @Index(name = "xfTherapyTemplatePatient")
-  public Long getPatientId()
+  public String getPatientId()
   {
     return patientId;
   }
 
   @Override
-  public void setPatientId(final Long patientId)
+  public void setPatientId(final String patientId)
   {
     this.patientId = patientId;
   }
@@ -131,8 +148,10 @@ public class TherapyTemplateImpl extends AbstractPermanentEntity implements Ther
     super.appendToString(tsb);
 
     tsb.append("name", name);
+    tsb.append("type", type);
+    tsb.append("templateMode", templateMode);
     tsb.append("userId", userId);
-    tsb.append("departmentId", departmentId);
+    tsb.append("careProviderId", careProviderId);
     tsb.append("patientId", patientId);
     tsb.append("therapyTemplateElements", therapyTemplateElements);
   }

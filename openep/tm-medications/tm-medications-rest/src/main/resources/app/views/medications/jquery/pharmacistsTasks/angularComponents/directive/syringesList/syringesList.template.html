@@ -1,0 +1,63 @@
+<div class="perfusion-syringes-list" data-ng-controller="SyringesListController as syringeList" data-tm-flex-layout="column"
+     data-justify-content="flex-start" data-align-items="stretch" data-item-flex="1 1 auto">
+    <div class="header" data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch"
+         data-tm-flex-item="0 0 auto">
+        <div class="row" data-tm-flex-layout="row" data-justify-content="flex-start" data-align-items="stretch"
+             data-tm-flex-item="1 1 auto">
+            <div class="column" data-tm-flex-item="1 1 100px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-align-items="stretch" style="min-width: 100px; max-width: 150px;">
+                <div class="column-content PortletHeading1" data-tm-flex-item="1 1 0">
+                    {{::'due' | tmDictionaryTermFilter}}
+                </div>
+            </div>
+            <div class="column" data-tm-flex-item="1 1 300px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-align-items="stretch" style="min-width: 150px; max-width: 400px;">
+                <div class="column-content PortletHeading1" data-tm-flex-item="1 1 0">
+                    {{::'patient' | tmDictionaryTermFilter}}
+                </div>
+            </div>
+            <div class="column" data-tm-flex-item="1 1 410px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-align-items="stretch" style="min-width: 210px;">
+                <div class="column-content PortletHeading1" data-tm-flex-item="1 1 0">
+                    {{::'therapy' | tmDictionaryTermFilter}}
+                </div>
+            </div>
+            <div class="column" data-tm-flex-item="1 1 100px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-align-items="stretch" style="min-width: 80px; max-width: 130px;">
+                <div class="column-content PortletHeading1" data-tm-flex-item="1 1 0">
+                    {{::'ordered.by.short' | tmDictionaryTermFilter}}
+                </div>
+            </div>
+            <div class="column" data-tm-flex-item="1 1 80px" data-tm-flex-layout="row" data-justify-content="center"
+                 data-align-items="flex-start" style="min-width: 80px; max-width: 100px;">
+                <div class="column-content PortletHeading1">
+                    {{::'number.of.syringes.short' | tmDictionaryTermFilter}}
+                </div>
+            </div>
+            <div class="column" data-tm-flex-item="1 1 100px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-align-items="stretch" style="min-width: 55px; max-width: 150px;">
+                <div class="column-content PortletHeading1" data-tm-flex-item="1 1 0">
+                    {{::'progress' | tmDictionaryTermFilter}}
+                </div>
+            </div>
+            <div class="column last" data-tm-flex-item="1 1 100px" data-tm-flex-layout="row"
+                 data-justify-content="flex-start" data-align-items="stretch" style="min-width: 50px;">
+            </div>
+        </div>
+    </div>
+    <div class="content" data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch"
+         data-ng-show="maskData.perfusionSyringes.data.length !== 0"
+         data-tm-flex-item="1 1 auto" style="overflow-y: auto; overflow-x: hidden;">
+        <syringes-list-row data-ng-repeat="(key, request) in maskData.perfusionSyringes.data as data"></syringes-list-row>
+    </div>
+
+    <div class="content-loader"
+         data-ng-show="maskData.perfusionSyringes.data.length === 0"
+         data-tm-flex-layout="column"
+         data-justify-content="flex-start"
+         data-align-items="center"
+         style="color: #61646D;"
+         data-tm-flex-item="1 1 auto">
+        <div style="margin-top: 15px;" data-tm-flex-item="0 0 auto">{{::'no.data.plural' | tmDictionaryTermFilter}}</div>
+    </div>
+</div>

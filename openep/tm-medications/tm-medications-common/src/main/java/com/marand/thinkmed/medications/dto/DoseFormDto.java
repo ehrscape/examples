@@ -19,8 +19,8 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.CatalogIdentityDo;
-import com.marand.maf.core.JsonSerializable;
+import com.marand.maf.core.data.object.SimpleCatalogIdentityDto;
+import com.marand.thinkmed.api.core.JsonSerializable;
 import com.marand.thinkmed.medications.DoseFormType;
 import com.marand.thinkmed.medications.MedicationOrderFormType;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -28,7 +28,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 /**
  * @author Bostjan Vester
  */
-public class DoseFormDto extends CatalogIdentityDo implements JsonSerializable
+public class DoseFormDto extends SimpleCatalogIdentityDto implements JsonSerializable
 {
   private DoseFormType doseFormType;
   private MedicationOrderFormType medicationOrderFormType;

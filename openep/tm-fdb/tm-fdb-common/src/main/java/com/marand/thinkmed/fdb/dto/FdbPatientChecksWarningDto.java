@@ -1,6 +1,6 @@
 package com.marand.thinkmed.fdb.dto;
 
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.JsonSerializable;
 
 /**
  * @author Mitja Lapajne

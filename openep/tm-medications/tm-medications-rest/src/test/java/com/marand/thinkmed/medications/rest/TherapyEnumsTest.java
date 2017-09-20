@@ -25,33 +25,55 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import com.marand.maf.core.JsonUtil;
+import com.marand.openehr.medications.tdo.AdministrationDetailsCluster;
+import com.marand.openehr.medications.tdo.MedicationActionAction;
+import com.marand.openehr.medications.tdo.MedicationAuthorisationSloveniaCluster.IllnessConditionType;
+import com.marand.openehr.medications.tdo.MedicationAuthorisationSloveniaCluster.Payer;
+import com.marand.openehr.medications.tdo.MedicationAuthorisationSloveniaCluster.PrescriptionDocumentType;
+import com.marand.thinkmed.medications.ActionReasonType;
+import com.marand.thinkmed.medications.AdministrationResultEnum;
+import com.marand.thinkmed.medications.AdministrationStatusEnum;
 import com.marand.thinkmed.medications.AdministrationTypeEnum;
 import com.marand.thinkmed.medications.DosingFrequencyTypeEnum;
 import com.marand.thinkmed.medications.InfusionSetChangeEnum;
+import com.marand.thinkmed.medications.MedicationAdditionalInstructionEnum;
+import com.marand.thinkmed.medications.MedicationFinderFilterEnum;
+import com.marand.thinkmed.medications.MedicationOrderActionEnum;
 import com.marand.thinkmed.medications.MedicationOrderFormType;
 import com.marand.thinkmed.medications.MedicationRouteTypeEnum;
 import com.marand.thinkmed.medications.MedicationStartCriterionEnum;
+import com.marand.thinkmed.medications.MedicationTypeEnum;
+import com.marand.thinkmed.medications.PharmacistReviewTaskStatusEnum;
+import com.marand.thinkmed.medications.PrescriptionChangeTypeEnum;
+import com.marand.thinkmed.medications.SelfAdministeringActionEnum;
+import com.marand.thinkmed.medications.TaskTypeEnum;
+import com.marand.thinkmed.medications.TherapyDoseTypeEnum;
 import com.marand.thinkmed.medications.TherapySortTypeEnum;
 import com.marand.thinkmed.medications.TherapyStatusEnum;
-import com.marand.thinkmed.medications.TherapyTag;
+import com.marand.thinkmed.medications.TherapyTagEnum;
+import com.marand.thinkmed.medications.TherapyTemplateModeEnum;
 import com.marand.thinkmed.medications.TherapyTemplateTypeEnum;
+import com.marand.thinkmed.medications.TitrationType;
+import com.marand.thinkmed.medications.dto.BnfMaximumUnitType;
+import com.marand.thinkmed.medications.dto.TherapyChangeReasonEnum;
+import com.marand.thinkmed.medications.dto.administration.AdjustAdministrationSubtype;
+import com.marand.thinkmed.medications.dto.administration.StartAdministrationSubtype;
+import com.marand.thinkmed.medications.dto.change.TherapyChangeType;
+import com.marand.thinkmed.medications.dto.pharmacist.review.MedicationSupplyTypeEnum;
+import com.marand.thinkmed.medications.dto.pharmacist.review.TherapyPharmacistReviewStatusEnum;
+import com.marand.thinkmed.medications.dto.reconsiliation.ReconciliationRowGroupEnum;
+import com.marand.thinkmed.medications.dto.warning.AdditionalWarningsType;
+import com.marand.thinkmed.medications.rule.MedicationRuleEnum;
+import com.marand.thinkmed.medicationsexternal.WarningSeverity;
+import com.marand.thinkmed.medicationsexternal.WarningType;
 import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.plugins.providers.jaxb.json.JsonParsing;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.unitils.UnitilsJUnit4TestClassRunner;
-import org.unitils.database.annotations.Transactional;
-import org.unitils.database.util.TransactionMode;
-import org.unitils.spring.annotation.SpringApplicationContext;
 
 /**
  * @author Mitja Lapajne
  */
-@RunWith(UnitilsJUnit4TestClassRunner.class)
-@Transactional(TransactionMode.ROLLBACK)
-@SpringApplicationContext( {"/com/marand/maf_test/unitils/tc-unitils.xml"}
-)
 public class TherapyEnumsTest
 {
   private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\\r?\\n");
@@ -71,7 +93,39 @@ public class TherapyEnumsTest
     assertEnum("infusionSetChangeEnum", enumsString, InfusionSetChangeEnum.values());
     assertEnum("therapySortTypeEnum", enumsString, TherapySortTypeEnum.values());
     assertEnum("medicationStartCriterionEnum", enumsString, MedicationStartCriterionEnum.values());
-    assertEnum("therapyTag", enumsString, TherapyTag.values());
+    assertEnum("therapyTag", enumsString, TherapyTagEnum.values());
+    assertEnum("warningSeverityEnum", enumsString, WarningSeverity.values());
+    assertEnum("medicationAdditionalInstructionEnum", enumsString, MedicationAdditionalInstructionEnum.values());
+    assertEnum("prescriptionChangeTypeEnum", enumsString, PrescriptionChangeTypeEnum.values());
+    assertEnum("pharmacistReviewTaskStatusEnum", enumsString, PharmacistReviewTaskStatusEnum.values());
+    assertEnum("taskTypeEnum", enumsString, TaskTypeEnum.values());
+    assertEnum("therapyPharmacistReviewStatusEnum", enumsString, TherapyPharmacistReviewStatusEnum.values());
+    assertEnum("medicationSupplyTypeEnum", enumsString, MedicationSupplyTypeEnum.values());
+    assertEnum("administrationResultEnum", enumsString, AdministrationResultEnum.values());
+    assertEnum("selfAdministrationTypeEnum", enumsString, MedicationActionAction.SelfAdministrationType.values());
+    assertEnum("medicationOrderActionEnum", enumsString, MedicationOrderActionEnum.values());
+    assertEnum("reconciliationRowGroupEnum", enumsString, ReconciliationRowGroupEnum.values());
+    assertEnum("actionReasonTypeEnum", enumsString, ActionReasonType.values());
+    assertEnum("bnfMaximumUnitType", enumsString, BnfMaximumUnitType.values());
+    assertEnum("prescriptionDocumentType", enumsString, PrescriptionDocumentType.values());
+    assertEnum("illnessConditionType", enumsString, IllnessConditionType.values());
+    assertEnum("selfAdministeringActionEnum", enumsString, SelfAdministeringActionEnum.values());
+    assertEnum("administrationStatusEnum", enumsString, AdministrationStatusEnum.values());
+    assertEnum("medicationFinderFilterEnum", enumsString, MedicationFinderFilterEnum.values());
+    assertEnum("therapyTemplateModeEnum", enumsString, TherapyTemplateModeEnum.values());
+    assertEnum("therapyDoseTypeEnum", enumsString, TherapyDoseTypeEnum.values());
+    assertEnum("warningType", enumsString, WarningType.values());
+    assertEnum("medicationTypeEnum", enumsString, MedicationTypeEnum.values());
+    assertEnum("medicationAuthorisationSloveniaClusterPayer", enumsString, Payer.values());
+    assertEnum("medicationRuleEnum", enumsString, MedicationRuleEnum.values());
+    assertEnum("therapyChangeReasonEnum", enumsString, TherapyChangeReasonEnum.values());
+    assertEnum("therapyTitrationTypeEnum", enumsString, TitrationType.values());
+    assertEnum("flowRateMode", enumsString, AdministrationDetailsCluster.OxygenDeliveryCluster.FlowRateMode.values());
+    assertEnum("oxygenDeliveryClusterRoute", enumsString, AdministrationDetailsCluster.OxygenDeliveryCluster.Route.values());
+    assertEnum("adjustAdministrationSubtype", enumsString, AdjustAdministrationSubtype.values());
+    assertEnum("startAdministrationSubtype", enumsString, StartAdministrationSubtype.values());
+    assertEnum("therapyChangeTypeEnum", enumsString, TherapyChangeType.values());
+    assertEnum("additionalWarningsTypeEnum", enumsString, AdditionalWarningsType.values());
   }
 
   private void assertEnum(final String enumName, final String enumsString, final Object[] enumValues)

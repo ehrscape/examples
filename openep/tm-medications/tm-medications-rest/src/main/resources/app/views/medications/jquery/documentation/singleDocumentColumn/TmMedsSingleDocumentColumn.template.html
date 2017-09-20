@@ -1,0 +1,6 @@
+<div data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch"
+     style="overflow-y: auto; overflow-x: hidden; min-height: 1px;"
+     data-ng-class="{'unauthorized' : !vm.getActiveDocument().getContent().isAuthorized()}">
+    <tm-meds-document-presenter data-tm-flex-item="0 0 auto" data-document="vm.getActiveDocument()"
+                                data-read-only="::!vm.isEditAllowed()"></tm-meds-document-presenter>
+</div>

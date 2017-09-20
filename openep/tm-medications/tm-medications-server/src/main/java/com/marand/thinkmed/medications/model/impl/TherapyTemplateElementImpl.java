@@ -29,12 +29,14 @@ import com.marand.maf.core.hibernate.entity.AbstractPermanentEntity;
 import com.marand.thinkmed.medications.model.TherapyTemplate;
 import com.marand.thinkmed.medications.model.TherapyTemplateElement;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = @Index(name = "xfTherapyTempMemberTherapyTemp", columnList = "therapy_template_id"))
 public class TherapyTemplateElementImpl extends AbstractPermanentEntity implements TherapyTemplateElement
 {
   private TherapyTemplate therapyTemplate;
@@ -43,7 +45,6 @@ public class TherapyTemplateElementImpl extends AbstractPermanentEntity implemen
 
   @Override
   @ManyToOne(targetEntity = TherapyTemplateImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfTherapyTempMemberTherapyTemp")
   public TherapyTemplate getTherapyTemplate()
   {
     return therapyTemplate;

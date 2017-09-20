@@ -1,0 +1,80 @@
+<div class="row" data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch"
+     data-tm-flex-item="0 0 auto"
+     data-ng-class="{'normal': !request.urgent, 'urgent': request.urgent, 'first': $first || (data[key-1] != undefined && (data[key].urgent != data[key-1].urgent)),
+     'last': data[key+1] != undefined && (data[key].urgent != data[key+1].urgent)}">
+    <div class="task" data-ng-repeat="task in request.tasksList" data-ng-class="{'first': $first}" data-tm-flex-layout="row"
+         data-justify-content="flex-start" data-align-items="stretch" data-tm-flex-item="0">
+        <div class="column" data-tm-flex-item="1 1 100px" data-tm-flex-layout="row" data-justify-content="flex-start"
+             data-align-items="flex-start"
+             style="min-width: 100px; max-width: 150px;">
+            <div class="column-content" class="column-content" data-tm-flex-item="1 1 0" data-tm-flex-layout="column"
+                 data-justify-content="flex-start" data-align-items="stretch" data-ng-class="{'urgent': request.urgent}">
+                <div data-ng-if="!(task.dueTime | IsTodayStringFilter)" data-item-flex="1 1 auto" class="TextDataBold">
+                    {{::task.dueTime | tmFriendlyDateFilter }}
+                </div>
+                <div data-item-flex="1 1 auto" data-ng-class="request.urgent ? 'TextDataBold': 'TextData'">
+                    {{::task.dueTime | tmTimeFilter:'tm.short' }}
+                </div>
+            </div>
+        </div>
+        <div class="column" data-tm-flex-item="1 1 300px" data-tm-flex-layout="row" data-justify-content="flex-start"
+             data-align-items="flex-start"
+             style="min-width: 150px; max-width: 400px;">
+            <tm-patient-banner data-ng-if="$first" dto="request.patientDisplayDto" class="column-content"
+                               data-tm-flex-item="1 1 0"
+                               ng-dblclick="openPatient(request.patientDisplayDto.id)"></tm-patient-banner>
+        </div>
+        <div class="column" data-tm-flex-item="1 1 410px" data-tm-flex-layout="row" data-justify-content="flex-start"
+             data-align-items="flex-start"
+             style="min-width: 210px;">
+            <div class="column-content" data-tm-flex-item="1 1 0" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-align-items="flex-start" style="margin-right: 15px">
+                <tm-therapy-description data-dto="task.therapyDayDto" data-tm-flex-item="1 1 0"></tm-therapy-description>
+                <tm-popup-menu data-tm-flex-item="0 0 auto">
+                    <tm-menu-item data-ng-if="isTaskOfTypeStart(task)"
+                                  data-action="startPerfusionSyringePreparations(request, task)">
+                        {{::'start' | tmDictionaryTermFilter}}
+                    </tm-menu-item>
+                    <tm-menu-item data-ng-if="isTaskOfTypeComplete(task)"
+                                  data-action="confirmPerfusionSyringePreparations(request, task)">
+                        {{::'confirm' | tmDictionaryTermFilter}}
+                    </tm-menu-item>
+                    <tm-menu-item data-ng-if="isTaskOfTypeComplete(task)"
+                                  data-action="undoPerfusionSyringeStartPreparations(request, task)">
+                        {{::'undo.start' | tmDictionaryTermFilter}}
+                    </tm-menu-item>
+                    <tm-menu-item data-ng-if="isTaskOfTypeDispense(task)"
+                                  data-action="undoPerfusionSyringePreparationsCompletion(request, task)">
+                        {{::'undo' | tmDictionaryTermFilter}}
+                    </tm-menu-item>
+                    <tm-menu-item data-action="printMedicationLabel(task)" data-ng-if="!isTaskOfTypeStart(task)">
+                        {{::'print.medication' | tmDictionaryTermFilter}}
+                    </tm-menu-item>
+                    <tm-menu-item data-action="printSystemLabel(task)" data-ng-if="!isTaskOfTypeStart(task)">
+                        {{::'print.system' | tmDictionaryTermFilter}}
+                    </tm-menu-item>
+                    <tm-menu-item data-disabled="!isTaskOfTypeStart(task)"
+                                  data-action="deletePerfusionSyringeTask(request, task)">
+                        {{::'delete.request' | tmDictionaryTermFilter}}
+                    </tm-menu-item>
+                </tm-popup-menu>
+            </div>
+        </div>
+        <div class="column" data-tm-flex-item="1 1 100px" data-tm-flex-layout="row" data-justify-content="flex-start"
+             data-align-items="flex-start" style="min-width: 80px; max-width: 130px;">
+            <span class="TextData column-content">{{::task.orderedBy.name}}</span>
+        </div>
+        <div class="column" data-tm-flex-item="1 1 80px" data-tm-flex-layout="row" data-justify-content="center"
+             data-align-items="flex-start" style="min-width: 80px; max-width: 100px;">
+            <span class="TextData column-content">{{::task.numberOfSyringes}}</span>
+        </div>
+        <div class="column" data-tm-flex-item="1 1 100px" data-tm-flex-layout="row" data-justify-content="center"
+             data-align-items="flex-start" style="min-width: 55px; max-width: 150px;">
+            <syringe-progress class="column-content" data-tm-flex-item="1 1 0" task="task"></syringe-progress>
+        </div>
+        <div class="column last" data-tm-flex-item="1 1 100px" data-tm-flex-layout="row" data-justify-content="flex-start"
+             data-align-items="flex-start" style="min-width: 50px;">
+            <syringe-overview class="column-content" data-tm-flex-item="1 1 0" ng-if="$index === 0"></syringe-overview>
+        </div>
+    </div>
+</div>

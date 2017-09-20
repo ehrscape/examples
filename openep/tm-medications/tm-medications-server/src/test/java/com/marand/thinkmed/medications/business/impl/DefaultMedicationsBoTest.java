@@ -22,127 +22,178 @@ package com.marand.thinkmed.medications.business.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import com.marand.ispek.ehr.common.EhrLinkType;
+import com.marand.maf.core.JsonUtil;
+import com.marand.maf.core.Opt;
 import com.marand.maf.core.Pair;
-import com.marand.maf.core.openehr.dao.EhrTaggingDao;
-import com.marand.maf.core.openehr.dao.openehr.OpenEhrTaggingDao;
-import com.marand.maf.core.openehr.util.InstructionTranslator;
+import com.marand.maf.core.SpringProxiedJUnit4ClassRunner;
+import com.marand.maf.core.openehr.dao.openehr.TaggingOpenEhrDao;
+import com.marand.maf.core.security.remoting.GlobalAuditContext;
+import com.marand.maf.core.service.ConstantUserMetadataProvider;
+import com.marand.maf.core.service.RequestContextHolder;
+import com.marand.maf.core.service.RequestContextImpl;
 import com.marand.maf.core.time.Intervals;
+import com.marand.maf.core.valueholder.ValueHolder;
 import com.marand.openehr.medications.tdo.AdministrationDetailsCluster;
 import com.marand.openehr.medications.tdo.IngredientsAndFormCluster;
 import com.marand.openehr.medications.tdo.MedicationActionAction;
-import com.marand.openehr.medications.tdo.MedicationAdministrationComposition;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction.OrderActivity;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster.TimingCluster.DayOfWeek;
 import com.marand.openehr.medications.tdo.MedicationOrderComposition;
+import com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection;
 import com.marand.openehr.medications.tdo.MedicationReferenceWeightComposition;
 import com.marand.openehr.util.DataValueUtils;
-import com.marand.openehr.util.OpenEhrLinkType;
 import com.marand.openehr.util.OpenEhrRefUtils;
-import com.marand.thinkehr.tagging.dto.TagFilteringDto;
-import com.marand.thinkehr.tagging.dto.TaggedObjectDto;
-import com.marand.thinkmed.api.core.data.NamedIdentity;
-import com.marand.thinkmed.api.core.data.object.NamedIdentityDto;
-import com.marand.thinkmed.api.organization.data.KnownClinic;
-import com.marand.thinkmed.medications.AdministrationStatusEnum;
-import com.marand.thinkmed.medications.AdministrationTypeEnum;
+import com.marand.thinkmed.api.core.Dictionary;
 import com.marand.thinkmed.medications.DosingFrequencyTypeEnum;
 import com.marand.thinkmed.medications.MedicationActionEnum;
 import com.marand.thinkmed.medications.MedicationDeliveryMethodEnum;
 import com.marand.thinkmed.medications.MedicationTypeEnum;
-import com.marand.thinkmed.medications.TherapyDoseTypeEnum;
-import com.marand.thinkmed.medications.TherapySortTypeEnum;
-import com.marand.thinkmed.medications.TherapyTag;
-import com.marand.thinkmed.medications.TherapyTaggingUtils;
-import com.marand.thinkmed.medications.b2b.MedicationsConnector;
-import com.marand.thinkmed.medications.converter.MedicationConverterSelector;
-import com.marand.thinkmed.medications.converter.MedicationToEhrConverter;
-import com.marand.thinkmed.medications.dao.EhrMedicationsDao;
+import com.marand.thinkmed.medications.TherapyJsonDeserializer;
+import com.marand.thinkmed.medications.TherapyStatusEnum;
+import com.marand.thinkmed.medications.TitrationType;
+import com.marand.thinkmed.medications.administration.AdministrationProvider;
+import com.marand.thinkmed.medications.admission.MedicationOnAdmissionHandler;
+import com.marand.thinkmed.medications.business.mapper.MedicationHolderDtoMapper;
+import com.marand.thinkmed.medications.business.util.MedicationsEhrUtils;
+import com.marand.thinkmed.medications.converter.therapy.MedicationConverterSelector;
+import com.marand.thinkmed.medications.converter.therapy.MedicationToEhrConverter;
+import com.marand.thinkmed.medications.dao.MedicationsDao;
 import com.marand.thinkmed.medications.dao.hibernate.HibernateMedicationsDao;
-import com.marand.thinkmed.medications.dto.ComplexDoseElementDto;
+import com.marand.thinkmed.medications.dao.openehr.MedicationsOpenEhrDao;
 import com.marand.thinkmed.medications.dto.ConstantComplexTherapyDto;
 import com.marand.thinkmed.medications.dto.ConstantSimpleTherapyDto;
 import com.marand.thinkmed.medications.dto.DocumentationTherapiesDto;
 import com.marand.thinkmed.medications.dto.DoseFormDto;
 import com.marand.thinkmed.medications.dto.DosingFrequencyDto;
+import com.marand.thinkmed.medications.dto.IndicationDto;
 import com.marand.thinkmed.medications.dto.InfusionIngredientDto;
 import com.marand.thinkmed.medications.dto.InfusionRateCalculationDto;
-import com.marand.thinkmed.medications.dto.IngredientDto;
 import com.marand.thinkmed.medications.dto.MedicationDataForTherapyDto;
 import com.marand.thinkmed.medications.dto.MedicationDto;
+import com.marand.thinkmed.medications.dto.MedicationHolderDto;
 import com.marand.thinkmed.medications.dto.MedicationIngredientDto;
 import com.marand.thinkmed.medications.dto.MedicationRouteDto;
-import com.marand.thinkmed.medications.dto.MedicationSearchDto;
-import com.marand.thinkmed.medications.dto.MedicationSimpleDto;
 import com.marand.thinkmed.medications.dto.MedicationSiteDto;
-import com.marand.thinkmed.medications.dto.RoundsIntervalDto;
-import com.marand.thinkmed.medications.dto.SimpleDoseElementDto;
-import com.marand.thinkmed.medications.dto.TherapyCardInfoDto;
-import com.marand.thinkmed.medications.dto.TherapyChangeHistoryDto;
-import com.marand.thinkmed.medications.dto.TherapyChangeType;
-import com.marand.thinkmed.medications.dto.TherapyDoseDto;
-import com.marand.thinkmed.medications.dto.TherapyDto;
-import com.marand.thinkmed.medications.dto.TimedComplexDoseElementDto;
+import com.marand.thinkmed.medications.dto.OxygenStartingDevice;
+import com.marand.thinkmed.medications.dto.OxygenTherapyDto;
+import com.marand.thinkmed.medications.dto.TherapyChangeReasonDto;
+import com.marand.thinkmed.medications.dto.TherapyChangeReasonEnum;
+import com.marand.thinkmed.medications.dto.TherapyTemplateDto;
+import com.marand.thinkmed.medications.dto.TherapyTemplateElementDto;
+import com.marand.thinkmed.medications.dto.TherapyTemplatesDto;
 import com.marand.thinkmed.medications.dto.VariableComplexTherapyDto;
-import com.marand.thinkmed.medications.dto.administration.AdministrationDto;
-import com.marand.thinkmed.medications.dto.administration.StartAdministrationDto;
-import com.marand.thinkmed.medications.dto.administration.TherapyTaskDto;
-import com.marand.thinkmed.medications.dto.administration.TherapyTimelineRowDto;
-import com.marand.thinkmed.medications.dto.administration.TherapyTimelineRowForContInfusionDto;
+import com.marand.thinkmed.medications.dto.dose.ComplexDoseElementDto;
+import com.marand.thinkmed.medications.dto.dose.SimpleDoseElementDto;
+import com.marand.thinkmed.medications.dto.dose.TimedComplexDoseElementDto;
+import com.marand.thinkmed.medications.dto.mentalHealth.MentalHealthMedicationDto;
+import com.marand.thinkmed.medications.dto.mentalHealth.MentalHealthTherapyDto;
+import com.marand.thinkmed.medications.dto.pharmacist.review.PharmacistReviewDto;
+import com.marand.thinkmed.medications.task.MedicationsTasksProvider;
 import com.marand.thinkmed.medications.test.MedicationsTestUtils;
+import com.marand.thinkmed.medications.valueholder.MedicationsValueHolder;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationForWarningsSearchDto;
+import junit.framework.Assert;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.openehr.jaxb.rm.Composition;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openehr.jaxb.rm.DvCodedText;
 import org.openehr.jaxb.rm.DvQuantity;
-import org.openehr.jaxb.rm.DvText;
-import org.openehr.jaxb.rm.Instruction;
 import org.openehr.jaxb.rm.Link;
-import org.openehr.jaxb.rm.LocatableRef;
 import org.openehr.jaxb.rm.ObjectVersionId;
 import org.openehr.jaxb.rm.UidBasedId;
-import org.unitils.UnitilsJUnit4TestClassRunner;
-import org.unitils.database.annotations.Transactional;
-import org.unitils.database.util.TransactionMode;
-import org.unitils.mock.core.MockObject;
-import org.unitils.spring.annotation.SpringApplicationContext;
-import org.unitils.spring.annotation.SpringBeanByName;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import static com.marand.openehr.medications.tdo.AdministrationDetailsCluster.InfusionAdministrationDetailsCluster;
 import static com.marand.openehr.medications.tdo.IngredientsAndFormCluster.IngredientCluster;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction.OrderActivity;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster.TimingCluster.DayOfWeek;
 import static com.marand.openehr.medications.tdo.MedicationReferenceWeightComposition.MedicationReferenceBodyWeightObservation.HistoryHistory.AnyEventEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Mitja Lapajne
  */
-@RunWith(UnitilsJUnit4TestClassRunner.class)
-@Transactional(TransactionMode.ROLLBACK)
-@SpringApplicationContext(
-    {
-        "/com/marand/maf_test/unitils/tc-unitils.xml",
-        "com/marand/thinkmed/medications/ac-hibernate-packages.xml",
-        "com/marand/thinkmed/medications/business/impl/DefaultMedicationsBoTest-context.xml"
-    }
-)
+@RunWith(MockitoJUnitRunner.class)
 public class DefaultMedicationsBoTest
 {
-  @SpringBeanByName
-  private DefaultMedicationsBo medicationsBo;
+  @InjectMocks
+  private DefaultMedicationsBo medicationsBo = new DefaultMedicationsBo();
+
+  @Mock
+  private Dictionary testDictionary;
+
+  @Mock
+  private MedicationsOpenEhrDao medicationsOpenEhrDao;
+
+  @Mock
+  private MedicationsDao medicationsDao;
+
+  @Mock
+  private TaggingOpenEhrDao taggingOpenEhrDao;
+
+  @Mock
+  private TherapyDisplayProvider therapyDisplayProvider;
+
+  @Mock
+  private ValueHolder<Map<Long, MedicationHolderDto>> medicationsValueHolder;
+
+  @Mock
+  private ValueHolder<Map<Long, MedicationRouteDto>> medicationRoutesValueHolder;
+
+  @Spy
+  private MedicationHolderDtoMapper medicationHolderDtoMapper = new MedicationHolderDtoMapper();
+
+  @Mock
+  private MedicationsTasksProvider medicationsTasksProvider;
+
+  @Mock
+  private MedicationOnAdmissionHandler medicationOnAdmissionHandler;
+
+  @Mock
+  private AdministrationProvider administrationProvider;
+
+  @Before
+  public void setUp()
+  {
+    medicationHolderDtoMapper.setMarkNonFormularyMedication(true);
+    //mock
+    final Map<Long, MedicationHolderDto> medicationHolderMap = new HashMap<>();
+    final MedicationHolderDto medicationDto1 = new MedicationHolderDto();
+    medicationDto1.setId(1L);
+    medicationDto1.setName("Lekadol 20x500mg");
+    medicationHolderMap.put(1L, medicationDto1);
+
+    final MedicationHolderDto medicationDto2 = new MedicationHolderDto();
+    medicationDto2.setId(2L);
+    medicationDto2.setName("Primotren 20x500mg");
+    medicationHolderMap.put(2L, medicationDto2);
+
+    final MedicationsValueHolder medicationsValueHolder = mock(MedicationsValueHolder.class);
+    when(medicationsValueHolder.getValue()).thenReturn(medicationHolderMap);
+    medicationsBo.setMedicationsValueHolder(medicationsValueHolder);
+  }
 
   @Test
   public void testTransformConstantSimpleTherapy()
@@ -150,9 +201,9 @@ public class DefaultMedicationsBoTest
     final ConstantSimpleTherapyDto therapy = new ConstantSimpleTherapyDto();
     therapy.setTherapyDescription("CODE1:NAME1 - 3.0mg 1TBL, 3x per day");
     final MedicationRouteDto route = new MedicationRouteDto();
-    route.setCode("O");
+    route.setId(1L);
     route.setName("ORAL");
-    therapy.setRoute(route);
+    therapy.setRoutes(Collections.singletonList(route));
     final DoseFormDto doseForm = new DoseFormDto();
     doseForm.setCode("T");
     doseForm.setName("TABLET");
@@ -161,7 +212,7 @@ public class DefaultMedicationsBoTest
     therapy.setStart(new DateTime(2013, 2, 2, 0, 0));
     therapy.setEnd(Intervals.INFINITE.getEnd());
     therapy.setComment("COMMENT1");
-    therapy.setClinicalIndication("INDICATION1");
+    therapy.setClinicalIndication(new IndicationDto("1", "INDICATION1"));
     therapy.setPastDaysOfTherapy(5);
 
     final List<String> daysOfWeek = new ArrayList<>();
@@ -173,15 +224,12 @@ public class DefaultMedicationsBoTest
     therapy.setMedication(medication);
     medication.setId(1L);
     medication.setName("Lekadol");
-    final IngredientDto ingredient = new IngredientDto();
-    ingredient.setId(1L);
-    ingredient.setName("paracetamol");
-    ingredient.setCode("PA");
     final SimpleDoseElementDto doseElement = new SimpleDoseElementDto();
     doseElement.setQuantity(3.0);
     doseElement.setDoseDescription("1/2");
     therapy.setDoseElement(doseElement);
     therapy.setQuantityUnit("mg");
+    therapy.setTitration(TitrationType.BLOOD_SUGAR);
 
     final MedicationToEhrConverter<?> converter = MedicationConverterSelector.getConverter(therapy);
     final MedicationInstructionInstruction instruction = converter.createInstructionFromTherapy(therapy);
@@ -214,11 +262,15 @@ public class DefaultMedicationsBoTest
     assertEquals("INDICATION1", orderActivity.getClinicalIndication().get(0).getValue());
     //route
     assertEquals("ORAL", orderActivity.getAdministrationDetails().getRoute().get(0).getValue());
-    assertEquals("O", orderActivity.getAdministrationDetails().getRoute().get(0).getDefiningCode().getCodeString());
+    assertEquals("1", orderActivity.getAdministrationDetails().getRoute().get(0).getDefiningCode().getCodeString());
     //quantity
     assertEquals(DataValueUtils.getQuantity(3.0, ""), orderActivity.getStructuredDose().getQuantity());
     assertEquals(DataValueUtils.getLocalCodedText("mg", "mg"), orderActivity.getStructuredDose().getDoseUnit());
     assertEquals("1/2", orderActivity.getStructuredDose().getDescription().getValue());
+    final TitrationType titration =
+        TitrationType.getByFullString(
+            ((DvCodedText)orderActivity.getAdditionalInstruction().get(0)).getDefiningCode().getCodeString());
+    assertEquals(TitrationType.BLOOD_SUGAR, titration);
     //form
     assertEquals("TABLET", orderActivity.getIngredientsAndForm().getForm().getValue());
   }
@@ -229,17 +281,18 @@ public class DefaultMedicationsBoTest
     final ConstantComplexTherapyDto therapy = new ConstantComplexTherapyDto();
     therapy.setTherapyDescription("Taxol 10.0mg, NOSILNA RAZTOPINA: Natrijev Klorid 90ml, 100ml/h, 2x na dan");
     final MedicationRouteDto routeDto = new MedicationRouteDto();
-    routeDto.setCode("1");
+    routeDto.setId(1L);
     routeDto.setName("IV");
-    therapy.setRoute(routeDto);
+    therapy.setRoutes(Collections.singletonList(routeDto));
     therapy.setContinuousInfusion(true);
     therapy.setDosingFrequency(new DosingFrequencyDto(DosingFrequencyTypeEnum.DAILY_COUNT, 3));
     therapy.setDosingDaysFrequency(2);
     therapy.setStart(new DateTime(2013, 2, 2, 9, 0));
     therapy.setEnd(new DateTime(2013, 2, 5, 9, 0));
     therapy.setComment("COMMENT1");
-    therapy.setClinicalIndication("INDICATION1");
+    therapy.setClinicalIndication(new IndicationDto("1", "INDICATION1"));
     therapy.setPastDaysOfTherapy(5);
+    therapy.setTitration(TitrationType.INR);
 
     final MedicationSiteDto siteDto = new MedicationSiteDto();
     siteDto.setCode("1");
@@ -249,14 +302,14 @@ public class DefaultMedicationsBoTest
     final ComplexDoseElementDto doseElement = new ComplexDoseElementDto();
     doseElement.setDuration(1);
     doseElement.setRate(100.0);
-    doseElement.setRateUnit("ml/h");
+    doseElement.setRateUnit("mL/h");
     doseElement.setRateFormula(5.0);
     doseElement.setRateFormulaUnit("mg/kg/h");
     therapy.setDoseElement(doseElement);
 
     therapy.setVolumeSum(100.0);
-    therapy.setVolumeSumUnit("ml");
-    final List<InfusionIngredientDto> ingredientsList = new ArrayList<InfusionIngredientDto>();
+    therapy.setVolumeSumUnit("mL");
+    final List<InfusionIngredientDto> ingredientsList = new ArrayList<>();
     therapy.setIngredientsList(ingredientsList);
     final InfusionIngredientDto medication = new InfusionIngredientDto();
     ingredientsList.add(medication);
@@ -266,8 +319,8 @@ public class DefaultMedicationsBoTest
     medication.setMedication(medicationDto1);
     medication.setQuantity(2.0);
     medication.setQuantityUnit("mg");
-    medication.setVolume(10.0);
-    medication.setVolumeUnit("ml");
+    medication.setQuantityDenominator(10.0);
+    medication.setQuantityDenominatorUnit("mL");
 
     final DoseFormDto doseFormDto = new DoseFormDto();
     doseFormDto.setCode("1");
@@ -278,10 +331,10 @@ public class DefaultMedicationsBoTest
     ingredientsList.add(solution);
     final MedicationDto medicationDto2 = new MedicationDto();
     medicationDto2.setId(2L);
-    medicationDto2.setName("Natrijev klorid Braun 9 mg/ml razt.za inf. vreča 100 ml 1x");
+    medicationDto2.setName("Natrijev klorid Braun 9 mg/mL razt.za inf. vreča 100 mL 1x");
     solution.setMedication(medicationDto2);
     solution.setQuantity(90.0);
-    solution.setQuantityUnit("ml");
+    solution.setQuantityUnit("mL");
 
     final MedicationToEhrConverter<?> converter = MedicationConverterSelector.getConverter(therapy);
     final MedicationInstructionInstruction instruction = converter.createInstructionFromTherapy(therapy);
@@ -325,7 +378,7 @@ public class DefaultMedicationsBoTest
         new Double(100.0),
         (Double)((DvQuantity)infusionAdministrationDetailsCluster.getDoseAdministrationRate()).getMagnitude());
     assertEquals(
-        "ml/h", ((DvQuantity)infusionAdministrationDetailsCluster.getDoseAdministrationRate()).getUnits());
+        "mL/h", ((DvQuantity)infusionAdministrationDetailsCluster.getDoseAdministrationRate()).getUnits());
     assertEquals(
         new Double(5.0),
         (Double)((DvQuantity)infusionAdministrationDetailsCluster.getDoseAdministrationFormula()).getMagnitude());
@@ -333,7 +386,7 @@ public class DefaultMedicationsBoTest
         "mg/kg/h", ((DvQuantity)infusionAdministrationDetailsCluster.getDoseAdministrationFormula()).getUnits());
     //quantity and strength
     assertEquals(DataValueUtils.getQuantity(100.0, ""), orderActivity.getStructuredDose().getQuantity());
-    assertEquals(DataValueUtils.getLocalCodedText("ml", "ml"), orderActivity.getStructuredDose().getDoseUnit());
+    assertEquals(DataValueUtils.getLocalCodedText("mL", "mL"), orderActivity.getStructuredDose().getDoseUnit());
     assertNull(orderActivity.getStructuredDose().getDescription());
     final List<IngredientsAndFormCluster.IngredientCluster> ingredient = orderActivity.getIngredientsAndForm()
         .getIngredient();
@@ -348,53 +401,116 @@ public class DefaultMedicationsBoTest
     final IngredientCluster.IngredientQuantityCluster.RatioDenominatorCluster ratioDenominator1 =
         ingredient.get(0).getIngredientQuantity().getRatioDenominator();
     assertEquals((Double)10.0, (Double)ratioDenominator1.getAmount().getMagnitude());
-    assertEquals("ml", ratioDenominator1.getDoseUnit().getDefiningCode().getCodeString());
-    assertEquals("ml", ratioDenominator1.getDoseUnit().getValue());
+    assertEquals("mL", ratioDenominator1.getDoseUnit().getDefiningCode().getCodeString());
+    assertEquals("mL", ratioDenominator1.getDoseUnit().getValue());
     //solution quantity and strength
     assertEquals("2", ((DvCodedText)ingredient.get(1).getName()).getDefiningCode().getCodeString());
-    assertEquals("Natrijev klorid Braun 9 mg/ml razt.za inf. vreča 100 ml 1x", ingredient.get(1).getName().getValue());
+    assertEquals("Natrijev klorid Braun 9 mg/mL razt.za inf. vreča 100 mL 1x", ingredient.get(1).getName().getValue());
+
+    final TitrationType titration =
+        TitrationType.getByFullString(
+            ((DvCodedText)orderActivity.getAdditionalInstruction().get(0)).getDefiningCode().getCodeString());
+    assertEquals(TitrationType.INR, titration);
   }
 
   @Test
-  public void testGetFirstInstruction()
+  public void testTransformOxygenTherapy()
   {
-    // 1 --> 2 --> 3
-    final MedicationOrderComposition composition1 =
+    final OxygenTherapyDto therapy = new OxygenTherapyDto();
+    therapy.setTherapyDescription("Oxygen description");
+    final MedicationRouteDto routeDto = new MedicationRouteDto();
+    routeDto.setId(1L);
+    routeDto.setName("IV");
+    therapy.setRoutes(Collections.singletonList(routeDto));
+    therapy.setStart(new DateTime(2013, 2, 2, 9, 0));
+    therapy.setEnd(new DateTime(2013, 2, 5, 9, 0));
+    therapy.setComment("COMMENT1");
+
+    final InfusionIngredientDto medication = new InfusionIngredientDto();
+    final MedicationDto medicationDto = new MedicationDto();
+    medicationDto.setId(1L);
+    medicationDto.setName("Oxygen medication name");
+    medication.setMedication(medicationDto);
+    medication.setQuantity(2.0);
+    medication.setQuantityUnit("mg");
+    medication.setQuantityDenominator(10.0);
+    medication.setQuantityDenominatorUnit("mL");
+    therapy.setMedication(medicationDto);
+
+    // OXYGEN SPECIFIC DATA
+    therapy.setFlowRate(50.0);
+    therapy.setFlowRateUnit("l/min");
+    therapy.setFlowRateMode(AdministrationDetailsCluster.OxygenDeliveryCluster.FlowRateMode.LOW_FLOW);
+    therapy.setMinTargetSaturation(0.8);
+    therapy.setMaxTargetSaturation(0.9);
+    final OxygenStartingDevice startingDevice = new OxygenStartingDevice(AdministrationDetailsCluster.OxygenDeliveryCluster.Route.CPAP_MASK);
+    startingDevice.setRouteType("24");
+    therapy.setStartingDevice(startingDevice);
+    therapy.setHumidification(true);
+    therapy.setSpeedDisplay("10ml/h");
+
+    final MedicationToEhrConverter<?> converter = MedicationConverterSelector.getConverter(therapy);
+    final MedicationInstructionInstruction instruction = converter.createInstructionFromTherapy(therapy);
+
+    final OrderActivity orderActivity = instruction.getOrder().get(0);
+
+    //narrative
+    assertEquals("Oxygen description", instruction.getNarrative().getValue());
+
+    //description
+    assertEquals("Oxygen medication name", orderActivity.getMedicine().getValue());
+    assertEquals("Oxygen description",orderActivity.getDirections().getValue());
+
+    //timing
+    assertNull(orderActivity.getMedicationTiming().getNumberOfAdministrations());
+    assertEquals(DataValueUtils.getDateTime(new DateTime(2013, 2, 2, 9, 0)), orderActivity.getMedicationTiming().getStartDate());
+    assertEquals(DataValueUtils.getDateTime(new DateTime(2013, 2, 5, 9, 0)), orderActivity.getMedicationTiming().getStopDate());
+
+    //comment
+    assertEquals("COMMENT1", orderActivity.getComment().get(0).getValue());
+
+    //route
+    assertEquals("IV", orderActivity.getAdministrationDetails().getRoute().get(0).getValue());
+    assertEquals("1", orderActivity.getAdministrationDetails().getRoute().get(0).getDefiningCode().getCodeString());
+
+    //Oxygen
+    final AdministrationDetailsCluster.OxygenDeliveryCluster oxygenDelivery = orderActivity.getAdministrationDetails()
+        .getOxygenDelivery().get(0);
+    assertSame(AdministrationDetailsCluster.OxygenDeliveryCluster.Route.CPAP_MASK, oxygenDelivery.getRouteEnum());
+    assertTrue(oxygenDelivery.getHumidifier().getHumidiferUsed().isValue());
+    assertEquals((Double)50.0, (Double)oxygenDelivery.getAmbientOxygen().getOxygenFlowRate().getMagnitude());
+    assertEquals("l/m", oxygenDelivery.getAmbientOxygen().getOxygenFlowRate().getUnits());
+
+    final Double minimumPercentO2 = (double)oxygenDelivery.getAmbientOxygen().getMinimumPercentO2().getNumerator();
+    final Double maximumPercentO2 = (double)oxygenDelivery.getAmbientOxygen().getMaximumPercentO2().getNumerator();
+    assertEquals(0.8, minimumPercentO2, 2);
+    assertEquals(0.9, maximumPercentO2, 2);
+
+    assertEquals(
+        AdministrationDetailsCluster.OxygenDeliveryCluster.FlowRateMode.LOW_FLOW,
+        oxygenDelivery.getFlowRateModeEnum());
+  }
+
+  @Test
+  public void testGetOriginalTherapyId()
+  {
+    final MedicationOrderComposition originComposition =
         MedicationsTestUtils.buildTestMedicationOrderComposition("uid1::1", null, null);
-    final MedicationOrderComposition composition2 =
+    final MedicationInstructionInstruction originInstruction =
+        MedicationsTestUtils.buildTestMedicationInstruction("Medication instruction");
+    originComposition.getMedicationDetail().getMedicationInstruction().add(originInstruction);
+
+    final MedicationOrderComposition composition =
         MedicationsTestUtils.buildTestMedicationOrderComposition("uid2::1", null, null);
-    final MedicationOrderComposition composition3 =
-        MedicationsTestUtils.buildTestMedicationOrderComposition("uid3::1", null, null);
+    final MedicationInstructionInstruction instruction =
+        MedicationsTestUtils.buildTestMedicationInstruction("Medication instruction");
+    composition.getMedicationDetail().getMedicationInstruction().add(instruction);
 
-    final MedicationInstructionInstruction instruction1 = MedicationsTestUtils.
-        buildTestMedicationInstruction("MedicationInstructionInstruction 1");
-    composition1.getMedicationDetail().getMedicationInstruction().add(instruction1);
-    final MedicationInstructionInstruction instruction2 =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 2");
-    composition2.getMedicationDetail().getMedicationInstruction().add(instruction2);
-    final MedicationInstructionInstruction instruction3 =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 3");
-    composition3.getMedicationDetail().getMedicationInstruction().add(instruction3);
+    instruction.getLinks().add(
+        OpenEhrRefUtils.getLinkToTdoTarget("origin", EhrLinkType.ORIGIN.getName(), originComposition, originInstruction));
 
-    final Link linkToInstruction1 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition1, instruction1);
-    instruction2.getLinks().add(linkToInstruction1);
-    final Link linkToInstruction2 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition2, instruction2);
-    instruction3.getLinks().add(linkToInstruction2);
-
-    //mock
-    final MockObject<EhrMedicationsDao> ehrDaoMock = new MockObject<>(EhrMedicationsDao.class, this);
-    ehrDaoMock.returns(composition1).loadMedicationOrderComposition(1L, "uid1");
-    ehrDaoMock.returns(composition2).loadMedicationOrderComposition(1L, "uid2");
-    ehrDaoMock.returns(composition3).loadMedicationOrderComposition(1L, "uid3");
-    ehrDaoMock.returns(composition1).loadMedicationOrderComposition(1L, "uid1::1");
-    ehrDaoMock.returns(composition2).loadMedicationOrderComposition(1L, "uid2::1");
-    ehrDaoMock.returns(composition3).loadMedicationOrderComposition(1L, "uid3::1");
-    medicationsBo.setEhrMedicationsDao(ehrDaoMock.getMock());
-
-    final MedicationInstructionInstruction firstInstruction = medicationsBo.getFirstInstruction(1L, instruction3);
-    assertEquals(firstInstruction, instruction1);
+    final String originalTherapyId = medicationsBo.getOriginalTherapyId(composition);
+    assertEquals("uid1|Medication instruction", originalTherapyId);
   }
 
   @Test
@@ -413,12 +529,12 @@ public class DefaultMedicationsBoTest
     composition2.getMedicationDetail().getMedicationInstruction().add(instruction2);
 
     final Link linkToInstruction1 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition1, instruction1);
+        OpenEhrRefUtils.getLinkToTdoTarget("update", EhrLinkType.UPDATE.getName(), composition1, instruction1);
     instruction2.getLinks().add(linkToInstruction1);
 
     assertTrue(
         medicationsBo.doesInstructionHaveLinkToCompareInstruction(
-            instruction2, Pair.of(composition1, instruction1), OpenEhrLinkType.UPDATE));
+            instruction2, Pair.of(composition1, instruction1), EhrLinkType.UPDATE));
   }
 
   @Test
@@ -437,7 +553,7 @@ public class DefaultMedicationsBoTest
     composition2.getMedicationDetail().getMedicationInstruction().add(instruction2);
 
     final Link linkToInstruction1 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition1, instruction1);
+        OpenEhrRefUtils.getLinkToTdoTarget("update", EhrLinkType.UPDATE.getName(), composition1, instruction1);
     instruction2.getLinks().add(linkToInstruction1);
 
     assertTrue(
@@ -463,7 +579,7 @@ public class DefaultMedicationsBoTest
     composition.getMedicationDetail().getMedicationInstruction().add(instruction);
     final OrderActivity orderActivity =
         MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 500.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
+            "Lekadol", 1L, 500.0, "mg", null, null, null, null, 1L, "ORAL", "1", "TBL");
     instruction.getOrder().add(orderActivity);
     final MedicationTimingCluster medicationTiming =
         MedicationsTestUtils.buildMedicationTimingCluster(
@@ -478,7 +594,7 @@ public class DefaultMedicationsBoTest
     compareComposition.getMedicationDetail().getMedicationInstruction().add(compareInstruction);
     final OrderActivity compareOrderActivity =
         MedicationsTestUtils.buildTestOrderActivity(
-            "Daleron", 2L, 500.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
+            "Daleron", 2L, 500.0, "mg", null, null, null, null, 1L, "ORAL", "1", "TBL");
     compareInstruction.getOrder().add(compareOrderActivity);
     final MedicationTimingCluster compareMedicationTiming =
         MedicationsTestUtils.buildMedicationTimingCluster(
@@ -491,13 +607,13 @@ public class DefaultMedicationsBoTest
     final MedicationDataForTherapyDto medicationData1 = new MedicationDataForTherapyDto();
     medicationData1.setGenericName("Paracetamol");
     medicationData1.setCustomGroupName("Group 1");
-    medicationData1.setAtcCode("ATC 1");
+    medicationData1.setAtcGroupCode("ATC 1");
     medicationsMap.put(1L, medicationData1);
 
     final MedicationDataForTherapyDto medicationData2 = new MedicationDataForTherapyDto();
     medicationData2.setGenericName("Paracetamol");
     medicationData2.setCustomGroupName("Group 1");
-    medicationData2.setAtcCode("ATC 1");
+    medicationData2.setAtcGroupCode("ATC 1");
     medicationsMap.put(2L, medicationData2);
 
     assertTrue(
@@ -507,6 +623,46 @@ public class DefaultMedicationsBoTest
             medicationsMap,
             false)
     );
+  }
+
+  @Test
+  public void testFilterMentalHealthDrugsList()
+  {
+    final List<MentalHealthTherapyDto> mentalHealthTherapyDtos = new ArrayList<>();
+
+    mentalHealthTherapyDtos.add(createMentalHealthTherapyDto(1L, 1, TherapyStatusEnum.NORMAL));
+    mentalHealthTherapyDtos.add(createMentalHealthTherapyDto(2L, 1, TherapyStatusEnum.NORMAL));
+    mentalHealthTherapyDtos.add(createMentalHealthTherapyDto(1L, 1, TherapyStatusEnum.NORMAL));
+    mentalHealthTherapyDtos.add(createMentalHealthTherapyDto(2L, 1, TherapyStatusEnum.NORMAL));
+
+    mentalHealthTherapyDtos.add(createMentalHealthTherapyDto(2L, 2, TherapyStatusEnum.NORMAL));
+    mentalHealthTherapyDtos.add(createMentalHealthTherapyDto(2L, 2, TherapyStatusEnum.ABORTED));
+
+    final Set<MentalHealthTherapyDto> mentalHealthMedicationDtoSet = medicationsBo.filterMentalHealthTherapyList(
+        mentalHealthTherapyDtos);
+    Assert.assertEquals(4, mentalHealthMedicationDtoSet.size());
+  }
+
+  private MentalHealthTherapyDto createMentalHealthTherapyDto(
+      final long routeId,
+      final long medicationId,
+      final TherapyStatusEnum therapyStatusEnum)
+  {
+    final MentalHealthTherapyDto mentalHealthTherapyDto = new MentalHealthTherapyDto();
+    mentalHealthTherapyDto.setTherapyStatusEnum(therapyStatusEnum);
+
+    final MedicationRouteDto route = new MedicationRouteDto();
+    route.setId(routeId);
+    route.setName("route name");
+
+    final MentalHealthMedicationDto mentalHealthMedicationDto = new MentalHealthMedicationDto(
+        medicationId,
+        "medication name",
+        "generic name",
+        route);
+
+    mentalHealthTherapyDto.setMentalHealthMedicationDto(mentalHealthMedicationDto);
+    return mentalHealthTherapyDto;
   }
 
   @Test
@@ -520,7 +676,7 @@ public class DefaultMedicationsBoTest
     composition.getMedicationDetail().getMedicationInstruction().add(instruction);
     final OrderActivity orderActivity =
         MedicationsTestUtils.buildTestOrderActivity(
-            null, null, 500.0, "ml", null, null, null, null, "IV", "IV", null, null);
+            null, null, 500.0, "mL", null, null, null, null, 2L, "IV", null, null);
     instruction.getOrder().add(orderActivity);
     final MedicationTimingCluster medicationTiming =
         MedicationsTestUtils.buildMedicationTimingCluster(
@@ -529,7 +685,7 @@ public class DefaultMedicationsBoTest
     final IngredientsAndFormCluster ingredientsAndForm = new IngredientsAndFormCluster();
     orderActivity.setIngredientsAndForm(ingredientsAndForm);
     final IngredientCluster ingredient1 =
-        MedicationsTestUtils.buildTestActiveIngredient("Dopamin1", "1", null, null, 10.0, "mg", 500.0, "ml");
+        MedicationsTestUtils.buildTestActiveIngredient("Dopamin1", "1", null, null, 10.0, "mg", 500.0, "mL");
     ingredientsAndForm.getIngredient().add(ingredient1);
 
     //compare therapy
@@ -540,7 +696,7 @@ public class DefaultMedicationsBoTest
     compareComposition.getMedicationDetail().getMedicationInstruction().add(compareInstruction);
     final OrderActivity compareOrderActivity =
         MedicationsTestUtils.buildTestOrderActivity(
-            null, null, 1000.0, "ml", null, null, null, null, "IV", "IV", null, null);
+            null, null, 1000.0, "mL", null, null, null, null, 2L, "IV", null, null);
     compareInstruction.getOrder().add(compareOrderActivity);
     final MedicationTimingCluster compareMedicationTiming =
         MedicationsTestUtils.buildMedicationTimingCluster(
@@ -549,7 +705,7 @@ public class DefaultMedicationsBoTest
     final IngredientsAndFormCluster compareIngredientsAndForm = new IngredientsAndFormCluster();
     compareOrderActivity.setIngredientsAndForm(compareIngredientsAndForm);
     final IngredientCluster compareIngredient1 =
-        MedicationsTestUtils.buildTestActiveIngredient("Dopamin2", "1", null, null, 10.0, "mg", 1000.0, "ml");
+        MedicationsTestUtils.buildTestActiveIngredient("Dopamin2", "1", null, null, 10.0, "mg", 1000.0, "mL");
     compareIngredientsAndForm.getIngredient().add(compareIngredient1);
 
     //medications data map
@@ -558,13 +714,13 @@ public class DefaultMedicationsBoTest
     final MedicationDataForTherapyDto medicationData1 = new MedicationDataForTherapyDto();
     medicationData1.setGenericName("Dopamin");
     medicationData1.setCustomGroupName("Group 1");
-    medicationData1.setAtcCode("ATC 1");
+    medicationData1.setAtcGroupCode("ATC 1");
     medicationsMap.put(1L, medicationData1);
 
     final MedicationDataForTherapyDto medicationData2 = new MedicationDataForTherapyDto();
     medicationData2.setGenericName("Dopamin");
     medicationData2.setCustomGroupName("Group 1");
-    medicationData2.setAtcCode("ATC 1");
+    medicationData2.setAtcGroupCode("ATC 1");
     medicationsMap.put(2L, medicationData2);
 
     assertTrue(
@@ -585,15 +741,25 @@ public class DefaultMedicationsBoTest
     final MedicationDto medicationDto1 = new MedicationDto();
     medicationDto1.setId(1L);
     medicationDto1.setName("Lekadol 20x500mg");
-    final MockObject<HibernateMedicationsDao> medicationsDaoMock = new MockObject<>(HibernateMedicationsDao.class, this);
-    medicationsDaoMock.returns(medicationDto1).getMedicationById(1L, when);
-    medicationsBo.setMedicationsDao(medicationsDaoMock.getMock());
+    final HibernateMedicationsDao medicationsDaoMock = mock(HibernateMedicationsDao.class);
+    medicationsBo.setMedicationsDao(medicationsDaoMock);
+
+    final MedicationRouteDto route = new MedicationRouteDto();
+    route.setName("route1");
+    route.setId(1L);
+    final MedicationRouteDto route2 = new MedicationRouteDto();
+    route2.setName("route2");
+    route2.setId(2L);
+    final Map<Long, MedicationRouteDto> routes = new HashMap<>();
+    routes.put(2L, route2);
+    routes.put(1L, route);
+    Mockito.when(medicationRoutesValueHolder.getValue()).thenReturn(routes);
 
     final Map<Long, MedicationDataForTherapyDto> medicationsDataMap = new HashMap<>();
     final MedicationDataForTherapyDto medicationData1 = new MedicationDataForTherapyDto();
     medicationData1.setGenericName("Paracetamol");
     medicationData1.setCustomGroupName("Group 1");
-    medicationData1.setAtcCode("ATC 1");
+    medicationData1.setAtcGroupCode("ATC 1");
     medicationsDataMap.put(1L, medicationData1);
 
     //similar to admission
@@ -604,7 +770,7 @@ public class DefaultMedicationsBoTest
     composition1.getMedicationDetail().getMedicationInstruction().add(instruction1);
     final OrderActivity orderActivity1 =
         MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 500.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
+            "Lekadol", 1L, 500.0, "mg", null, null, null, null, 1L, "ORAL", "1", "TBL");
     instruction1.getOrder().add(orderActivity1);
     final MedicationTimingCluster medicationTiming1 =
         MedicationsTestUtils.buildMedicationTimingCluster(
@@ -634,7 +800,7 @@ public class DefaultMedicationsBoTest
     composition2.getMedicationDetail().getMedicationInstruction().add(instruction2);
     final OrderActivity orderActivity2 =
         MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 1000.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
+            "Lekadol", 1L, 1000.0, "mg", null, null, null, null, 1L, "ORAL", "1", "TBL");
     instruction2.getOrder().add(orderActivity2);
     final MedicationTimingCluster medicationTiming2 =
         MedicationsTestUtils.buildMedicationTimingCluster(
@@ -663,7 +829,7 @@ public class DefaultMedicationsBoTest
     composition3.getMedicationDetail().getMedicationInstruction().add(instruction3);
     final OrderActivity orderActivity3 =
         MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 500.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
+            "Lekadol", 1L, 500.0, "mg", null, null, null, null, 1L, "ORAL", "1", "TBL");
     instruction3.getOrder().add(orderActivity3);
     final MedicationTimingCluster medicationTiming3 =
         MedicationsTestUtils.buildMedicationTimingCluster(
@@ -688,17 +854,6 @@ public class DefaultMedicationsBoTest
     assertEquals(1L, groups3.getDischargeTherapies().size());
     assertEquals(0L, groups3.getAdmissionTherapies().size());
 
-    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionPairs3 = new ArrayList<>();
-    final Link linkToInstruction1 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition2, instruction2);
-    instruction2.getLinks().add(linkToInstruction1);
-    final Link linkToInstruction2 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition3, instruction3);
-    instruction3.getLinks().add(linkToInstruction2);
-
-    instructionPairs3.add(Pair.of(composition2, instruction2));
-    instructionPairs3.add(Pair.of(composition3, instruction3));
-
     final DocumentationTherapiesDto groups4 =
         medicationsBo.getTherapiesForDocumentation(
             null,
@@ -713,7 +868,6 @@ public class DefaultMedicationsBoTest
     assertEquals(1L, groups4.getDischargeTherapies().size());
     assertEquals(0L, groups4.getTherapies().size());
 
-
     //linked regular
     final MedicationOrderComposition composition4 =
         MedicationsTestUtils.buildTestMedicationOrderComposition("uid1::1", new DateTime(2013, 11, 11, 0, 0, 0), "aaa");
@@ -722,7 +876,7 @@ public class DefaultMedicationsBoTest
     composition4.getMedicationDetail().getMedicationInstruction().add(instruction4);
     final OrderActivity orderActivity4 =
         MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 500.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
+            "Lekadol", 1L, 500.0, "mg", null, null, null, null, 1L, "ORAL", "1", "TBL");
     instruction4.getOrder().add(orderActivity4);
     final MedicationTimingCluster medicationTiming4 =
         MedicationsTestUtils.buildMedicationTimingCluster(
@@ -731,10 +885,10 @@ public class DefaultMedicationsBoTest
 
     final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionPairs4 = new ArrayList<>();
     final Link linkToInstruction11 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition2, instruction2);
+        OpenEhrRefUtils.getLinkToTdoTarget("update", EhrLinkType.UPDATE.getName(), composition2, instruction2);
     instruction2.getLinks().add(linkToInstruction11);
     final Link linkToInstruction22 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition4, instruction4);
+        OpenEhrRefUtils.getLinkToTdoTarget("update", EhrLinkType.UPDATE.getName(), composition4, instruction4);
     instruction3.getLinks().add(linkToInstruction22);
 
     instructionPairs4.add(Pair.of(composition2, instruction2));
@@ -762,17 +916,20 @@ public class DefaultMedicationsBoTest
         DataValueUtils.getDateTime(DataValueUtils.getDateTime(new DateTime(2013, 3, 25, 12, 0, DateTimeZone.UTC)));
 
     //mock
-    final MedicationDto medicationDto1 = new MedicationDto();
+    final Map<Long, MedicationHolderDto> medicationHolderMap = new HashMap<>();
+    final MedicationHolderDto medicationDto1 = new MedicationHolderDto();
     medicationDto1.setId(1L);
     medicationDto1.setName("Lekadol 20x500mg");
-    final MedicationDto medicationDto2 = new MedicationDto();
+    medicationHolderMap.put(1L, medicationDto1);
+
+    final MedicationHolderDto medicationDto2 = new MedicationHolderDto();
     medicationDto2.setId(2L);
     medicationDto2.setName("Primotren 20x500mg");
-    final MockObject<HibernateMedicationsDao> medicationsDaoMock =
-        new MockObject<>(HibernateMedicationsDao.class, this);
-    medicationsDaoMock.returns(medicationDto1).getMedicationById(1L, start);
-    medicationsDaoMock.returns(medicationDto2).getMedicationById(2L, start);
-    medicationsBo.setMedicationsDao(medicationsDaoMock.getMock());
+    medicationHolderMap.put(2L, medicationDto2);
+
+    final MedicationsValueHolder medicationsValueHolder = mock(MedicationsValueHolder.class);
+    when(medicationsValueHolder.getValue()).thenReturn(medicationHolderMap);
+    medicationsBo.setMedicationsValueHolder(medicationsValueHolder);
 
     //simple therapy
     final MedicationOrderComposition composition1 =
@@ -784,19 +941,19 @@ public class DefaultMedicationsBoTest
 
     final OrderActivity orderActivity1 =
         MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 500.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
+            "Lekadol", 1L, 500.0, "mg", null, null, null, null, 1L, "ORAL", "1", "TBL");
     instruction1.getOrder().add(orderActivity1);
     orderActivity1.setMedicationTiming(medicationTimingCluster);
     composition1.getMedicationDetail().getMedicationInstruction().add(instruction1);
 
-    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList1 =
-        new ArrayList<>();
-    medicationInstructionsList1.add(Pair.of(composition1, instruction1));
-    final List<MedicationForWarningsSearchDto> warningsSearchDtosList1 =
-        medicationsBo.extractWarningsSearchDtos(medicationInstructionsList1, start);
+    final List<MedicationOrderComposition> medicationInstructionsList1 = new ArrayList<>();
+    medicationInstructionsList1.add(composition1);
+    final List<MedicationForWarningsSearchDto> warningsSearchDtosList1 = medicationsBo.extractWarningsSearchDtos(
+        medicationInstructionsList1);
+
     assertEquals((Double)500.0, warningsSearchDtosList1.get(0).getDoseAmount());
     assertEquals("mg", warningsSearchDtosList1.get(0).getDoseUnit());
-    assertEquals("O", warningsSearchDtosList1.get(0).getRouteCode());
+    assertEquals("1", warningsSearchDtosList1.get(0).getRouteCode());
 
     //complex therapy
     final MedicationOrderComposition composition2 =
@@ -805,9 +962,9 @@ public class DefaultMedicationsBoTest
         MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 1");
 
     final IngredientCluster ingredient =
-        MedicationsTestUtils.buildTestActiveIngredient("Primotren", "0002", null, null, 10.0, "mg", 3.0, "ml");
+        MedicationsTestUtils.buildTestActiveIngredient("Primotren", "0002", null, null, 10.0, "mg", 3.0, "mL");
     final OrderActivity orderActivity2 =
-        MedicationsTestUtils.buildTestOrderActivity(null, null, null, null, null, null, null, null, "O", "ORAL", "1", "TBL");
+        MedicationsTestUtils.buildTestOrderActivity(null, null, null, null, null, null, null, null, 1L, "ORAL", "1", "TBL");
     instruction2.getOrder().add(orderActivity2);
     final IngredientsAndFormCluster ingredientsAndForm = new IngredientsAndFormCluster();
     orderActivity2.setIngredientsAndForm(ingredientsAndForm);
@@ -815,14 +972,14 @@ public class DefaultMedicationsBoTest
     orderActivity2.setMedicationTiming(medicationTimingCluster);
     composition2.getMedicationDetail().getMedicationInstruction().add(instruction2);
 
-    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList2 =
-        new ArrayList<>();
-    medicationInstructionsList2.add(Pair.of(composition2, instruction2));
-    final List<MedicationForWarningsSearchDto> warningsSearchDtosList2 =
-        medicationsBo.extractWarningsSearchDtos(medicationInstructionsList2, start);
+    final List<MedicationOrderComposition> medicationInstructionsList2 = new ArrayList<>();
+    medicationInstructionsList2.add(composition2);
+    final List<MedicationForWarningsSearchDto> warningsSearchDtosList2 = medicationsBo.extractWarningsSearchDtos(
+        medicationInstructionsList2);
+
     assertEquals((Double)10.0, warningsSearchDtosList2.get(0).getDoseAmount());
     assertEquals("mg", warningsSearchDtosList2.get(0).getDoseUnit());
-    assertEquals("O", warningsSearchDtosList2.get(0).getRouteCode());
+    assertEquals("1", warningsSearchDtosList2.get(0).getRouteCode());
   }
 
   @Test
@@ -832,18 +989,20 @@ public class DefaultMedicationsBoTest
     final DateTime start =
         DataValueUtils.getDateTime(DataValueUtils.getDateTime(new DateTime(2013, 3, 25, 12, 0, DateTimeZone.UTC)));
 
-    //mock
-    final MedicationDto medicationDto1 = new MedicationDto();
+    final Map<Long, MedicationHolderDto> medicationHolderMap = new HashMap<>();
+    final MedicationHolderDto medicationDto1 = new MedicationHolderDto();
     medicationDto1.setId(1L);
     medicationDto1.setName("Lekadol 20x500mg");
-    final MedicationDto medicationDto2 = new MedicationDto();
+    medicationHolderMap.put(1L, medicationDto1);
+
+    final MedicationHolderDto medicationDto2 = new MedicationHolderDto();
     medicationDto2.setId(2L);
     medicationDto2.setName("Primotren 20x500mg");
-    final MockObject<HibernateMedicationsDao> medicationsDaoMock =
-        new MockObject<HibernateMedicationsDao>(HibernateMedicationsDao.class, this);
-    medicationsDaoMock.returns(medicationDto1).getMedicationById(1L, start);
-    medicationsDaoMock.returns(medicationDto2).getMedicationById(2L, start);
-    medicationsBo.setMedicationsDao(medicationsDaoMock.getMock());
+    medicationHolderMap.put(2L, medicationDto2);
+
+    final MedicationsValueHolder medicationsValueHolder = mock(MedicationsValueHolder.class);
+    when(medicationsValueHolder.getValue()).thenReturn(medicationHolderMap);
+    medicationsBo.setMedicationsValueHolder(medicationsValueHolder);
 
     final MedicationTimingCluster medicationTimingCluster =
         MedicationsTestUtils.buildMedicationTimingCluster(4L, null, null, null, start, null, null);
@@ -851,24 +1010,24 @@ public class DefaultMedicationsBoTest
     final IngredientCluster ingredient1 =
         MedicationsTestUtils.buildTestActiveIngredient("Lekadol", "0001", 500.0, "mg", null, null, null, null);
     final OrderActivity orderActivity1 =
-        MedicationsTestUtils.buildTestOrderActivity(null, null, null, null, null, null, null, null, "O", "ORAL", "1", "TBL");
+        MedicationsTestUtils.buildTestOrderActivity(null, null, null, null, null, null, null, null, 1L, "ORAL", "1", "TBL");
     orderActivity1.setMedicationTiming(medicationTimingCluster);
     final MedicationForWarningsSearchDto warningsSearchDto1 =
-        medicationsBo.buildWarningSearchDtoFromIngredient(orderActivity1, ingredient1, start);
+        medicationsBo.buildWarningSearchDtoFromIngredient(orderActivity1, ingredient1);
     assertEquals((Double)500.0, warningsSearchDto1.getDoseAmount());
     assertEquals("mg", warningsSearchDto1.getDoseUnit());
-    assertEquals("O", warningsSearchDto1.getRouteCode());
+    assertEquals("1", warningsSearchDto1.getRouteCode());
 
     final IngredientCluster ingredient2 =
-        MedicationsTestUtils.buildTestActiveIngredient("Primotren", "0002", null, null, 10.0, "mg", 3.0, "ml");
+        MedicationsTestUtils.buildTestActiveIngredient("Primotren", "0002", null, null, 10.0, "mg", 3.0, "mL");
     final OrderActivity orderActivity2 =
-        MedicationsTestUtils.buildTestOrderActivity(null, null, null, null, null, null, null, null, "O", "ORAL", "1", "TBL");
+        MedicationsTestUtils.buildTestOrderActivity(null, null, null, null, null, null, null, null, 1L, "ORAL", "1", "TBL");
     orderActivity2.setMedicationTiming(medicationTimingCluster);
     final MedicationForWarningsSearchDto warningsSearchDto2 =
-        medicationsBo.buildWarningSearchDtoFromIngredient(orderActivity2, ingredient2, start);
+        medicationsBo.buildWarningSearchDtoFromIngredient(orderActivity2, ingredient2);
     assertEquals((Double)10.0, warningsSearchDto2.getDoseAmount());
     assertEquals("mg", warningsSearchDto2.getDoseUnit());
-    assertEquals("O", warningsSearchDto2.getRouteCode());
+    assertEquals("1", warningsSearchDto2.getRouteCode());
   }
 
   @Test
@@ -885,34 +1044,31 @@ public class DefaultMedicationsBoTest
     final MedicationDto medicationDto2 = new MedicationDto();
     medicationDto2.setId(2L);
     medicationDto2.setName("Primotren 20x500mg");
-    final MockObject<HibernateMedicationsDao> medicationsDaoMock =
-        new MockObject<HibernateMedicationsDao>(HibernateMedicationsDao.class, this);
-    medicationsDaoMock.returns(medicationDto1).getMedicationById(1L, start);
-    medicationsDaoMock.returns(medicationDto2).getMedicationById(2L, start);
-    medicationsBo.setMedicationsDao(medicationsDaoMock.getMock());
+    final HibernateMedicationsDao medicationsDaoMock = mock(HibernateMedicationsDao.class);
+    medicationsBo.setMedicationsDao(medicationsDaoMock);
 
     final MedicationTimingCluster medicationTimingCluster =
         MedicationsTestUtils.buildMedicationTimingCluster(4L, null, null, null, start, null, null);
 
     final OrderActivity orderActivity1 =
         MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 500.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
+            "Lekadol", 1L, 500.0, "mg", null, null, null, null, 1L, "ORAL", "1", "TBL");
     orderActivity1.setMedicationTiming(medicationTimingCluster);
     final MedicationForWarningsSearchDto warningsSearchDto1 =
-        medicationsBo.buildWarningSearchDtoFromMedication(orderActivity1, start);
+        medicationsBo.buildWarningSearchDtoFromMedication(orderActivity1);
     assertEquals((Double)500.0, warningsSearchDto1.getDoseAmount());
     assertEquals("mg", warningsSearchDto1.getDoseUnit());
-    assertEquals("O", warningsSearchDto1.getRouteCode());
+    assertEquals("1", warningsSearchDto1.getRouteCode());
 
     final OrderActivity orderActivity2 =
         MedicationsTestUtils.buildTestOrderActivity(
-            "Primotren", 1L, null, null, 10.0, "mg", 3.0, "ml", "O", "ORAL", "1", "TBL");
+            "Primotren", 1L, null, null, 10.0, "mg", 3.0, "mL", 1L, "ORAL", "1", "TBL");
     orderActivity2.setMedicationTiming(medicationTimingCluster);
     final MedicationForWarningsSearchDto warningsSearchDto2 =
-        medicationsBo.buildWarningSearchDtoFromMedication(orderActivity2, start);
+        medicationsBo.buildWarningSearchDtoFromMedication(orderActivity2);
     assertEquals((Double)10.0, warningsSearchDto2.getDoseAmount());
     assertEquals("mg", warningsSearchDto2.getDoseUnit());
-    assertEquals("O", warningsSearchDto2.getRouteCode());
+    assertEquals("1", warningsSearchDto2.getRouteCode());
   }
 
   @Test
@@ -922,26 +1078,27 @@ public class DefaultMedicationsBoTest
     final DateTime start =
         DataValueUtils.getDateTime(DataValueUtils.getDateTime(new DateTime(2013, 3, 25, 12, 0, DateTimeZone.UTC)));
 
-    //mock
-    final MedicationDto medicationDto = new MedicationDto();
+    final Map<Long, MedicationHolderDto> medicationHolderMap = new HashMap<>();
+    final MedicationHolderDto medicationDto = new MedicationHolderDto();
     medicationDto.setId(1L);
     medicationDto.setName("Lekadol 20x500mg");
-    final MockObject<HibernateMedicationsDao> medicationsDaoMock =
-        new MockObject<HibernateMedicationsDao>(HibernateMedicationsDao.class, this);
-    medicationsDaoMock.returns(medicationDto).getMedicationById(1L, start);
-    medicationsBo.setMedicationsDao(medicationsDaoMock.getMock());
+    medicationHolderMap.put(1L, medicationDto);
+
+    final MedicationsValueHolder medicationsValueHolder = mock(MedicationsValueHolder.class);
+    when(medicationsValueHolder.getValue()).thenReturn(medicationHolderMap);
+    medicationsBo.setMedicationsValueHolder(medicationsValueHolder);
 
     //end not set
     final DateTime stop1 = null;
     final MedicationTimingCluster medicationTimingCluster1 =
         MedicationsTestUtils.buildMedicationTimingCluster(4L, null, null, null, start, stop1, null);
     final MedicationForWarningsSearchDto warningsSearchDto1 =
-        medicationsBo.buildWarningSearchDto(medicationTimingCluster1, 1L, "ORAL", 500.0, "mg", start);
+        medicationsBo.buildWarningSearchDto(medicationTimingCluster1, 1L, "ORAL", 500.0, "mg");
     assertEquals(4L, (long)warningsSearchDto1.getFrequency());
     assertEquals("ORAL", warningsSearchDto1.getRouteCode());
     assertEquals(Double.valueOf(500.0), warningsSearchDto1.getDoseAmount());
     assertEquals("mg", warningsSearchDto1.getDoseUnit());
-    assertEquals("Lekadol 20x500mg", warningsSearchDto1.getDescription());
+    assertEquals("Lekadol 20x500mg", warningsSearchDto1.getName());
     assertEquals(1L, warningsSearchDto1.getId());
     assertEquals(
         new DateTime(2013, 3, 25, 12, 0, DateTimeZone.UTC).getMillis(),
@@ -953,12 +1110,12 @@ public class DefaultMedicationsBoTest
     final MedicationTimingCluster medicationTimingCluster2 =
         MedicationsTestUtils.buildMedicationTimingCluster(4L, null, null, null, start, stop2, null);
     final MedicationForWarningsSearchDto warningsSearchDto2 =
-        medicationsBo.buildWarningSearchDto(medicationTimingCluster2, 1L, "ORAL", 500.0, "mg", start);
+        medicationsBo.buildWarningSearchDto(medicationTimingCluster2, 1L, "ORAL", 500.0, "mg");
     assertEquals(4L, (long)warningsSearchDto2.getFrequency());
     assertEquals("ORAL", warningsSearchDto2.getRouteCode());
     assertEquals(Double.valueOf(500.0), warningsSearchDto2.getDoseAmount());
     assertEquals("mg", warningsSearchDto2.getDoseUnit());
-    assertEquals("Lekadol 20x500mg", warningsSearchDto2.getDescription());
+    assertEquals("Lekadol 20x500mg", warningsSearchDto2.getName());
     assertEquals(1L, warningsSearchDto2.getId());
     assertEquals(start, warningsSearchDto2.getEffective().getStart());
     assertEquals(stop2.getMillis(), warningsSearchDto2.getEffective().getEnd().getMillis());
@@ -1003,178 +1160,7 @@ public class DefaultMedicationsBoTest
   }
 
   @Test
-  public void testGetMedicationOrderCardInfoData()
-  {
-    // 1 --> 2 --> 3
-    final MedicationOrderComposition composition1 =
-        MedicationsTestUtils.buildTestMedicationOrderComposition(
-            "uid1::1", new DateTime(2013, 5, 10, 12, 0), "Composer 1");
-    final MedicationOrderComposition composition2 =
-        MedicationsTestUtils.buildTestMedicationOrderComposition(
-            "uid2::1", new DateTime(2013, 5, 11, 12, 0), "Composer 2");
-    final MedicationOrderComposition composition3 =
-        MedicationsTestUtils.buildTestMedicationOrderComposition(
-            "uid3::1", new DateTime(2013, 5, 12, 12, 0), "Composer 3");
-
-    final MedicationInstructionInstruction instruction1 =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 1", "Prescriber 1");
-    composition1.getMedicationDetail().getMedicationInstruction().add(instruction1);
-    final OrderActivity orderActivity1 =
-        MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 500.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
-    orderActivity1.setMedicationTiming(
-        MedicationsTestUtils.buildMedicationTimingCluster(
-            3L, null, null, null, new DateTime(2013, 5, 10, 12, 0), null, null)
-    );
-    instruction1.getOrder().add(orderActivity1);
-    final MedicationInstructionInstruction instruction2 =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 2", "Prescriber 2");
-    composition2.getMedicationDetail().getMedicationInstruction().add(instruction2);
-    final OrderActivity orderActivity2 =
-        MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 1000.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
-    orderActivity2.setMedicationTiming(
-        MedicationsTestUtils.buildMedicationTimingCluster(
-            2L, null, null, null, new DateTime(2013, 5, 11, 12, 0), null, null)
-    );
-    instruction2.getOrder().add(orderActivity2);
-    final MedicationInstructionInstruction instruction3 =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 3", "Prescriber 3");
-    final OrderActivity orderActivity3 =
-        MedicationsTestUtils.buildTestOrderActivity(
-            "Daleron", 2L, 1500.0, "mg", null, null, null, null, "O", "ORAL", "1", "TBL");
-    orderActivity3.setMedicationTiming(
-        MedicationsTestUtils.buildMedicationTimingCluster(
-            null, 8, null, null, new DateTime(2013, 5, 12, 12, 0), null, null)
-    );
-    instruction3.getOrder().add(orderActivity3);
-    composition3.getMedicationDetail().getMedicationInstruction().add(instruction3);
-
-    final Link linkToInstruction1 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition1, instruction1);
-    instruction2.getLinks().add(linkToInstruction1);
-    final Link linkToInstruction2 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition2, instruction2);
-    instruction3.getLinks().add(linkToInstruction2);
-
-    //mock
-    final MockObject<EhrMedicationsDao> ehrDaoMock = new MockObject<>(EhrMedicationsDao.class, this);
-    ehrDaoMock.returns(composition1).loadMedicationOrderComposition(1L, "uid1");
-    ehrDaoMock.returns(composition2).loadMedicationOrderComposition(1L, "uid2");
-    ehrDaoMock.returns(composition3).loadMedicationOrderComposition(1L, "uid3");
-    ehrDaoMock.returns(composition1).loadMedicationOrderComposition(1L, "uid1::1");
-    ehrDaoMock.returns(composition2).loadMedicationOrderComposition(1L, "uid2::1");
-    ehrDaoMock.returns(composition3).loadMedicationOrderComposition(1L, "uid3::1");
-    medicationsBo.setEhrMedicationsDao(ehrDaoMock.getMock());
-
-    final MedicationDto medicationDto1 = new MedicationDto();
-    medicationDto1.setId(1L);
-    medicationDto1.setName("Lekadol");
-    medicationDto1.setGenericName("Paracetamol");
-    final MedicationDto medicationDto2 = new MedicationDto();
-    medicationDto2.setId(2L);
-    medicationDto2.setName("Daleron");
-    medicationDto2.setGenericName("Paracetamol");
-
-    final MockObject<HibernateMedicationsDao> medicationsDaoMock =
-        new MockObject<>(HibernateMedicationsDao.class, this);
-    medicationsDaoMock.returns(medicationDto1).getMedicationById(1L, new DateTime(2013, 5, 12, 12, 0));
-    medicationsDaoMock.returns(medicationDto1).getMedicationById(1L, new DateTime(2013, 5, 12, 12, 0));
-    medicationsDaoMock.returns(medicationDto2).getMedicationById(2L, new DateTime(2013, 5, 12, 12, 0));
-    medicationsBo.setMedicationsDao(medicationsDaoMock.getMock());
-
-    final TherapyCardInfoDto cardInfoData =
-        medicationsBo.getTherapyCardInfoData(
-            1L, null, "uid3::1", "MedicationInstructionInstruction 3", new Locale("en"),
-            Intervals.wholeDay(new DateTime(2013, 5, 12, 12, 0)), new DateTime(2013, 5, 12, 12, 0));
-    final List<TherapyChangeHistoryDto> changeHistoryList = cardInfoData.getChangeHistoryList();
-    assertEquals("Prescriber 3", changeHistoryList.get(0).getEditor());
-    assertEquals(new DateTime(2013, 5, 12, 12, 0), changeHistoryList.get(0).getChangeTime());
-    assertEquals(TherapyChangeType.MEDICATION, changeHistoryList.get(0).getChanges().get(0).getType());
-    assertEquals("Paracetamol (Lekadol)", changeHistoryList.get(0).getChanges().get(0).getOldValue());
-    assertEquals("Paracetamol (Daleron)", changeHistoryList.get(0).getChanges().get(0).getNewValue());
-    assertEquals(TherapyChangeType.DOSE, changeHistoryList.get(0).getChanges().get(1).getType());
-    assertEquals("1000 mg", changeHistoryList.get(0).getChanges().get(1).getOldValue());
-    assertEquals("1500 mg", changeHistoryList.get(0).getChanges().get(1).getNewValue());
-    assertEquals(TherapyChangeType.DOSE_INTERVAL, changeHistoryList.get(0).getChanges().get(2).getType());
-    assertEquals("2X per day", changeHistoryList.get(0).getChanges().get(2).getOldValue());
-    assertEquals("Every 8 hours", changeHistoryList.get(0).getChanges().get(2).getNewValue());
-
-    assertEquals("Prescriber 2", changeHistoryList.get(1).getEditor());
-    assertEquals(new DateTime(2013, 5, 11, 12, 0), changeHistoryList.get(1).getChangeTime());
-    assertEquals(TherapyChangeType.DOSE, changeHistoryList.get(1).getChanges().get(0).getType());
-    assertEquals("500 mg", changeHistoryList.get(1).getChanges().get(0).getOldValue());
-    assertEquals("1000 mg", changeHistoryList.get(1).getChanges().get(0).getNewValue());
-    assertEquals(TherapyChangeType.DOSE_INTERVAL, changeHistoryList.get(1).getChanges().get(1).getType());
-    assertEquals("3X per day", changeHistoryList.get(1).getChanges().get(1).getOldValue());
-    assertEquals("2X per day", changeHistoryList.get(1).getChanges().get(1).getNewValue());
-  }
-
-  @Test
-  public void testCalculateSimpleTherapyChange()
-  {
-    final ConstantSimpleTherapyDto oldTherapy = new ConstantSimpleTherapyDto();
-    final MedicationDto medication1 = new MedicationDto();
-    medication1.setDisplayName("Paracetamol (Lekadol)");
-    oldTherapy.setMedication(medication1);
-    oldTherapy.setFrequencyDisplay("every 8 hours");
-    oldTherapy.setQuantityDisplay("120 mg / 5 ml");
-    oldTherapy.setPrescriberName("Prescriber 1");
-    oldTherapy.setStart(new DateTime(2013, 5, 10, 12, 0));
-
-    final ConstantSimpleTherapyDto newTherapy = new ConstantSimpleTherapyDto();
-    final MedicationDto medication2 = new MedicationDto();
-    medication2.setDisplayName("Paracetamol (Daleron)");
-    newTherapy.setMedication(medication2);
-    newTherapy.setFrequencyDisplay("every 6 hours");
-    newTherapy.setQuantityDisplay("240 mg / 10 ml");
-    newTherapy.setPrescriberName("Prescriber 2");
-    newTherapy.setStart(new DateTime(2013, 5, 11, 12, 0));
-
-    final TherapyChangeHistoryDto changeHistoryDto =
-        medicationsBo.calculateTherapyChange(oldTherapy, newTherapy);
-    assertEquals("Prescriber 2", changeHistoryDto.getEditor());
-    assertEquals(new DateTime(2013, 5, 11, 12, 0), changeHistoryDto.getChangeTime());
-    assertEquals(TherapyChangeType.MEDICATION, changeHistoryDto.getChanges().get(0).getType());
-    assertEquals("Paracetamol (Lekadol)", changeHistoryDto.getChanges().get(0).getOldValue());
-    assertEquals("Paracetamol (Daleron)", changeHistoryDto.getChanges().get(0).getNewValue());
-    assertEquals(TherapyChangeType.DOSE, changeHistoryDto.getChanges().get(1).getType());
-    assertEquals("120 mg / 5 ml", changeHistoryDto.getChanges().get(1).getOldValue());
-    assertEquals("240 mg / 10 ml", changeHistoryDto.getChanges().get(1).getNewValue());
-    assertEquals(TherapyChangeType.DOSE_INTERVAL, changeHistoryDto.getChanges().get(2).getType());
-    assertEquals("every 8 hours", changeHistoryDto.getChanges().get(2).getOldValue());
-    assertEquals("every 6 hours", changeHistoryDto.getChanges().get(2).getNewValue());
-  }
-
-  @Test
-  public void testCalculateComplexTherapyChange()
-  {
-    final ConstantComplexTherapyDto oldTherapy = new ConstantComplexTherapyDto();
-    oldTherapy.setSpeedDisplay("100 ml/h");
-    oldTherapy.setFrequencyDisplay("every 8 hours");
-    oldTherapy.setPrescriberName("Prescriber 1");
-    oldTherapy.setStart(new DateTime(2013, 5, 10, 12, 0));
-
-    final ConstantComplexTherapyDto newTherapy = new ConstantComplexTherapyDto();
-    newTherapy.setSpeedDisplay("200 ml/h");
-    newTherapy.setFrequencyDisplay("every 6 hours");
-    newTherapy.setPrescriberName("Prescriber 2");
-    newTherapy.setStart(new DateTime(2013, 5, 11, 12, 0));
-
-    final TherapyChangeHistoryDto changeHistoryDto =
-        medicationsBo.calculateTherapyChange(oldTherapy, newTherapy);
-    assertEquals("Prescriber 2", changeHistoryDto.getEditor());
-    assertEquals(new DateTime(2013, 5, 11, 12, 0), changeHistoryDto.getChangeTime());
-    assertEquals(TherapyChangeType.SPEED, changeHistoryDto.getChanges().get(0).getType());
-    assertEquals("100 ml/h", changeHistoryDto.getChanges().get(0).getOldValue());
-    assertEquals("200 ml/h", changeHistoryDto.getChanges().get(0).getNewValue());
-    assertEquals(TherapyChangeType.DOSE_INTERVAL, changeHistoryDto.getChanges().get(1).getType());
-    assertEquals("every 8 hours", changeHistoryDto.getChanges().get(1).getOldValue());
-    assertEquals("every 6 hours", changeHistoryDto.getChanges().get(1).getNewValue());
-  }
-
-  @Test
-  public void testWasTherapyModifiedFromLastReview()
+  public void testTherapyModifiedFromLastReviewWithUpdateLink()
   {
     final MedicationOrderComposition composition1 =
         MedicationsTestUtils.buildTestMedicationOrderComposition("uid1::1", null, null);
@@ -1189,7 +1175,7 @@ public class DefaultMedicationsBoTest
     composition2.getMedicationDetail().getMedicationInstruction().add(instruction2);
 
     final Link linkToInstruction1 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition1, instruction1);
+        OpenEhrRefUtils.getLinkToTdoTarget("update", EhrLinkType.UPDATE.getName(), composition1, instruction1);
     instruction2.getLinks().add(linkToInstruction1);
 
     final List<MedicationActionAction> actionsList = new ArrayList<>();
@@ -1204,11 +1190,33 @@ public class DefaultMedicationsBoTest
     actionsList.add(
         MedicationsTestUtils.buildMedicationAction(MedicationActionEnum.REVIEW, new DateTime(2013, 5, 12, 12, 0)));
     final boolean modified1 =
-        medicationsBo.wasTherapyModifiedFromLastReview(instruction2, actionsList, new DateTime(2013, 5, 13, 5, 0));
+        medicationsBo.isTherapyModifiedFromLastReview(instruction2, actionsList, new DateTime(2013, 5, 13, 5, 0));
     assertTrue(modified1);
     final boolean modified2 =
-        medicationsBo.wasTherapyModifiedFromLastReview(instruction2, actionsList, new DateTime(2013, 5, 12, 5, 0));
+        medicationsBo.isTherapyModifiedFromLastReview(instruction2, actionsList, new DateTime(2013, 5, 12, 5, 0));
     assertFalse(modified2);
+  }
+
+  @Test
+  public void testTherapyModifiedFromLastReviewWithModifyAction()
+  {
+    final MedicationOrderComposition composition =
+        MedicationsTestUtils.buildTestMedicationOrderComposition("uid2::1", null, null);
+    final MedicationInstructionInstruction instruction =
+        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 2");
+    composition.getMedicationDetail().getMedicationInstruction().add(instruction);
+
+    final List<MedicationActionAction> actionsList = new ArrayList<>();
+    actionsList.add(MedicationsTestUtils.buildMedicationAction(MedicationActionEnum.SCHEDULE, new DateTime(2013, 5, 10, 12, 0)));
+    actionsList.add(MedicationsTestUtils.buildMedicationAction(MedicationActionEnum.START, new DateTime(2013, 5, 10, 12, 0)));
+    actionsList.add(MedicationsTestUtils.buildMedicationAction(MedicationActionEnum.REVIEW, new DateTime(2013, 5, 10, 12, 0)));
+    actionsList.add(MedicationsTestUtils.buildMedicationAction(MedicationActionEnum.REVIEW, new DateTime(2013, 5, 11, 12, 0)));
+    actionsList.add(MedicationsTestUtils.buildMedicationAction(MedicationActionEnum.REVIEW, new DateTime(2013, 5, 12, 12, 0)));
+    actionsList.add(MedicationsTestUtils.buildMedicationAction(MedicationActionEnum.MODIFY_EXISTING, new DateTime(2013, 5, 12, 13, 0)));
+    composition.getMedicationDetail().getMedicationAction().addAll(actionsList);
+
+    final boolean modified = medicationsBo.isTherapyModifiedFromLastReview(instruction, actionsList, new DateTime(2013, 5, 12, 5, 0));
+    assertTrue(modified);
   }
 
   @Test
@@ -1306,15 +1314,15 @@ public class DefaultMedicationsBoTest
   {
     final DateTime testTimestamp = new DateTime(2013, 11, 28, 16, 0, 0);
 
-    //mock
-    final NamedIdentity namedIdentity = new NamedIdentityDto(1L, "First Last");
-
-    final MockObject<MedicationsConnector> medicationsConnector = new MockObject<>(MedicationsConnector.class, this);
-    medicationsConnector.returns(namedIdentity).getUsersName(1L, testTimestamp);
-    medicationsBo.setMedicationsConnector(medicationsConnector.getMock());
+    RequestContextHolder.setContext(
+        new RequestContextImpl(
+            1L,
+            GlobalAuditContext.current(),
+            new DateTime(),
+            Opt.of(ConstantUserMetadataProvider.createMetadata("1", "First Last"))));
 
     final MedicationReferenceWeightComposition comp =
-        medicationsBo.buildReferenceWeightComposition(10.0, testTimestamp, 1L);
+        medicationsBo.buildReferenceWeightComposition(10.0, testTimestamp);
     final AnyEventEvent event = comp.getMedicationReferenceBodyWeight().getHistoryHistory().getAnyEvent().get(0);
     assertEquals(new Double(10.0), new Double(event.getWeight().getMagnitude()));
     assertEquals(testTimestamp, DataValueUtils.getDateTime(event.getTime()));
@@ -1326,8 +1334,8 @@ public class DefaultMedicationsBoTest
     final InfusionRateCalculationDto calculationDto = new InfusionRateCalculationDto();
     calculationDto.setQuantity(10.0);
     calculationDto.setQuantityUnit("mg");
-    calculationDto.setVolume(5.0);
-    final Double formula = medicationsBo.calculateInfusionFormulaFromRate(10.0, calculationDto, 10d, "mg/kg/h", 10.0);
+    calculationDto.setQuantityDenominator(5.0);
+    final Double formula = medicationsBo.calculateInfusionFormulaFromRate(10.0, calculationDto, 10.0, "mg/kg/h", 10.0);
     assertEquals(new Double(2.0), formula);
   }
 
@@ -1337,8 +1345,8 @@ public class DefaultMedicationsBoTest
     final InfusionRateCalculationDto calculationDto = new InfusionRateCalculationDto();
     calculationDto.setQuantity(10.0);
     calculationDto.setQuantityUnit("mg");
-    calculationDto.setVolume(5.0);
-    final Double rate = medicationsBo.calculateInfusionRateFromFormula(2.0,  "mg/kg/h", calculationDto, 10.0, 70.0);
+    calculationDto.setQuantityDenominator(5.0);
+    final Double rate = medicationsBo.calculateInfusionRateFromFormula(2.0, "mg/kg/h", calculationDto, 10.0, 70.0);
     assertEquals(new Double(10.0), rate);
   }
 
@@ -1348,8 +1356,8 @@ public class DefaultMedicationsBoTest
     final InfusionRateCalculationDto calculationDto = new InfusionRateCalculationDto();
     calculationDto.setQuantity(0.5);
     calculationDto.setQuantityUnit("mg");
-    calculationDto.setVolume(2.0);
-    final Double formula = medicationsBo.calculateInfusionFormulaFromRate(21.0, calculationDto, 10d, "µg/kg/min", 5.0);
+    calculationDto.setQuantityDenominator(2.0);
+    final Double formula = medicationsBo.calculateInfusionFormulaFromRate(21.0, calculationDto, 10.0, "microgram/kg/min", 5.0);
     final double formulaWithNormalPrecision = Math.round(formula * 1000.0) / 1000.0;
     assertEquals(new Double(17.5), new Double(formulaWithNormalPrecision));
   }
@@ -1360,8 +1368,8 @@ public class DefaultMedicationsBoTest
     final InfusionRateCalculationDto calculationDto = new InfusionRateCalculationDto();
     calculationDto.setQuantity(0.5);
     calculationDto.setQuantityUnit("mg");
-    calculationDto.setVolume(2.0);
-    final Double rate = medicationsBo.calculateInfusionRateFromFormula(17.5, "µg/kg/min", calculationDto, 5.0, 70.0);
+    calculationDto.setQuantityDenominator(2.0);
+    final Double rate = medicationsBo.calculateInfusionRateFromFormula(17.5, "microgram/kg/min", calculationDto, 5.0, 70.0);
     final double rateWithNormalPrecision = Math.round(rate * 1000.0) / 1000.0;
     assertEquals(new Double(21.0), new Double(rateWithNormalPrecision));
   }
@@ -1371,9 +1379,9 @@ public class DefaultMedicationsBoTest
   {
     final InfusionRateCalculationDto calculationDto = new InfusionRateCalculationDto();
     calculationDto.setQuantity(50.0);
-    calculationDto.setQuantityUnit("ng");
-    calculationDto.setVolume(1.0);
-    final Double formula = medicationsBo.calculateInfusionFormulaFromRate(100.0, calculationDto, 10d, "µg/kg/d", 10.0);
+    calculationDto.setQuantityUnit("nanogram");
+    calculationDto.setQuantityDenominator(1.0);
+    final Double formula = medicationsBo.calculateInfusionFormulaFromRate(100.0, calculationDto, 10.0, "microgram/kg/d", 10.0);
     final double formulaWithNormalPrecision = Math.round(formula * 1000.0) / 1000.0;
     assertEquals(new Double(12.0), new Double(formulaWithNormalPrecision));
   }
@@ -1383,9 +1391,9 @@ public class DefaultMedicationsBoTest
   {
     final InfusionRateCalculationDto calculationDto = new InfusionRateCalculationDto();
     calculationDto.setQuantity(50.0);
-    calculationDto.setQuantityUnit("ng");
-    calculationDto.setVolume(1.0);
-    final Double rate = medicationsBo.calculateInfusionRateFromFormula(12.0, "µg/kg/d", calculationDto, 10.0, 70.0);
+    calculationDto.setQuantityUnit("nanogram");
+    calculationDto.setQuantityDenominator(1.0);
+    final Double rate = medicationsBo.calculateInfusionRateFromFormula(12.0, "microgram/kg/d", calculationDto, 10.0, 70.0);
     final double rateWithNormalPrecision = Math.round(rate * 1000.0) / 1000.0;
     assertEquals(new Double(100.0), new Double(rateWithNormalPrecision));
   }
@@ -1400,16 +1408,15 @@ public class DefaultMedicationsBoTest
     therapy.getIngredientsList().add(ingredient);
     ingredient.setQuantityUnit("mg");
     ingredient.setQuantity(10.0);
-    ingredient.setVolume(5.0);
+    ingredient.setQuantityDenominator(5.0);
     final MedicationDto medication = new MedicationDto();
     ingredient.setMedication(medication);
     medication.setMedicationType(MedicationTypeEnum.MEDICATION);
 
-    final InfusionRateCalculationDto data =
-        medicationsBo.getInfusionRateCalculationData(therapy, new DateTime(2013, 12, 10, 12, 0, 0));
+    final InfusionRateCalculationDto data = medicationsBo.getInfusionRateCalculationData(therapy);
     assertEquals(new Double(10.0), data.getQuantity());
     assertEquals("mg", data.getQuantityUnit());
-    assertEquals(new Double(5.0), data.getVolume());
+    assertEquals(new Double(5.0), data.getQuantityDenominator());
   }
 
   @Test
@@ -1417,15 +1424,22 @@ public class DefaultMedicationsBoTest
   {
     //single infusion ingredient (MEDICATION), continuous infusion
 
-    //mock
-    final MedicationIngredientDto medicationIngredient = new MedicationIngredientDto();
-    medicationIngredient.setStrengthNumerator(10.0);
-    medicationIngredient.setStrengthNumeratorUnit("mg");
-    medicationIngredient.setStrengthDenominator(5.0);
-    medicationIngredient.setStrengthDenominatorUnit("ml");
-    final MockObject<HibernateMedicationsDao> medicationsDao = new MockObject<>(HibernateMedicationsDao.class, this);
-    medicationsDao.returns(medicationIngredient).getMedicationDefiningIngredient(1L, new DateTime(2013, 12, 10, 12, 0, 0));
-    medicationsBo.setMedicationsDao(medicationsDao.getMock());
+    final Map<Long, MedicationHolderDto> medicationHolderMap = new HashMap<>();
+    final MedicationHolderDto medicationDto1 = new MedicationHolderDto();
+    medicationDto1.setId(1L);
+    final MedicationIngredientDto definingIngredient = new MedicationIngredientDto();
+    definingIngredient.setId(1L);
+    definingIngredient.setIngredientName("Paracetamol");
+    definingIngredient.setStrengthNumerator(10.0);
+    definingIngredient.setStrengthNumeratorUnit("mg");
+    definingIngredient.setStrengthDenominator(5.0);
+    definingIngredient.setStrengthDenominatorUnit("mL");
+    medicationDto1.setDefiningIngredient(definingIngredient);
+    medicationHolderMap.put(1L, medicationDto1);
+
+    final MedicationsValueHolder medicationsValueHolder = mock(MedicationsValueHolder.class);
+    when(medicationsValueHolder.getValue()).thenReturn(medicationHolderMap);
+    medicationsBo.setMedicationsValueHolder(medicationsValueHolder);
 
     final ConstantComplexTherapyDto therapy = new ConstantComplexTherapyDto();
     therapy.setStart(new DateTime(2013, 12, 10, 12, 0, 0));
@@ -1437,11 +1451,10 @@ public class DefaultMedicationsBoTest
     medication.setMedicationType(MedicationTypeEnum.MEDICATION);
     medication.setId(1L);
 
-    final InfusionRateCalculationDto data =
-        medicationsBo.getInfusionRateCalculationData(therapy, new DateTime(2013, 12, 10, 12, 0, 0));
+    final InfusionRateCalculationDto data = medicationsBo.getInfusionRateCalculationData(therapy);
     assertEquals(new Double(10.0), data.getQuantity());
     assertEquals("mg", data.getQuantityUnit());
-    assertEquals(new Double(5.0), data.getVolume());
+    assertEquals(new Double(5.0), data.getQuantityDenominator());
   }
 
   @Test
@@ -1455,23 +1468,22 @@ public class DefaultMedicationsBoTest
     therapy.getIngredientsList().add(ingredient1);
     ingredient1.setQuantityUnit("mg");
     ingredient1.setQuantity(10.0);
-    ingredient1.setVolume(5.0);
+    ingredient1.setQuantityDenominator(5.0);
     final MedicationDto medication1 = new MedicationDto();
     ingredient1.setMedication(medication1);
     medication1.setMedicationType(MedicationTypeEnum.MEDICATION);
 
     final InfusionIngredientDto ingredient2 = new InfusionIngredientDto();
     therapy.getIngredientsList().add(ingredient2);
-    ingredient2.setVolume(50.0);
+    ingredient2.setQuantityDenominator(50.0);
     final MedicationDto solution = new MedicationDto();
     ingredient2.setMedication(solution);
     solution.setMedicationType(MedicationTypeEnum.SOLUTION);
 
-    final InfusionRateCalculationDto data =
-        medicationsBo.getInfusionRateCalculationData(therapy, new DateTime(2013, 12, 10, 12, 0, 0));
+    final InfusionRateCalculationDto data = medicationsBo.getInfusionRateCalculationData(therapy);
     assertEquals(new Double(10.0), data.getQuantity());
     assertEquals("mg", data.getQuantityUnit());
-    assertEquals(new Double(55.0), data.getVolume());
+    assertEquals(new Double(55.0), data.getQuantityDenominator());
   }
 
   @Test
@@ -1485,7 +1497,7 @@ public class DefaultMedicationsBoTest
     therapy.getIngredientsList().add(ingredient1);
     ingredient1.setQuantityUnit("mg");
     ingredient1.setQuantity(10.0);
-    ingredient1.setVolume(5.0);
+    ingredient1.setQuantityDenominator(5.0);
     final MedicationDto medication1 = new MedicationDto();
     ingredient1.setMedication(medication1);
     medication1.setMedicationType(MedicationTypeEnum.MEDICATION);
@@ -1494,13 +1506,12 @@ public class DefaultMedicationsBoTest
     therapy.getIngredientsList().add(ingredient2);
     ingredient2.setQuantityUnit("mg");
     ingredient2.setQuantity(2.0);
-    ingredient2.setVolume(1.0);
+    ingredient2.setQuantityDenominator(1.0);
     final MedicationDto solution = new MedicationDto();
     ingredient2.setMedication(solution);
     solution.setMedicationType(MedicationTypeEnum.MEDICATION);
 
-    final InfusionRateCalculationDto data =
-        medicationsBo.getInfusionRateCalculationData(therapy, new DateTime(2013, 12, 10, 12, 0, 0));
+    final InfusionRateCalculationDto data = medicationsBo.getInfusionRateCalculationData(therapy);
     assertNull(data);
   }
 
@@ -1517,12 +1528,12 @@ public class DefaultMedicationsBoTest
     therapy.getIngredientsList().add(ingredient);
     ingredient.setQuantityUnit("mg");
     ingredient.setQuantity(10.0);
-    ingredient.setVolume(5.0);
+    ingredient.setQuantityDenominator(5.0);
     final MedicationDto medication = new MedicationDto();
     ingredient.setMedication(medication);
     medication.setMedicationType(MedicationTypeEnum.MEDICATION);
 
-    medicationsBo.fillInfusionFormulaFromRate(therapy, 10.0, 70.0, new DateTime(2013, 12, 10, 12, 0, 0));
+    medicationsBo.fillInfusionFormulaFromRate(therapy, 10.0, 70.0);
     assertEquals(new Double(2.0), therapy.getDoseElement().getRateFormula());
   }
 
@@ -1539,12 +1550,12 @@ public class DefaultMedicationsBoTest
     therapy.getIngredientsList().add(ingredient);
     ingredient.setQuantityUnit("mg");
     ingredient.setQuantity(10.0);
-    ingredient.setVolume(5.0);
+    ingredient.setQuantityDenominator(5.0);
     final MedicationDto medication = new MedicationDto();
     ingredient.setMedication(medication);
     medication.setMedicationType(MedicationTypeEnum.MEDICATION);
 
-    medicationsBo.fillInfusionRateFromFormula(therapy, 10.0, 70.0, new DateTime(2013, 12, 10, 12, 0, 0));
+    medicationsBo.fillInfusionRateFromFormula(therapy, 10.0, 70.0);
     assertEquals(new Double(10.0), therapy.getDoseElement().getRate());
   }
 
@@ -1572,12 +1583,12 @@ public class DefaultMedicationsBoTest
     therapy.getIngredientsList().add(ingredient);
     ingredient.setQuantityUnit("mg");
     ingredient.setQuantity(10.0);
-    ingredient.setVolume(5.0);
+    ingredient.setQuantityDenominator(5.0);
     final MedicationDto medication = new MedicationDto();
     ingredient.setMedication(medication);
     medication.setMedicationType(MedicationTypeEnum.MEDICATION);
 
-    medicationsBo.fillInfusionFormulaFromRate(therapy, 10.0, 70.0, new DateTime(2013, 12, 10, 12, 0, 0));
+    medicationsBo.fillInfusionFormulaFromRate(therapy, 10.0, 70.0);
     assertEquals(new Double(2.0), therapy.getTimedDoseElements().get(0).getDoseElement().getRateFormula());
     assertEquals(new Double(4.0), therapy.getTimedDoseElements().get(1).getDoseElement().getRateFormula());
   }
@@ -1606,835 +1617,448 @@ public class DefaultMedicationsBoTest
     therapy.getIngredientsList().add(ingredient);
     ingredient.setQuantityUnit("mg");
     ingredient.setQuantity(10.0);
-    ingredient.setVolume(5.0);
+    ingredient.setQuantityDenominator(5.0);
     final MedicationDto medication = new MedicationDto();
     ingredient.setMedication(medication);
     medication.setMedicationType(MedicationTypeEnum.MEDICATION);
 
-    medicationsBo.fillInfusionRateFromFormula(therapy, 10.0, 70.0, new DateTime(2013, 12, 10, 12, 0, 0));
+    medicationsBo.fillInfusionRateFromFormula(therapy, 10.0, 70.0);
     assertEquals(new Double(10.0), therapy.getTimedDoseElements().get(0).getDoseElement().getRate());
     assertEquals(new Double(20.0), therapy.getTimedDoseElements().get(1).getDoseElement().getRate());
   }
 
   @Test
-  public void testBuildTherapyTimeline1()
+  public void testGetTherapySuspendReasonForSuspendedTherapy()
   {
-    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> therapies = new ArrayList<>();
-    final Map<String, List<MedicationAdministrationComposition>> administrations = new HashMap<>();
+    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair =
+        buildTestInstructionForSuspendReasonTest();
 
-    final MedicationOrderComposition composition =
-        MedicationsTestUtils.buildTestMedicationOrderComposition(
-            "uid1::1", new DateTime(2014, 2, 20, 12, 0, 0), "1");
-    final MedicationInstructionInstruction instruction =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 1");
-    final OrderActivity orderActivity =
-        MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 500.0, "mg", null, null, null, null, "po", "po", null, null);
-    instruction.getOrder().add(orderActivity);
-    final MedicationTimingCluster medicationTiming =
-        MedicationsTestUtils.buildMedicationTimingCluster(
-            4L, null, null, null, new DateTime(2014, 2, 21, 8, 10, 0), null, null);
-    orderActivity.setMedicationTiming(medicationTiming);
-    final IngredientsAndFormCluster ingredientsAndForm = new IngredientsAndFormCluster();
-    orderActivity.setIngredientsAndForm(ingredientsAndForm);
-    ingredientsAndForm.setForm(DataValueUtils.getLocalCodedText("tbl", "tbl"));
-    composition.getMedicationDetail().getMedicationInstruction().add(instruction);
-    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyPair = Pair.of(composition, instruction);
-    therapies.add(therapyPair);
-    final String therapyId = InstructionTranslator.translate(therapyPair.getSecond(), therapyPair.getFirst());
+    addActionToSuspendReasonTestData(
+        instructionPair.getFirst(),
+        instructionPair.getSecond(),
+        MedicationActionEnum.SUSPEND,
+        new DateTime(2016, 6, 10, 12, 0));
 
-    administrations.put(therapyId, new ArrayList<MedicationAdministrationComposition>());
-    final LocatableRef instructionLocatableRef =
-        MedicationsEhrUtils.createInstructionLocatableRef(therapyPair.getFirst(), therapyPair.getSecond());
-    administrations.get(therapyId).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm0",
-            new DateTime(2014, 2, 21, 8, 10, 0),
-            instructionLocatableRef,
-            "1",
-            500.0,
-            "mg",
-            "comment123",
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    ); //administered on time
-    administrations.get(therapyId).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm1",
-            new DateTime(2014, 2, 21, 10, 40, 0),
-            instructionLocatableRef,
-            "1",
-            500.0,
-            "mg",
-            null,
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    );  //administered on time
-    administrations.get(therapyId).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm2",
-            new DateTime(2014, 2, 21, 14, 50, 0),
-            instructionLocatableRef,
-            "1",
-            500.0,
-            "ug",
-            null,
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    ); //administered late
-    administrations.get(therapyId).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm3",
-            new DateTime(2014, 2, 21, 15, 15, 0),
-            instructionLocatableRef,
-            "1",
-            450.0,
-            "mg",
-            null,
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    ); //administered early
-    administrations.get(therapyId).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm4",
-            new DateTime(2014, 2, 21, 16, 30, 0),
-            instructionLocatableRef,
-            "1",
-            600.0,
-            "mg",
-            null,
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    ); //unplanned
-    administrations.get(therapyId).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm4",
-            new DateTime(2013, 1, 1, 10, 30, 0),
-            instructionLocatableRef,
-            "1",
-            600.0,
-            "mg",
-            null,
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    ); //past - should be filtered out
-
-    final List<TherapyTaskDto> tasks = new ArrayList<>();
-    tasks.add(buildTherapyTaskDto("t0", "adm0", therapyId, new DateTime(2014, 2, 21, 8, 0, 0), 500.0, "mg"));
-    tasks.add(buildTherapyTaskDto("t1", "adm1", therapyId, new DateTime(2014, 2, 21, 11, 0, 0), 500.0, "mg"));
-    tasks.add(buildTherapyTaskDto("t2", "adm2", therapyId, new DateTime(2014, 2, 21, 14, 0, 0), 500.0, "mg"));
-    tasks.add(buildTherapyTaskDto("t3", "adm3", therapyId, new DateTime(2014, 2, 21, 16, 0, 0), 500.0, "mg"));
-    tasks.add(buildTherapyTaskDto("t4", null, therapyId, new DateTime(2014, 2, 21, 18, 0, 0), 500.0, "mg")); //late
-    tasks.add(buildTherapyTaskDto("t5", null, therapyId, new DateTime(2014, 2, 21, 18, 30, 0), 500.0, "mg")); //due
-    tasks.add(buildTherapyTaskDto("t6", null, therapyId, new DateTime(2014, 2, 21, 19, 0, 0), 500.0, "mg")); //due
-    tasks.add(buildTherapyTaskDto("t7", null, therapyId, new DateTime(2014, 2, 21, 21, 0, 0), 500.0, "mg")); //planned
-
-    final KnownClinic department = KnownClinic.Utils.fromName("KOOKIT");
-    final RoundsIntervalDto roundsIntervalDto = MedicationsTestUtils.getTestRoundsIntervalDto(); //7:00 - 17:00
-
-    //mock medicationsBo
-    final MockObject<EhrMedicationsDao> ehrDaoMock = new MockObject<>(EhrMedicationsDao.class, this);
-    ehrDaoMock.returns(composition).loadMedicationOrderComposition(1L, "uid1");
-    medicationsBo.setEhrMedicationsDao(ehrDaoMock.getMock());
-
-    final MedicationDto medicationDto1 = new MedicationDto();
-    medicationDto1.setId(1L);
-    medicationDto1.setName("Lekadol 20x500mg");
-    final MockObject<HibernateMedicationsDao> medicationsDaoMock = new MockObject<>(HibernateMedicationsDao.class, this);
-    medicationsDaoMock.returns(medicationDto1).getMedicationById(1L, new DateTime(2014, 2, 21, 18, 40, 0));
-    medicationsBo.setMedicationsDao(medicationsDaoMock.getMock());
-
-    //mock taggingDao
-    final MockObject<OpenEhrTaggingDao> ehrTaggingDaoMock = new MockObject<>(OpenEhrTaggingDao.class, this);
-    final TagFilteringDto filteringDto = new TagFilteringDto();
-    filteringDto.setCompositionVersion(TagFilteringDto.CompositionVersion.LAST_VERSION_OF_ANY_TAGGED);
-
-    final TaggedObjectDto<Instruction> taggedObjectDto = new TaggedObjectDto<>();
-    taggedObjectDto.setComposition(composition);
-    taggedObjectDto.setObject(instruction);
-
-    ehrTaggingDaoMock.returns(Collections.singleton(taggedObjectDto)).findObjectCompositionPairs(
-        filteringDto, TherapyTaggingUtils.generateTag(TherapyTag.PRESCRIPTION, 1L));
-    medicationsBo.setEhrTaggingDao(ehrTaggingDaoMock.getMock());
-
-
-    final List<TherapyTimelineRowDto> therapyTimelineRows =
-        medicationsBo.buildTherapyTimeline(
-            1L,
-            1L,
-            therapies,
-            administrations,
-            tasks,
-            Intervals.infiniteFrom(new DateTime(2014, 2, 10, 0, 0, 0)),
-            roundsIntervalDto,
-            TherapySortTypeEnum.DESCRIPTION_ASC,
-            department,
-            new DateTime(2014, 2, 21, 18, 40, 0),
-            null);
-
-    assertEquals(1L, therapyTimelineRows.size());
-    assertEquals(9L, therapyTimelineRows.get(0).getAdministrations().size());
-
-    final StartAdministrationDto administration0 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(0);
-    assertEquals("adm0", administration0.getAdministrationId());
-    assertEquals("t0", administration0.getTaskId());
-    assertEquals(AdministrationStatusEnum.COMPLETED, administration0.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 8, 10, 0), administration0.getAdministrationTime());
-    assertEquals(500.0, administration0.getAdministeredDose().getNumerator(), 0);
-    assertEquals("mg", administration0.getAdministeredDose().getNumeratorUnit());
-    assertFalse(administration0.isDifferentFromOrder());
-    assertEquals("comment123", administration0.getComment());
-
-    final StartAdministrationDto administration1 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(1);
-    assertEquals("adm1", administration1.getAdministrationId());
-    assertEquals("t1", administration1.getTaskId());
-    assertEquals(AdministrationStatusEnum.COMPLETED, administration1.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 10, 40, 0), administration1.getAdministrationTime());
-    assertEquals(500.0, administration1.getAdministeredDose().getNumerator(), 0);
-    assertEquals("mg", administration1.getAdministeredDose().getNumeratorUnit());
-    assertFalse(administration1.isDifferentFromOrder());
-    assertNull(administration1.getComment());
-
-    final StartAdministrationDto administration2 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(2);
-    assertEquals("adm2", administration2.getAdministrationId());
-    assertEquals("t2", administration2.getTaskId());
-    assertEquals(AdministrationStatusEnum.COMPLETED_LATE, administration2.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 14, 50, 0), administration2.getAdministrationTime());
-    assertEquals(500.0, administration2.getAdministeredDose().getNumerator(), 0);
-    assertEquals("ug", administration2.getAdministeredDose().getNumeratorUnit());
-    assertTrue(administration2.isDifferentFromOrder());
-
-    final StartAdministrationDto administration3 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(3);
-    assertEquals("adm3", administration3.getAdministrationId());
-    assertEquals("t3", administration3.getTaskId());
-    assertEquals(AdministrationStatusEnum.COMPLETED_EARLY, administration3.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 15, 15, 0), administration3.getAdministrationTime());
-    assertEquals(450.0, administration3.getAdministeredDose().getNumerator(), 0);
-    assertEquals("mg", administration3.getAdministeredDose().getNumeratorUnit());
-    assertTrue(administration3.isDifferentFromOrder());
-
-    final StartAdministrationDto administration4 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(4);
-    assertEquals("adm4", administration4.getAdministrationId());
-    assertNull(administration4.getTaskId());
-    assertEquals(AdministrationStatusEnum.COMPLETED, administration4.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 16, 30, 0), administration4.getAdministrationTime());
-    assertEquals(600.0, administration4.getAdministeredDose().getNumerator(), 0);
-    assertEquals("mg", administration4.getAdministeredDose().getNumeratorUnit());
-    assertFalse(administration4.isDifferentFromOrder());
-
-    final StartAdministrationDto administration5 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(5);
-    assertNull(administration5.getAdministrationId());
-    assertEquals("t4", administration5.getTaskId());
-    assertEquals(AdministrationStatusEnum.LATE, administration5.getAdministrationStatus());
-    assertNull(administration5.getAdministrationTime());
-    assertEquals(new DateTime(2014, 2, 21, 18, 0, 0), administration5.getPlannedTime());
-    assertEquals(500.0, administration5.getPlannedDose().getNumerator(), 0);
-    assertEquals("mg", administration5.getPlannedDose().getNumeratorUnit());
-
-    final StartAdministrationDto administration6 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(6);
-    assertNull(administration6.getAdministrationId());
-    assertEquals("t5", administration6.getTaskId());
-    assertEquals(AdministrationStatusEnum.DUE, administration6.getAdministrationStatus());
-    assertNull(administration6.getAdministrationTime());
-    assertEquals(new DateTime(2014, 2, 21, 18, 30, 0), administration6.getPlannedTime());
-    assertEquals(500.0, administration6.getPlannedDose().getNumerator(), 0);
-    assertEquals("mg", administration6.getPlannedDose().getNumeratorUnit());
-
-    final StartAdministrationDto administration7 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(7);
-    assertNull(administration7.getAdministrationId());
-    assertEquals("t6", administration7.getTaskId());
-    assertEquals(AdministrationStatusEnum.DUE, administration7.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 19, 0, 0), administration7.getPlannedTime());
-
-    final StartAdministrationDto administration8 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(8);
-    assertNull(administration8.getAdministrationId());
-    assertEquals("t7", administration8.getTaskId());
-    assertEquals(AdministrationStatusEnum.PLANNED, administration8.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 21, 0, 0), administration8.getPlannedTime());
-
-    assertEquals(1L, therapyTimelineRows.get(0).getTherapy().getTags().size());
-    assertEquals(TherapyTag.PRESCRIPTION, therapyTimelineRows.get(0).getTherapy().getTags().get(0));
+    final TherapyChangeReasonDto therapySuspendReason =
+        medicationsBo.getTherapySuspendReason(instructionPair.getFirst(), instructionPair.getSecond());
+    assertNotNull(therapySuspendReason);
+    assertNotNull(therapySuspendReason.getChangeReason());
+    assertEquals(
+        TherapyChangeReasonEnum.TEMPORARY_LEAVE.toFullString(),
+        therapySuspendReason.getChangeReason().getCode());
+    assertEquals(
+        TherapyChangeReasonEnum.TEMPORARY_LEAVE.toFullString(),
+        therapySuspendReason.getChangeReason().getName());
   }
 
   @Test
-  public void testFillingTagsForPrescription1()
+  public void testGetTherapySuspendReasonForReissuedTherapy()
   {
-    //tag exists
-    final List<TherapyDto> therapyDtos = new ArrayList<>();
+    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair =
+        buildTestInstructionForSuspendReasonTest();
 
-    final ConstantComplexTherapyDto therapy = new ConstantComplexTherapyDto();
-    therapy.setCompositionUid("12345");
-    therapy.setEhrOrderName("ehrOrder");
-    therapyDtos.add(therapy);
+    final MedicationOrderComposition composition = instructionPair.getFirst();
+    final MedicationInstructionInstruction instruction = instructionPair.getSecond();
 
-    final Set<TaggedObjectDto<Instruction>> taggedObjectDtos = new HashSet<>();
+    addActionToSuspendReasonTestData(
+        composition,
+        instruction,
+        MedicationActionEnum.SUSPEND,
+        new DateTime(2016, 6, 10, 12, 0));
 
-    final TaggedObjectDto<Instruction> taggedObjectDto = new TaggedObjectDto<>();
-    final Composition composition = new Composition();
+    addActionToSuspendReasonTestData(
+        composition,
+        instruction,
+        MedicationActionEnum.REISSUE,
+        new DateTime(2016, 6, 10, 13, 0));
+
+    final TherapyChangeReasonDto therapySuspendReason = medicationsBo.getTherapySuspendReason(composition, instruction);
+    assertNull(therapySuspendReason);
+  }
+
+  @Test
+  public void testGetTherapySuspendReasonNoAction()
+  {
+    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair =
+        buildTestInstructionForSuspendReasonTest();
+
+    final TherapyChangeReasonDto therapySuspendReason =
+        medicationsBo.getTherapySuspendReason(instructionPair.getFirst(), instructionPair.getSecond());
+    assertNull(therapySuspendReason);
+  }
+
+  private Pair<MedicationOrderComposition, MedicationInstructionInstruction> buildTestInstructionForSuspendReasonTest()
+  {
+    final MedicationInstructionInstruction instruction = new MedicationInstructionInstruction();
+    instruction.setName(DataValueUtils.getText("Medication instruction"));
+
+    final MedicationOrderComposition composition = new MedicationOrderComposition();
     final UidBasedId uidBasedId = new ObjectVersionId();
-    uidBasedId.setValue("12345");
+    uidBasedId.setValue("uid1");
     composition.setUid(uidBasedId);
-    taggedObjectDto.setComposition(composition);
-    final Instruction instruction = new Instruction();
-    final DvText dvText = new DvText();
-    dvText.setValue("ehrOrder");
-    instruction.setName(dvText);
-    taggedObjectDto.setObject(instruction);
-    taggedObjectDtos.add(taggedObjectDto);
 
-    medicationsBo.fillPrescriptionTagsForTherapies(therapyDtos, taggedObjectDtos);
-    assertEquals(1L, therapyDtos.get(0).getTags().size());
+    final MedicationDetailSection medicationDetail = new MedicationDetailSection();
+    medicationDetail.getMedicationInstruction().add(instruction);
+    composition.setMedicationDetail(medicationDetail);
+
+    return Pair.of(composition, instruction);
+  }
+
+  private void addActionToSuspendReasonTestData(
+      final MedicationOrderComposition composition,
+      final MedicationInstructionInstruction instruction,
+      final MedicationActionEnum medicationActionEnum,
+      final DateTime actionTime)
+  {
+    final MedicationActionAction suspendAction =
+        MedicationsEhrUtils.buildMedicationAction(composition, medicationActionEnum, actionTime);
+    MedicationsEhrUtils.fillActionInstructionId(
+        suspendAction.getInstructionDetails().getInstructionId(), composition, instruction, "uid1");
+    suspendAction.getReason().add(DataValueUtils.getLocalCodedText(
+        TherapyChangeReasonEnum.TEMPORARY_LEAVE.toFullString(),
+        TherapyChangeReasonEnum.TEMPORARY_LEAVE.toFullString()));
+    composition.getMedicationDetail().getMedicationAction().add(suspendAction);
   }
 
   @Test
-  public void testFillingTagsForPrescription2()
+  public void pharmacyReviewJsonDeserializer()
   {
-    //another tag
-    final List<TherapyDto> therapyDtos = new ArrayList<>();
-
-    final ConstantComplexTherapyDto therapy = new ConstantComplexTherapyDto();
-    therapy.setCompositionUid("12345");
-    therapy.setEhrOrderName("ehrOrder");
-    therapyDtos.add(therapy);
-
-    final Set<TaggedObjectDto<Instruction>> taggedObjectDtos = new HashSet<>();
-
-    final TaggedObjectDto<Instruction> taggedObjectDto = new TaggedObjectDto<>();
-    final Composition composition = new Composition();
-    final UidBasedId uidBasedId = new ObjectVersionId();
-    uidBasedId.setValue("12345");
-    composition.setUid(uidBasedId);
-    taggedObjectDto.setComposition(composition);
-    final Instruction instruction = new Instruction();
-    final DvText dvText = new DvText();
-    dvText.setValue("ehrOrder2");
-    instruction.setName(dvText);
-    taggedObjectDto.setObject(instruction);
-    taggedObjectDtos.add(taggedObjectDto);
-
-    medicationsBo.fillPrescriptionTagsForTherapies(therapyDtos, taggedObjectDtos);
-    assertEquals(0L, therapyDtos.get(0).getTags().size());
+    final String json =
+        "[\n" +
+            "  {\n" +
+            "    \"configs\": [],\n" +
+            "    \"createTimestamp\": \"2015-04-14T14:58:14.346Z\",\n" +
+            "    \"compositionId\": null,\n" +
+            "    \"composer\": {\n" +
+            "      \"id\": \"2323321\",\n" +
+            "      \"name\": \"Today Guy\"\n" +
+            "    },\n" +
+            "    \"referBackToPescriber\": null,\n" +
+            "    \"relatedTherapies\": [\n" +
+            "      {\n" +
+            "        \"therapy\": {\n" +
+            "          \"doseElement\": {\n" +
+            "            \"quantity\": 4,\n" +
+            "            \"doseDescription\": null,\n" +
+            "            \"quantityDenominator\": 0.4,\n" +
+            "            \"serialVersionUID\": 0\n" +
+            "          },\n" +
+            "          \"medication\": {\n" +
+            "            \"id\": 1717028,\n" +
+            "            \"name\": \"ASPIRIN 10 MG SVEČKA ZA OTROKE\",\n" +
+            "            \"shortName\": \"ASPIRIN 10 mg SVEČKA ZA OTROKE \",\n" +
+            "            \"genericName\": \"acetilsalicilna kislina\",\n" +
+            "            \"medicationType\": \"MEDICATION\",\n" +
+            "            \"displayName\": \"acetilsalicilna kislina (ASPIRIN 10 MG SVEČKA ZA OTROKE)\",\n" +
+            "            \"serialVersionUID\": 0\n" +
+            "          },\n" +
+            "          \"quantityUnit\": \"mg\",\n" +
+            "          \"doseForm\": {\n" +
+            "            \"doseFormType\": \"SUPPOSITORY\",\n" +
+            "            \"medicationOrderFormType\": \"SIMPLE\",\n" +
+            "            \"serialVersionUID\": 0,\n" +
+            "            \"name\": \"Svečka\",\n" +
+            "            \"code\": \"289\",\n" +
+            "            \"description\": null,\n" +
+            "            \"deleted\": false,\n" +
+            "            \"auditInfo\": null,\n" +
+            "            \"version\": 0,\n" +
+            "            \"id\": 289\n" +
+            "          },\n" +
+            "          \"quantityDenominatorUnit\": \"svečka\",\n" +
+            "          \"quantityDisplay\": \"4 mg\",\n" +
+            "          \"compositionUid\": \"07e5280c-3309-48ce-a8b6-04ad41a53da5::prod.pediatrics.marand.si::3\",\n" +
+            "          \"ehrOrderName\": \"Medication instruction\",\n" +
+            "          \"medicationOrderFormType\": \"SIMPLE\",\n" +
+            "          \"variable\": false,\n" +
+            "          \"therapyDescription\": \"acetilsalicilna kislina (ASPIRIN 10 MG SVEČKA ZA OTROKE) - 4 mg - 3X na dan - rect\",\n" +
+            "          \"route\": {\n" +
+            "            \"type\": null,\n" +
+            "            \"unlicensedRoute\": false,\n" +
+            "            \"serialVersionUID\": 0,\n" +
+            "            \"code\": \"35\",\n" +
+            "            \"name\": \"rect\",\n" +
+            "            \"id\": 0\n" +
+            "          },\n" +
+            "          \"dosingFrequency\": {\n" +
+            "            \"type\": \"DAILY_COUNT\",\n" +
+            "            \"value\": 3\n" +
+            "          },\n" +
+            "          \"dosingDaysFrequency\": null,\n" +
+            "          \"daysOfWeek\": null,\n" +
+            "          \"start\": {\n" +
+            "            \"data\": \"2015-03-11T13:48:00.000+01:00\",\n" +
+            "            \"default\": \"11.3.2015\",\n" +
+            "            \"short.date\": \"11.3.2015\",\n" +
+            "            \"short.time\": \"13:48\",\n" +
+            "            \"short.date.time\": \"11.3.2015 13:48\"\n" +
+            "          },\n" +
+            "          \"end\": null,\n" +
+            "          \"whenNeeded\": false,\n" +
+            "          \"comment\": null,\n" +
+            "          \"clinicalIndication\": null,\n" +
+            "          \"prescriberName\": null,\n" +
+            "          \"composerName\": \"Tadej Avčin\",\n" +
+            "          \"startCriterion\": null,\n" +
+            "          \"applicationPrecondition\": null,\n" +
+            "          \"frequencyDisplay\": \"3X na dan\",\n" +
+            "          \"daysFrequencyDisplay\": null,\n" +
+            "          \"whenNeededDisplay\": null,\n" +
+            "          \"startCriterionDisplay\": null,\n" +
+            "          \"daysOfWeekDisplay\": null,\n" +
+            "          \"applicationPreconditionDisplay\": null,\n" +
+            "          \"formattedTherapyDisplay\": \"<span class='GenericName TextDataBold'>acetilsalicilna kislina </span><span class='MedicationName TextData'>(ASPIRIN 10 MG SVEČKA ZA OTROKE) </span><br><span class='DoseLabel TextLabel'>ODMEREK </span><span class='Quantity TextData'>4 mg </span><span class='Delimiter TextData'><span> &ndash; </span> </span><span class='Frequency TextData'>3X na dan </span><span class='Delimiter TextData'><span> &ndash; </span> </span><span class='Route TextData'>rect </span><span class='TherapyInterval'><br><span class='FromLabel TextLabel'>Od </span><span class='From TextData'>11.3.2015 13:48 </span></span>\",\n" +
+            "          \"pastDaysOfTherapy\": null,\n" +
+            "          \"linkName\": null,\n" +
+            "          \"maxDailyFrequency\": null,\n" +
+            "          \"createdTimestamp\": \"2015-03-11T13:48:41.174+01:00\",\n" +
+            "          \"tags\": [],\n" +
+            "          \"criticalWarnings\": [],\n" +
+            "          \"serialVersionUID\": 0\n" +
+            "        },\n" +
+            "        \"therapyStatus\": \"NORMAL\",\n" +
+            "        \"doctorReviewNeeded\": true,\n" +
+            "        \"therapyEndsBeforeNextRounds\": false,\n" +
+            "        \"modifiedFromLastReview\": false,\n" +
+            "        \"modified\": false,\n" +
+            "        \"active\": true,\n" +
+            "        \"consecutiveDay\": 26,\n" +
+            "        \"showConsecutiveDay\": false\n" +
+            "      },\n" +
+            "      {\n" +
+            "        \"therapy\": {\n" +
+            "          \"timedDoseElements\": [\n" +
+            "            {\n" +
+            "              \"doseElement\": {\n" +
+            "                \"quantity\": 15,\n" +
+            "                \"doseDescription\": null,\n" +
+            "                \"quantityDenominator\": null,\n" +
+            "                \"serialVersionUID\": 0\n" +
+            "              },\n" +
+            "              \"doseTime\": {\n" +
+            "                \"hour\": 8,\n" +
+            "                \"minute\": 0\n" +
+            "              },\n" +
+            "              \"date\": null,\n" +
+            "              \"timeDisplay\": \"08:00\",\n" +
+            "              \"quantityDisplay\": \"15 mg\",\n" +
+            "              \"serialVersionUID\": 0\n" +
+            "            },\n" +
+            "            {\n" +
+            "              \"doseElement\": {\n" +
+            "                \"quantity\": 20,\n" +
+            "                \"doseDescription\": null,\n" +
+            "                \"quantityDenominator\": null,\n" +
+            "                \"serialVersionUID\": 0\n" +
+            "              },\n" +
+            "              \"doseTime\": {\n" +
+            "                \"hour\": 13,\n" +
+            "                \"minute\": 0\n" +
+            "              },\n" +
+            "              \"date\": null,\n" +
+            "              \"timeDisplay\": \"13:00\",\n" +
+            "              \"quantityDisplay\": \"20 mg\",\n" +
+            "              \"serialVersionUID\": 0\n" +
+            "            },\n" +
+            "            {\n" +
+            "              \"doseElement\": {\n" +
+            "                \"quantity\": 15,\n" +
+            "                \"doseDescription\": null,\n" +
+            "                \"quantityDenominator\": null,\n" +
+            "                \"serialVersionUID\": 0\n" +
+            "              },\n" +
+            "              \"doseTime\": {\n" +
+            "                \"hour\": 17,\n" +
+            "                \"minute\": 0\n" +
+            "              },\n" +
+            "              \"date\": null,\n" +
+            "              \"timeDisplay\": \"17:00\",\n" +
+            "              \"quantityDisplay\": \"15 mg\",\n" +
+            "              \"serialVersionUID\": 0\n" +
+            "            },\n" +
+            "            {\n" +
+            "              \"doseElement\": {\n" +
+            "                \"quantity\": 20,\n" +
+            "                \"doseDescription\": null,\n" +
+            "                \"quantityDenominator\": null,\n" +
+            "                \"serialVersionUID\": 0\n" +
+            "              },\n" +
+            "              \"doseTime\": {\n" +
+            "                \"hour\": 21,\n" +
+            "                \"minute\": 0\n" +
+            "              },\n" +
+            "              \"date\": null,\n" +
+            "              \"timeDisplay\": \"21:00\",\n" +
+            "              \"quantityDisplay\": \"20 mg\",\n" +
+            "              \"serialVersionUID\": 0\n" +
+            "            }\n" +
+            "          ],\n" +
+            "          \"medication\": {\n" +
+            "            \"id\": 1061700,\n" +
+            "            \"name\": \"SINECOD 50 mg film.obl.tbl. \",\n" +
+            "            \"shortName\": \"Sinecod tbl.\",\n" +
+            "            \"genericName\": \"butamirat\",\n" +
+            "            \"medicationType\": \"MEDICATION\",\n" +
+            "            \"displayName\": \"butamirat (SINECOD 50 mg film.obl.tbl. )\",\n" +
+            "            \"serialVersionUID\": 0\n" +
+            "          },\n" +
+            "          \"quantityUnit\": \"mg\",\n" +
+            "          \"doseForm\": {\n" +
+            "            \"doseFormType\": null,\n" +
+            "            \"medicationOrderFormType\": \"SIMPLE\",\n" +
+            "            \"serialVersionUID\": 0,\n" +
+            "            \"name\": \"Tableta s podaljšanim sproščanjem\",\n" +
+            "            \"code\": \"296\",\n" +
+            "            \"description\": null,\n" +
+            "            \"deleted\": false,\n" +
+            "            \"auditInfo\": null,\n" +
+            "            \"version\": 0,\n" +
+            "            \"id\": 296\n" +
+            "          },\n" +
+            "          \"quantityDenominatorUnit\": null,\n" +
+            "          \"quantityDisplay\": \"15-20-15-20 mg\",\n" +
+            "          \"compositionUid\": \"8da7c530-03c8-44ec-b022-8539c43f0b71::prod.pediatrics.marand.si::3\",\n" +
+            "          \"ehrOrderName\": \"Medication instruction\",\n" +
+            "          \"medicationOrderFormType\": \"SIMPLE\",\n" +
+            "          \"variable\": true,\n" +
+            "          \"therapyDescription\": \"butamirat (SINECOD 50 mg film.obl.tbl. ) - 15-20-15-20 mg - 4X na dan - po\",\n" +
+            "          \"route\": {\n" +
+            "            \"type\": null,\n" +
+            "            \"unlicensedRoute\": false,\n" +
+            "            \"serialVersionUID\": 0,\n" +
+            "            \"code\": \"34\",\n" +
+            "            \"name\": \"po\",\n" +
+            "            \"id\": 0\n" +
+            "          },\n" +
+            "          \"dosingFrequency\": {\n" +
+            "            \"type\": \"DAILY_COUNT\",\n" +
+            "            \"value\": 4\n" +
+            "          },\n" +
+            "          \"dosingDaysFrequency\": null,\n" +
+            "          \"daysOfWeek\": null,\n" +
+            "          \"start\": {\n" +
+            "            \"data\": \"2015-03-11T14:17:00.000+01:00\",\n" +
+            "            \"default\": \"11.3.2015\",\n" +
+            "            \"short.date\": \"11.3.2015\",\n" +
+            "            \"short.time\": \"14:17\",\n" +
+            "            \"short.date.time\": \"11.3.2015 14:17\"\n" +
+            "          },\n" +
+            "          \"end\": null,\n" +
+            "          \"whenNeeded\": false,\n" +
+            "          \"comment\": null,\n" +
+            "          \"clinicalIndication\": null,\n" +
+            "          \"prescriberName\": null,\n" +
+            "          \"composerName\": \"Tadej Avčin\",\n" +
+            "          \"startCriterion\": null,\n" +
+            "          \"applicationPrecondition\": null,\n" +
+            "          \"frequencyDisplay\": \"4X na dan\",\n" +
+            "          \"daysFrequencyDisplay\": null,\n" +
+            "          \"whenNeededDisplay\": null,\n" +
+            "          \"startCriterionDisplay\": null,\n" +
+            "          \"daysOfWeekDisplay\": null,\n" +
+            "          \"applicationPreconditionDisplay\": null,\n" +
+            "          \"formattedTherapyDisplay\": \"<span class='GenericName TextDataBold'>butamirat </span><span class='MedicationName TextData'>(SINECOD 50 mg film.obl.tbl. ) </span><br><span class='DoseLabel TextLabel'>ODMEREK </span><span class='Quantity TextData'>15-20-15-20 mg </span><span class='Delimiter TextData'><span> &ndash; </span> </span><span class='Frequency TextData'>4X na dan </span><span class='Delimiter TextData'><span> &ndash; </span> </span><span class='Route TextData'>po </span><span class='TherapyInterval'><br><span class='FromLabel TextLabel'>Od </span><span class='From TextData'>11.3.2015 14:17 </span></span>\",\n" +
+            "          \"pastDaysOfTherapy\": null,\n" +
+            "          \"linkName\": null,\n" +
+            "          \"maxDailyFrequency\": null,\n" +
+            "          \"createdTimestamp\": \"2015-03-11T14:17:33.693+01:00\",\n" +
+            "          \"tags\": [],\n" +
+            "          \"criticalWarnings\": [],\n" +
+            "          \"serialVersionUID\": 0\n" +
+            "        },\n" +
+            "        \"therapyStatus\": \"NORMAL\",\n" +
+            "        \"doctorReviewNeeded\": true,\n" +
+            "        \"therapyEndsBeforeNextRounds\": false,\n" +
+            "        \"modifiedFromLastReview\": false,\n" +
+            "        \"modified\": false,\n" +
+            "        \"active\": true,\n" +
+            "        \"consecutiveDay\": 26,\n" +
+            "        \"showConsecutiveDay\": false\n" +
+            "      }\n" +
+            "    ],\n" +
+            "    \"drugRelatedProblem\": {\n" +
+            "      \"c\": {\n" +
+            "        \"categories\": [\n" +
+            "          {\n" +
+            "            \"id\": 123,\n" +
+            "            \"name\": \"Adherence issue\"\n" +
+            "          }\n" +
+            "        ],\n" +
+            "        \"outcome\": {\n" +
+            "          \"id\": 123,\n" +
+            "          \"name\": \"Cost saving only\"\n" +
+            "        },\n" +
+            "        \"impact\": {\n" +
+            "          \"id\": 123,\n" +
+            "          \"name\": \"Potentially severe\"\n" +
+            "        },\n" +
+            "        \"recommendation\": \"Withold Warfarin for next 2 days as INR >6. Repeat INR and reassess dose based on tomorrow's result.\"\n" +
+            "      },\n" +
+            "      \"configs\": [],\n" +
+            "      \"categories\": [\n" +
+            "        {\n" +
+            "          \"id\": 123,\n" +
+            "          \"name\": \"Adherence issue\"\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"outcome\": {\n" +
+            "        \"id\": 123,\n" +
+            "        \"name\": \"Cost saving only\"\n" +
+            "      },\n" +
+            "      \"impact\": {\n" +
+            "        \"id\": 123,\n" +
+            "        \"name\": \"Potentially severe\"\n" +
+            "      },\n" +
+            "      \"recommendation\": \"Withold Warfarin for next 2 days as INR >6. Repeat INR and reassess dose based on tomorrow's result.\"\n" +
+            "    },\n" +
+            "    \"pharmacokineticIssue\": null,\n" +
+            "    \"patientRelatedProblem\": null\n" +
+            "  }\n" +
+            "]\n";
+    JsonUtil.fromJson(json, PharmacistReviewDto[].class, TherapyJsonDeserializer.INSTANCE.getTypeAdapters());
   }
 
   @Test
-  public void testFillingTagsForPrescription3()
+  public void testSortTherapyTemplates()
   {
-    //no tag
-    final List<TherapyDto> therapyDtos = new ArrayList<>();
+    final TherapyTemplatesDto templates = new TherapyTemplatesDto();
+    final TherapyTemplateDto template = new TherapyTemplateDto();
+    final List<TherapyTemplateElementDto> templateElements = new ArrayList<>();
+    template.setTemplateElements(templateElements);
+    templates.getOrganizationTemplates().add(template);
 
-    final ConstantComplexTherapyDto therapy = new ConstantComplexTherapyDto();
-    therapy.setCompositionUid("12345");
-    therapy.setEhrOrderName("ehrOrder");
-    therapyDtos.add(therapy);
+    final TherapyTemplateElementDto element1 = new TherapyTemplateElementDto();
+    final ConstantSimpleTherapyDto therapy1 = new ConstantSimpleTherapyDto();
+    therapy1.setTherapyDescription("Lekadol 500mg 1x per day po");
+    element1.setTherapy(therapy1);
+    template.getTemplateElements().add(element1);
 
-    final Set<TaggedObjectDto<Instruction>> taggedObjectDtos = new HashSet<>();
+    final TherapyTemplateElementDto element2 = new TherapyTemplateElementDto();
+    final ConstantSimpleTherapyDto therapy2 = new ConstantSimpleTherapyDto();
+    therapy2.setTherapyDescription("Aspirin 500mg 2x per day po");
+    element2.setTherapy(therapy2);
+    template.getTemplateElements().add(element2);
 
-    medicationsBo.fillPrescriptionTagsForTherapies(therapyDtos, taggedObjectDtos);
-    assertEquals(0L, therapyDtos.get(0).getTags().size());
-  }
+    final TherapyTemplateElementDto element3 = new TherapyTemplateElementDto();
+    final ConstantComplexTherapyDto therapy3 = new ConstantComplexTherapyDto();
+    therapy3.setTherapyDescription("Dopamin 100ml 10ml/h ivk");
+    element3.setTherapy(therapy3);
+    template.getTemplateElements().add(element3);
 
-  @Test
-  public void testBuildTherapyTimeline2()
-  {
-    //mock
-    final MedicationDto medicationDto1 = new MedicationDto();
-    medicationDto1.setId(1L);
-    medicationDto1.setName("Lekadol 20x500mg");
-    final MockObject<HibernateMedicationsDao> medicationsDaoMock = new MockObject<>(HibernateMedicationsDao.class, this);
-    medicationsDaoMock.returns(medicationDto1).getMedicationById(1L, new DateTime(2014, 2, 21, 18, 40, 0));
-    medicationsBo.setMedicationsDao(medicationsDaoMock.getMock());
+    final TherapyTemplateElementDto element4 = new TherapyTemplateElementDto();
+    final ConstantComplexTherapyDto therapy4 = new ConstantComplexTherapyDto();
+    therapy4.setTherapyDescription("Glucose 500ml Baselie infusion ivk");
+    therapy4.setBaselineInfusion(true);
+    element4.setTherapy(therapy4);
+    template.getTemplateElements().add(element4);
 
-    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> therapies = new ArrayList<>();
-    final Map<String, List<MedicationAdministrationComposition>> administrations = new HashMap<>();
-    final List<TherapyTaskDto> tasks = new ArrayList<>();
+    medicationsBo.sortTherapyTemplates(templates);
 
-    //original therapy
-    final MedicationOrderComposition composition1 =
-        MedicationsTestUtils.buildTestMedicationOrderComposition(
-            "uid1::1", new DateTime(2014, 2, 20, 12, 0, 0), "1");
-    final MedicationInstructionInstruction instruction1 =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 1");
-    final OrderActivity orderActivity1 =
-        MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 500.0, "mg", null, null, null, null, "IV", "IV", null, null);
-    instruction1.getOrder().add(orderActivity1);
-    final MedicationTimingCluster medicationTiming1 =
-        MedicationsTestUtils.buildMedicationTimingCluster(
-            4L, null, null, null, new DateTime(2014, 2, 20, 12, 10, 0), null, null);
-    orderActivity1.setMedicationTiming(medicationTiming1);
-    final IngredientsAndFormCluster ingredientsAndForm1 = new IngredientsAndFormCluster();
-    orderActivity1.setIngredientsAndForm(ingredientsAndForm1);
-    ingredientsAndForm1.setForm(DataValueUtils.getLocalCodedText("po", "po"));
-    composition1.getMedicationDetail().getMedicationInstruction().add(instruction1);
-    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyPair1 = Pair.of(
-        composition1,
-        instruction1);
-    therapies.add(therapyPair1);
-
-    final String therapyId1 = InstructionTranslator.translate(therapyPair1.getSecond(), therapyPair1.getFirst());
-    administrations.put(therapyId1, new ArrayList<MedicationAdministrationComposition>());
-    final LocatableRef instructionLocatableRef1 =
-        MedicationsEhrUtils.createInstructionLocatableRef(therapyPair1.getFirst(), therapyPair1.getSecond());
-    administrations.get(therapyId1).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm0",
-            new DateTime(2014, 2, 21, 8, 10, 0),
-            instructionLocatableRef1,
-            "1",
-            500.0,
-            "mg",
-            "comment123",
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    );
-    tasks.add(buildTherapyTaskDto("t0", "adm0", therapyId1, new DateTime(2014, 2, 21, 8, 0, 0), 500.0, "mg"));
-
-    //modified therapy
-    final MedicationOrderComposition composition2 =
-        MedicationsTestUtils.buildTestMedicationOrderComposition(
-            "uid2::1", new DateTime(2014, 2, 21, 12, 0, 0), "1");
-    final MedicationInstructionInstruction instruction2 =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 1");
-    final OrderActivity orderActivity2 =
-        MedicationsTestUtils.buildTestOrderActivity(
-            "Lekadol", 1L, 1000.0, "mg", null, null, null, null, "IV", "IV", null, null);
-    instruction2.getOrder().add(orderActivity2);
-    final MedicationTimingCluster medicationTiming2 =
-        MedicationsTestUtils.buildMedicationTimingCluster(
-            4L, null, null, null, new DateTime(2014, 2, 21, 12, 10, 0), null, null);
-    orderActivity2.setMedicationTiming(medicationTiming2);
-    final IngredientsAndFormCluster ingredientsAndForm2 = new IngredientsAndFormCluster();
-    orderActivity2.setIngredientsAndForm(ingredientsAndForm2);
-    ingredientsAndForm2.setForm(DataValueUtils.getLocalCodedText("po", "po"));
-    composition2.getMedicationDetail().getMedicationInstruction().add(instruction2);
-    final Link linkToInstruction1 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition1, instruction1);
-    instruction2.getLinks().add(linkToInstruction1);
-    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyPair2 = Pair.of(
-        composition2,
-        instruction2);
-    therapies.add(therapyPair2);
-
-    final String therapyId2 = InstructionTranslator.translate(therapyPair2.getSecond(), therapyPair2.getFirst());
-    administrations.put(therapyId2, new ArrayList<MedicationAdministrationComposition>());
-    final LocatableRef instructionLocatableRef2 =
-        MedicationsEhrUtils.createInstructionLocatableRef(therapyPair1.getFirst(), therapyPair1.getSecond());
-    administrations.get(therapyId2).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm1",
-            new DateTime(2014, 2, 21, 12, 40, 0),
-            instructionLocatableRef2,
-            "1",
-            1000.0,
-            "mg",
-            null,
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    );
-    tasks.add(buildTherapyTaskDto("t1", "adm1", therapyId2, new DateTime(2014, 2, 21, 13, 0, 0), 1000.0, "mg"));
-
-    //mock
-    final MockObject<EhrMedicationsDao> ehrDaoMock = new MockObject<>(EhrMedicationsDao.class, this);
-    ehrDaoMock.returns(composition1).loadMedicationOrderComposition(1L, "uid1");
-    ehrDaoMock.returns(composition2).loadMedicationOrderComposition(1L, "uid2");
-    medicationsBo.setEhrMedicationsDao(ehrDaoMock.getMock());
-
-    final KnownClinic department = KnownClinic.Utils.fromName("KOOKIT");
-    final RoundsIntervalDto roundsIntervalDto = MedicationsTestUtils.getTestRoundsIntervalDto(); //7:00 - 17:00
-    final List<TherapyTimelineRowDto> therapyTimelineRows =
-        medicationsBo.buildTherapyTimeline(
-            1L,
-            1L,
-            therapies, administrations, tasks, Intervals.INFINITE,
-            roundsIntervalDto,
-            TherapySortTypeEnum.DESCRIPTION_ASC,
-            department,
-            new DateTime(2014, 2, 21, 18, 40, 0), null);
-
-    assertEquals(1L, therapyTimelineRows.size());
-    assertEquals(2L, therapyTimelineRows.get(0).getAdministrations().size());
-
-    final StartAdministrationDto administration0 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(0);
-    assertEquals("adm0", administration0.getAdministrationId());
-    assertEquals("t0", administration0.getTaskId());
-    assertEquals(AdministrationStatusEnum.COMPLETED, administration0.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 8, 10, 0), administration0.getAdministrationTime());
-    assertEquals(500.0, administration0.getAdministeredDose().getNumerator(), 0);
-    assertEquals("mg", administration0.getAdministeredDose().getNumeratorUnit());
-    assertFalse(administration0.isDifferentFromOrder());
-    assertEquals("comment123", administration0.getComment());
-
-    final StartAdministrationDto administration1 =
-        (StartAdministrationDto)therapyTimelineRows.get(0).getAdministrations().get(1);
-    assertEquals("adm1", administration1.getAdministrationId());
-    assertEquals("t1", administration1.getTaskId());
-    assertEquals(AdministrationStatusEnum.COMPLETED, administration1.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 12, 40, 0), administration1.getAdministrationTime());
-    assertEquals(1000.0, administration1.getAdministeredDose().getNumerator(), 0);
-    assertEquals("mg", administration1.getAdministeredDose().getNumeratorUnit());
-    assertFalse(administration1.isDifferentFromOrder());
-    assertNull(administration1.getComment());
-
-    assertEquals("uid2::1", therapyTimelineRows.get(0).getTherapy().getCompositionUid());
-  }
-
-  @Test
-  public void testBuildTherapyTimeline3() //continuous infusion
-  {
-    //mock
-    final MedicationDto medicationDto1 = new MedicationDto();
-    medicationDto1.setId(1L);
-    medicationDto1.setName("Lekadol 20x500mg");
-    final MockObject<HibernateMedicationsDao> medicationsDaoMock = new MockObject<>(HibernateMedicationsDao.class, this);
-    medicationsDaoMock.returns(medicationDto1).getMedicationById(1L, new DateTime(2014, 2, 21, 18, 40, 0));
-    medicationsBo.setMedicationsDao(medicationsDaoMock.getMock());
-
-    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> therapies = new ArrayList<>();
-    final Map<String, List<MedicationAdministrationComposition>> administrations = new HashMap<>();
-    final List<TherapyTaskDto> tasks = new ArrayList<>();
-
-    //original therapy
-    final MedicationOrderComposition composition1 =
-        MedicationsTestUtils.buildTestMedicationOrderComposition(
-            "uid1::1", new DateTime(2014, 2, 20, 12, 0, 0), "1");
-    final MedicationInstructionInstruction instruction1 =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 1");
-    final OrderActivity orderActivity1 =
-        MedicationsTestUtils.buildTestOrderActivity(
-            "Dopamin", 1L, null, null, null, null, null, null, "IV", "IV", null, null);
-    instruction1.getOrder().add(orderActivity1);
-    final MedicationTimingCluster medicationTiming1 =
-        MedicationsTestUtils.buildMedicationTimingCluster(
-            null, null, null, null, new DateTime(2014, 2, 20, 12, 10, 0), null, null);
-    orderActivity1.setMedicationTiming(medicationTiming1);
-    final AdministrationDetailsCluster administrationDetails = new AdministrationDetailsCluster();
-    orderActivity1.setAdministrationDetails(administrationDetails);
-    administrationDetails.setDeliveryMethod(
-        DataValueUtils.getText(
-            MedicationDeliveryMethodEnum.getFullString(MedicationDeliveryMethodEnum.CONTINUOUS_INFUSION))
-    );
-    final InfusionAdministrationDetailsCluster infusionDetails = new InfusionAdministrationDetailsCluster();
-    administrationDetails.getInfusionAdministrationDetails().add(infusionDetails);
-    infusionDetails.setDoseAdministrationRate(DataValueUtils.getQuantity(20.0, "ml/h"));
-    administrationDetails.setRoute(Collections.singletonList(DataValueUtils.getLocalCodedText("IV", "IV")));
-
-    final IngredientsAndFormCluster ingredientsAndForm1 = new IngredientsAndFormCluster();
-    orderActivity1.setIngredientsAndForm(ingredientsAndForm1);
-    ingredientsAndForm1.setForm(DataValueUtils.getLocalCodedText("fluid", "fluid"));
-    composition1.getMedicationDetail().getMedicationInstruction().add(instruction1);
-    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyPair1 = Pair.of(
-        composition1,
-        instruction1);
-    therapies.add(therapyPair1);
-
-    final String therapyId1 = InstructionTranslator.translate(therapyPair1.getSecond(), therapyPair1.getFirst());
-    administrations.put(therapyId1, new ArrayList<MedicationAdministrationComposition>());
-    final LocatableRef instructionLocatableRef1 =
-        MedicationsEhrUtils.createInstructionLocatableRef(therapyPair1.getFirst(), therapyPair1.getSecond());
-    administrations.get(therapyId1).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm0",
-            new DateTime(2014, 2, 20, 12, 0, 0),
-            instructionLocatableRef1,
-            "1",
-            21.0,
-            "ml/h",
-            "comment123",
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    );
-
-    //modified therapy
-    final MedicationOrderComposition composition2 =
-        MedicationsTestUtils.buildTestMedicationOrderComposition(
-            "uid2::1", new DateTime(2014, 2, 21, 12, 0, 0), "1");
-    final MedicationInstructionInstruction instruction2 =
-        MedicationsTestUtils.buildTestMedicationInstruction("MedicationInstructionInstruction 1");
-    final OrderActivity orderActivity2 =
-        MedicationsTestUtils.buildTestOrderActivity(
-            "Dopamin", 1L, null, null, null, null, null, null, "IV", "IV", null, null);
-    instruction2.getOrder().add(orderActivity2);
-    final MedicationTimingCluster medicationTiming2 =
-        MedicationsTestUtils.buildMedicationTimingCluster(
-            null, null, null, null, new DateTime(2014, 2, 20, 17, 30, 0), null, null);
-    orderActivity2.setMedicationTiming(medicationTiming2);
-    final AdministrationDetailsCluster administrationDetails2 = new AdministrationDetailsCluster();
-    orderActivity2.setAdministrationDetails(administrationDetails2);
-    administrationDetails2.setDeliveryMethod(
-        DataValueUtils.getText(
-            MedicationDeliveryMethodEnum.getFullString(MedicationDeliveryMethodEnum.CONTINUOUS_INFUSION))
-    );
-    final InfusionAdministrationDetailsCluster infusionDetails2 = new InfusionAdministrationDetailsCluster();
-    administrationDetails2.getInfusionAdministrationDetails().add(infusionDetails2);
-    infusionDetails2.setDoseAdministrationRate(DataValueUtils.getQuantity(20.0, "ml/h"));
-    administrationDetails2.setRoute(Collections.singletonList(DataValueUtils.getLocalCodedText("IV", "IV")));
-
-    final IngredientsAndFormCluster ingredientsAndForm2 = new IngredientsAndFormCluster();
-    orderActivity2.setIngredientsAndForm(ingredientsAndForm2);
-    ingredientsAndForm2.setForm(DataValueUtils.getLocalCodedText("fluid", "fluid"));
-    composition2.getMedicationDetail().getMedicationInstruction().add(instruction2);
-    final Link linkToInstruction1 =
-        OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, composition1, instruction1);
-    instruction2.getLinks().add(linkToInstruction1);
-
-    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyPair2 = Pair.of(
-        composition2,
-        instruction2);
-    therapies.add(therapyPair2);
-
-    final String therapyId2 = InstructionTranslator.translate(therapyPair2.getSecond(), therapyPair2.getFirst());
-    administrations.put(therapyId2, new ArrayList<MedicationAdministrationComposition>());
-    final LocatableRef instructionLocatableRef2 =
-        MedicationsEhrUtils.createInstructionLocatableRef(therapyPair2.getFirst(), therapyPair2.getSecond());
-    administrations.get(therapyId2).add(
-        MedicationsTestUtils.buildMedicationAdministrationComposition(
-            "adm1",
-            new DateTime(2014, 2, 21, 8, 10, 0),
-            instructionLocatableRef2,
-            "1",
-            25.0,
-            "ml/h",
-            null,
-            MedicationActionEnum.ADMINISTER,
-            AdministrationTypeEnum.START)
-    );
-
-    final KnownClinic department = KnownClinic.Utils.fromName("KOOKIT");
-    final RoundsIntervalDto roundsIntervalDto = MedicationsTestUtils.getTestRoundsIntervalDto(); //7:00 - 17:00
-
-    //mock
-    final MockObject<EhrMedicationsDao> ehrDaoMock = new MockObject<>(EhrMedicationsDao.class, this);
-    ehrDaoMock.returns(composition1).loadMedicationOrderComposition(1L, "uid1");
-    ehrDaoMock.returns(composition2).loadMedicationOrderComposition(1L, "uid2");
-    medicationsBo.setEhrMedicationsDao(ehrDaoMock.getMock());
-
-    final List<TherapyTimelineRowDto> therapyTimelineRows =
-        medicationsBo.buildTherapyTimeline(
-            1L,
-            1L,
-            therapies, administrations, tasks, Intervals.INFINITE,
-            roundsIntervalDto,
-            TherapySortTypeEnum.DESCRIPTION_ASC,
-            department,
-            new DateTime(2014, 2, 21, 18, 40, 0), new Locale("en"));
-
-    assertEquals(1L, therapyTimelineRows.size());
-    final TherapyTimelineRowDto timeline = therapyTimelineRows.get(0);
-    assertEquals(2L, timeline.getAdministrations().size());
-
-    final StartAdministrationDto administration0 = (StartAdministrationDto)timeline.getAdministrations().get(0);
-    assertEquals("adm0", administration0.getAdministrationId());
-    assertNull(administration0.getTaskId());
-    assertEquals(AdministrationStatusEnum.COMPLETED, administration0.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 20, 12, 0, 0), administration0.getAdministrationTime());
-    assertEquals(21.0, administration0.getAdministeredDose().getNumerator(), 0);
-    assertEquals("ml/h", administration0.getAdministeredDose().getNumeratorUnit());
-    assertFalse(administration0.isDifferentFromOrder());
-    assertEquals("comment123", administration0.getComment());
-
-    final StartAdministrationDto administration1 = (StartAdministrationDto)timeline.getAdministrations().get(1);
-    assertEquals("adm1", administration1.getAdministrationId());
-    assertNull(administration0.getTaskId());
-    assertEquals(AdministrationStatusEnum.COMPLETED, administration1.getAdministrationStatus());
-    assertEquals(new DateTime(2014, 2, 21, 8, 10, 0), administration1.getAdministrationTime());
-    assertEquals(25, administration1.getAdministeredDose().getNumerator(), 0);
-    assertEquals("ml/h", administration1.getAdministeredDose().getNumeratorUnit());
-    assertFalse(administration1.isDifferentFromOrder());
-    assertNull(administration1.getComment());
-
-    assertEquals("uid2::1", timeline.getTherapy().getCompositionUid());
-    assertTrue(timeline instanceof TherapyTimelineRowForContInfusionDto);
-    assertEquals("25 ml/h", ((TherapyTimelineRowForContInfusionDto)timeline).getInfusionRateDisplay());
-  }
-
-  @Test
-  public void testBuildAdministrationFromTask()
-  {
-    final TherapyTaskDto therapyTask =
-        buildTherapyTaskDto("task1", null, "therapy1", new DateTime(2014, 5, 7, 12, 0, 0), 50.0, "mg");
-    final AdministrationDto administration =
-        medicationsBo.buildAdministrationFromTask(therapyTask, new DateTime(2014, 5, 7, 12, 0, 0));
-    assertTrue(administration instanceof StartAdministrationDto);
-    final StartAdministrationDto startAdministration = (StartAdministrationDto)administration;
-    assertEquals(50, startAdministration.getPlannedDose().getNumerator(), 0);
-    assertEquals("mg", startAdministration.getPlannedDose().getNumeratorUnit());
-    assertNull(startAdministration.getPlannedDose().getDenominator());
-    assertNull(startAdministration.getPlannedDose().getDenominatorUnit());
-    assertEquals(TherapyDoseTypeEnum.QUANTITY, startAdministration.getPlannedDose().getTherapyDoseTypeEnum());
-    assertEquals(new DateTime(2014, 5, 7, 12, 0, 0), startAdministration.getPlannedTime());
-    assertEquals("task1", startAdministration.getTaskId());
-    assertEquals(AdministrationTypeEnum.START, startAdministration.getAdministrationType());
-  }
-
-  @Test
-  public void testFilterMedicationsTreeSingleGeneric()
-  {
-    final List<MedicationSearchDto> medications = buildMedicationTree();
-    final List<MedicationSearchDto> filteredMedications = medicationsBo.filterMedicationsTree(medications, "para");
-
-    assertEquals(1, filteredMedications.size());
-    assertEquals(2, filteredMedications.get(0).getChildren().size());
-    assertEquals(2, filteredMedications.get(0).getChildren().get(0).getChildren().size());
-    assertEquals(2, filteredMedications.get(0).getChildren().get(1).getChildren().size());
-
-    assertFalse(filteredMedications.get(0).isExpand());
-    assertFalse(filteredMedications.get(0).getChildren().get(0).isExpand());
-    assertFalse(filteredMedications.get(0).getChildren().get(1).isExpand());
-  }
-
-  @Test
-  public void testFilterMedicationsTreeGenericDose()
-  {
-    final List<MedicationSearchDto> medications = buildMedicationTree();
-    final List<MedicationSearchDto> filteredMedications = medicationsBo.filterMedicationsTree(medications, "para 500");
-
-    assertEquals(1, filteredMedications.size());
-    assertEquals(1, filteredMedications.get(0).getChildren().size());
-    assertEquals(2, filteredMedications.get(0).getChildren().get(0).getChildren().size());
-
-    assertTrue(filteredMedications.get(0).isExpand());
-    assertFalse(filteredMedications.get(0).getChildren().get(0).isExpand());
-  }
-
-  @Test
-  public void testFilterMedicationsTreeBrandDose1()
-  {
-    final List<MedicationSearchDto> medications = buildMedicationTree();
-    final List<MedicationSearchDto> filteredMedications = medicationsBo.filterMedicationsTree(medications, "leka 500");
-
-    assertEquals(1, filteredMedications.size());
-    assertEquals(1, filteredMedications.get(0).getChildren().size());
-    assertEquals(1, filteredMedications.get(0).getChildren().get(0).getChildren().size());
-
-    assertTrue(filteredMedications.get(0).isExpand());
-    assertTrue(filteredMedications.get(0).getChildren().get(0).isExpand());
-  }
-
-  @Test
-  public void testFilterMedicationsTreeBrandDose2()
-  {
-    final List<MedicationSearchDto> medications = buildMedicationTree();
-    final List<MedicationSearchDto> filteredMedications = medicationsBo.filterMedicationsTree(medications, "dale 500");
-
-    assertEquals(1, filteredMedications.size());
-    assertEquals(1, filteredMedications.get(0).getChildren().size());
-    assertEquals(1, filteredMedications.get(0).getChildren().get(0).getChildren().size());
-
-    assertTrue(filteredMedications.get(0).isExpand());
-    assertTrue(filteredMedications.get(0).getChildren().get(0).isExpand());
-  }
-
-  @Test
-  public void testFilterMedicationsTreeBrand()
-  {
-    final List<MedicationSearchDto> medications = buildMedicationTree();
-    final List<MedicationSearchDto> filteredMedications = medicationsBo.filterMedicationsTree(medications, "dale");
-
-    assertEquals(1, filteredMedications.size());
-    assertEquals(2, filteredMedications.get(0).getChildren().size());
-    assertEquals(1, filteredMedications.get(0).getChildren().get(0).getChildren().size());
-    assertEquals(1, filteredMedications.get(0).getChildren().get(1).getChildren().size());
-
-    assertTrue(filteredMedications.get(0).isExpand());
-    assertTrue(filteredMedications.get(0).getChildren().get(0).isExpand());
-    assertTrue(filteredMedications.get(0).getChildren().get(1).isExpand());
-  }
-
-  @Test
-  public void testFilterMedicationsTreeDoesntStartWithSearchWord()
-  {
-    final List<MedicationSearchDto> medications = buildMedicationTree();
-    final List<MedicationSearchDto> filteredMedications = medicationsBo.filterMedicationsTree(medications, "aleron");
-
-    assertEquals(0, filteredMedications.size());
-  }
-
-  @Test
-  public void testFilterMedicationsTreeEmptySearch()
-  {
-    final List<MedicationSearchDto> medications = buildMedicationTree();
-    final List<MedicationSearchDto> filteredMedications = medicationsBo.filterMedicationsTree(medications, "");
-
-    assertEquals(1, filteredMedications.size());
-  }
-
-  private List<MedicationSearchDto> buildMedicationTree()
-  {
-    final List<MedicationSearchDto> medications = new ArrayList<>();
-
-    final MedicationSearchDto dto1 = new MedicationSearchDto();
-    dto1.setTitle("Paracetamol");
-    dto1.setKey(1L);
-    dto1.setMedication(new MedicationSimpleDto());
-    medications.add(dto1);
-
-    final MedicationSearchDto dto11 = new MedicationSearchDto();
-    dto11.setTitle("Paracetamol 500 mg oral");
-    dto11.setKey(11L);
-    dto11.setMedication(new MedicationSimpleDto());
-    dto1.getSublevelMedications().add(dto11);
-
-    final MedicationSearchDto dto111 = new MedicationSearchDto();
-    dto111.setTitle("Lekadol 500 mg oral");
-    dto111.setKey(111L);
-    dto111.setMedication(new MedicationSimpleDto());
-    dto11.getSublevelMedications().add(dto111);
-
-    final MedicationSearchDto dto112 = new MedicationSearchDto();
-    dto112.setTitle("Daleron 500 mg oral");
-    dto112.setKey(112L);
-    dto112.setMedication(new MedicationSimpleDto());
-    dto11.getSublevelMedications().add(dto112);
-
-    final MedicationSearchDto dto12 = new MedicationSearchDto();
-    dto12.setTitle("Paracetamol 250 mg oral");
-    dto12.setKey(12L);
-    dto12.setMedication(new MedicationSimpleDto());
-    dto1.getSublevelMedications().add(dto12);
-
-    final MedicationSearchDto dto121 = new MedicationSearchDto();
-    dto121.setTitle("Lekadol 250 mg oral");
-    dto121.setKey(121L);
-    dto121.setMedication(new MedicationSimpleDto());
-    dto12.getSublevelMedications().add(dto121);
-
-    final MedicationSearchDto dto122 = new MedicationSearchDto();
-    dto122.setTitle("Daleron 250 mg oral");
-    dto122.setKey(122L);
-    dto122.setMedication(new MedicationSimpleDto());
-    dto12.getSublevelMedications().add(dto122);
-
-    return medications;
-  }
-
-  private TherapyTaskDto buildTherapyTaskDto(
-      final String taskId,
-      final String administrationId,
-      final String therapyId,
-      final DateTime timestamp,
-      final Double doseNumerator,
-      final String doseNumeratorUnit)
-  {
-    final TherapyTaskDto therapyTaskDto = new TherapyTaskDto();
-    therapyTaskDto.setTaskId(taskId);
-    therapyTaskDto.setAdministrationId(administrationId);
-    therapyTaskDto.setTherapyId(therapyId);
-    therapyTaskDto.setPlannedAdministrationTime(timestamp);
-    therapyTaskDto.setAdministrationTypeEnum(AdministrationTypeEnum.START);
-    therapyTaskDto.setTherapyDoseDto(new TherapyDoseDto());
-    therapyTaskDto.getTherapyDoseDto().setNumerator(doseNumerator);
-    therapyTaskDto.getTherapyDoseDto().setNumeratorUnit(doseNumeratorUnit);
-    therapyTaskDto.getTherapyDoseDto().setTherapyDoseTypeEnum(TherapyDoseTypeEnum.QUANTITY);
-    return therapyTaskDto;
+    final List<TherapyTemplateElementDto> sortedElements =
+        templates.getOrganizationTemplates().get(0).getTemplateElements();
+    assertEquals(sortedElements.get(0), element4);
+    assertEquals(sortedElements.get(1), element2);
+    assertEquals(sortedElements.get(2), element3);
+    assertEquals(sortedElements.get(3), element1);
   }
 }

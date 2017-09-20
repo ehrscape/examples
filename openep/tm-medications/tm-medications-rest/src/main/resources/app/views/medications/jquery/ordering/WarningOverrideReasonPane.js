@@ -18,9 +18,9 @@
  */
 
 Class.define('app.views.medications.ordering.WarningOverrideReasonPane', 'app.views.common.containers.AppDataEntryContainer', {
+  cls: "warning-override-reason-button",
   /** configs */
   view: null,
-  overrideReason: null,
   /** privates */
   resultCallback: null,
   validationForm: null,
@@ -33,7 +33,7 @@ Class.define('app.views.medications.ordering.WarningOverrideReasonPane', 'app.vi
   {
     var self = this;
     this.callSuper(config);
-    this.setLayout(new tm.jquery.HFlexboxLayout({gap: 5, flex: 1}));
+    this.setLayout(new tm.jquery.HFlexboxLayout({gap: 5, flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto")}));
     this.setPadding('10');
     this._buildComponents();
     this._buildGui();
@@ -53,7 +53,7 @@ Class.define('app.views.medications.ordering.WarningOverrideReasonPane', 'app.vi
   _buildComponents: function()
   {
     var self = this;
-    this.textArea = new tm.jquery.TextArea({value: null, rows: 4, width: 275, size: "large"});
+    this.textArea = new tm.jquery.TextArea({cls: "reason-text-area", value: null, rows: 4, width: 275, size: "large"});
 
     this.validationForm = new tm.jquery.Form({
       onValidationSuccess: function()
@@ -83,7 +83,7 @@ Class.define('app.views.medications.ordering.WarningOverrideReasonPane', 'app.vi
       required: true,
       componentValueImplementationFn: function()
       {
-        if (tm.jquery.Utils.isEmpty(self.textArea.getValue()))
+        if (tm.jquery.Utils.isEmpty(self.textArea.getValue().trim()))
         {
           return null;
         }

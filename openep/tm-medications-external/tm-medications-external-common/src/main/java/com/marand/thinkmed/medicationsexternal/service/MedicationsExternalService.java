@@ -21,9 +21,11 @@ package com.marand.thinkmed.medicationsexternal.service;
 
 import java.util.List;
 
+import com.marand.thinkmed.api.externals.data.object.NamedExternalDto;
 import com.marand.thinkmed.medicationsexternal.dto.DoseRangeCheckDto;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationForWarningsSearchDto;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationsWarningDto;
+import com.marand.thinkmed.medicationsexternal.dto.WarningsProviderDto;
 
 /**
  * @author Mitja Lapajne
@@ -38,14 +40,13 @@ public interface MedicationsExternalService
       String externalSystem,
       long patientAgeInDays,
       Double patientWeightInKg,
-      Integer gabInWeeks,
       Double bsaInM2,
       boolean isFemale,
-      List<String> diseaseTypeCodes,
-      List<String> allergiesExternalValues,
+      final List<NamedExternalDto> diseaseTypeValues,
+      List<NamedExternalDto> allergiesExternalValues,
       List<MedicationForWarningsSearchDto> medicationSummaries);
 
-  List<String> getWarningProviders();
+  List<WarningsProviderDto> getWarningProviders();
 
   String getMedicationOverviewProvider();
 
