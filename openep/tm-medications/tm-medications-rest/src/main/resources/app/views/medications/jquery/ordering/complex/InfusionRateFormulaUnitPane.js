@@ -18,6 +18,7 @@
  */
 
 Class.define('app.views.medications.ordering.InfusionRateFormulaUnitPane', 'tm.jquery.Container', {
+  cls: "infusion-rate-formula-unit-pane",
   scrollable: "visible",
 
   /** configs */
@@ -26,6 +27,7 @@ Class.define('app.views.medications.ordering.InfusionRateFormulaUnitPane', 'tm.j
   /** privates */
   defaultValue: null,
   heightDefined: null,
+  dropdownAppendTo: false,
   /** privates: components */
   formulaUnitCombo: null,
   formulaUnitLabel: null,
@@ -34,8 +36,8 @@ Class.define('app.views.medications.ordering.InfusionRateFormulaUnitPane', 'tm.j
   Constructor: function(config)
   {
     this.callSuper(config);
-    this.heightDefined = this.view.getPatientData().heightInCm != null;
-    this.setLayout(tm.jquery.HFlexboxLayout.create("start", "start"));
+    this.heightDefined = this.view.getPatientHeightInCm() != null;
+    this.setLayout(tm.jquery.HFlexboxLayout.create("flex-start", "flex-start"));
     this._buildComponents();
     this._buildGui();
   },
@@ -45,19 +47,27 @@ Class.define('app.views.medications.ordering.InfusionRateFormulaUnitPane', 'tm.j
   {
     var self = this;
 
-    this.formulaUnitCombo = new tm.jquery.ComboBox({
-      width: 120,
-      displayPropertyName: "displayUnit",
+    this.formulaUnitCombo = new tm.jquery.SelectBox({
+      cls: "formula-unit-combo",
+      width: 151,
+      appendTo: this.getDropdownAppendTo(),
       allowSingleDeselect: false,
-      multiple: false
+      multiple: false,
+      defaultValueCompareToFunction: function(value1, value2)
+      {
+        return (tm.jquery.Utils.isEmpty(value1) ? null : value1.id)
+            === (tm.jquery.Utils.isEmpty(value2) ? null : value2.id);
+      }
     });
     this.formulaUnitCombo.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function()
     {
       self.formulaUnitChangeEvent();
     });
 
-    this.formulaUnitLabel = new tm.jquery.Container({cls: 'TextData', padding: "6 0 0 0"});
-    this.formulaUnitLabel.hide();
+    this.formulaUnitLabel = new tm.jquery.Container({
+      cls: 'TextData formula-unit-label',
+      hidden: true
+    });
   },
 
   _buildGui: function()
@@ -66,44 +76,86 @@ Class.define('app.views.medications.ordering.InfusionRateFormulaUnitPane', 'tm.j
     this.add(this.formulaUnitLabel);
   },
 
-  _setDefaultFormulaComboOptions: function()
+  _setGramFormulaComboOptions: function(continuousInfusion, preventEvent)
   {
+    var previousSelectedOptions = this.formulaUnitCombo.getSelections();
     this.formulaUnitCombo.removeAllOptions();
     this.defaultValue = {id: 0, displayUnit: 'mg/kg/h', massUnit: 'mg', patientUnit: 'kg', timeUnit: 'h'};
-    this.formulaUnitCombo.addOption(this.defaultValue);
-    this.formulaUnitCombo.addOption({id: 1, displayUnit: 'mg/h', massUnit: 'mg', patientUnit: null, timeUnit: 'h'});
-    this.formulaUnitCombo.addOption({id: 2, displayUnit: 'mg/kg/min', massUnit: 'mg', patientUnit: 'kg', timeUnit: 'min'});
-    this.formulaUnitCombo.addOption({id: 3, displayUnit: 'mg/kg/d', massUnit: 'mg', patientUnit: 'kg', timeUnit: 'day'});
-    this.formulaUnitCombo.addOption({id: 4, displayUnit: 'mg/m2/d', massUnit: 'mg', patientUnit: 'm2', timeUnit: 'day', enabled: this.heightDefined});
-    this.formulaUnitCombo.addOption({id: 5, displayUnit: 'ng/kg/min', massUnit: 'ng', patientUnit: 'kg', timeUnit: 'min'});
-    this.formulaUnitCombo.addOption({id: 6, displayUnit: 'ng/kg/h', massUnit: 'ng', patientUnit: 'kg', timeUnit: 'h'});
-    this.formulaUnitCombo.addOption({id: 7, displayUnit: 'µg/kg/min', massUnit: 'µg', patientUnit: 'kg', timeUnit: 'min'});
-    this.formulaUnitCombo.addOption({id: 8, displayUnit: 'µg/kg/h', massUnit: 'µg', patientUnit: 'kg', timeUnit: 'h'});
-    this.formulaUnitCombo.setSelections([this.defaultValue]);
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(this.defaultValue, this.defaultValue.displayUnit));
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+        {id: 1, displayUnit: 'mg/h', massUnit: 'mg', patientUnit: null, timeUnit: 'h'}, 'mg/h'));
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+        {id: 2, displayUnit: 'mg/kg/min', massUnit: 'mg', patientUnit: 'kg', timeUnit: 'min'}, 'mg/kg/min'));
+    if (continuousInfusion === true)
+    {
+      this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+          {id: 3, displayUnit: 'mg/kg/d', massUnit: 'mg', patientUnit: 'kg', timeUnit: 'day'}, 'mg/kg/d'));
+      this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+          {id: 4, displayUnit: 'mg/m2/d', massUnit: 'mg', patientUnit: 'm2', timeUnit: 'day'}, 'mg/m2/d',
+          null, null, false, this.heightDefined));
+    }
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+        {id: 5, displayUnit: 'nanogram/kg/min', massUnit: 'nanogram', patientUnit: 'kg', timeUnit: 'min'}, 'nanogram/kg/min'));
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+        {id: 6, displayUnit: 'nanogram/kg/h', massUnit: 'nanogram', patientUnit: 'kg', timeUnit: 'h'}, 'nanogram/kg/h'));
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+        {id: 7, displayUnit: 'microgram/kg/min', massUnit: 'microgram', patientUnit: 'kg', timeUnit: 'min'}, 'microgram/kg/min'));
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+        {id: 8, displayUnit: 'microgram/kg/h', massUnit: 'microgram', patientUnit: 'kg', timeUnit: 'h'}, 'microgram/kg/h'));
+    this._setDefaultSelection(previousSelectedOptions, preventEvent);
   },
 
-  _setIeFormulaComboOptions: function()
+  _setFormulaComboOptions: function(unit, continuousInfusion, preventEvent)
   {
+    var previousSelectedOptions = this.formulaUnitCombo.getSelections();
     this.formulaUnitCombo.removeAllOptions();
-    this.defaultValue = {id: 0, displayUnit: 'i.e./kg/h', massUnit: 'i.e.', patientUnit: 'kg', timeUnit: 'h'};
-    this.formulaUnitCombo.addOption(this.defaultValue);
-    this.formulaUnitCombo.addOption({id: 1, displayUnit: 'i.e./h', massUnit: 'i.e.', patientUnit: null, timeUnit: 'h'});
-    this.formulaUnitCombo.addOption({id: 2, displayUnit: 'i.e./kg/d', massUnit: 'i.e.', patientUnit: 'kg', timeUnit: 'day'});
-    this.formulaUnitCombo.addOption({id: 3, displayUnit: 'i.e./kg/min', massUnit: 'i.e.', patientUnit: 'kg', timeUnit: 'min'});
-    this.formulaUnitCombo.addOption({id: 4, displayUnit: 'i.e./m2/d', massUnit: 'i.e.', patientUnit: 'm2', timeUnit: 'day', enabled: this.heightDefined});
-    this.formulaUnitCombo.setSelections([this.defaultValue]);
+    this.defaultValue = {id: 0, displayUnit: unit + '/kg/h', massUnit: unit, patientUnit: 'kg', timeUnit: 'h'};
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(this.defaultValue, this.defaultValue.displayUnit));
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+        {id: 1, displayUnit: unit + '/h', massUnit: unit, patientUnit: null, timeUnit: 'h'}, unit + '/h'));
+    if (continuousInfusion === true)
+    {
+      this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+          {id: 2, displayUnit: unit + '/kg/d', massUnit: unit, patientUnit: 'kg', timeUnit: 'day'}, unit + '/kg/d'));
+    }
+
+    this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+        {id: 3, displayUnit: unit + '/kg/min', massUnit: unit, patientUnit: 'kg', timeUnit: 'min'}, unit + '/kg/min'));
+    if (continuousInfusion === true)
+    {
+      this.formulaUnitCombo.addOption(tm.jquery.SelectBox.createOption(
+          {
+            id: 4,
+            displayUnit: unit + '/m2/d',
+            massUnit: unit,
+            patientUnit: 'm2',
+            timeUnit: 'day'
+          }, unit + '/m2/d', null, null, false, this.heightDefined));
+    }
+    this._setDefaultSelection(previousSelectedOptions, preventEvent);
   },
 
-  _setMmolFormulaComboOptions: function()
+  _setDefaultSelection: function(previousSelectedOptions, preventEvent)
   {
-    this.formulaUnitCombo.removeAllOptions();
-    this.defaultValue = {id: 0, displayUnit: 'mmol/kg/h', massUnit: 'mmol',patientUnit: 'kg', timeUnit: 'h'};
-    this.formulaUnitCombo.addOption(this.defaultValue);
-    this.formulaUnitCombo.addOption({id: 1, displayUnit: 'mmol/h', massUnit: 'mmol', patientUnit: null, timeUnit: 'h'});
-    this.formulaUnitCombo.addOption({id: 2, displayUnit: 'mmol/kg/min', massUnit: 'mmol', patientUnit: 'kg', timeUnit: 'min'});
-    this.formulaUnitCombo.addOption({id: 3, displayUnit: 'mmol/kg/d', massUnit: 'mmol', patientUnit: 'kg', timeUnit: 'day'});
-    this.formulaUnitCombo.addOption({id: 4, displayUnit: 'mmol/m2/d', massUnit: 'mmol', patientUnit: 'm2', timeUnit: 'day', enabled: this.heightDefined});
-    this.formulaUnitCombo.setSelections([this.defaultValue]);
+    var self = this;
+    var preselect = null;
+    if (previousSelectedOptions.length > 0)
+    {
+      var previousSelection = previousSelectedOptions[0];
+      for (var i = 0; i < this.formulaUnitCombo.getOptions().length; i++)
+      {
+        var option = this.formulaUnitCombo.getOptions()[i];
+        if (option.value.id == previousSelection.id)
+        {
+          preselect = option.value;
+          break;
+        }
+      }
+    }
+    this.formulaUnitCombo.setSelections(
+        !tm.jquery.Utils.isEmpty(preselect) ? [preselect] : [this.defaultValue], 
+        preventEvent
+    );
   },
 
   _getFormulaByDisplayValue: function(formulaUnitDisplay)
@@ -120,44 +172,35 @@ Class.define('app.views.medications.ordering.InfusionRateFormulaUnitPane', 'tm.j
   },
 
   /** public methods */
-  setMedicationData: function(medicationData)
+  setMedicationData: function(medicationData, continuousInfusion, preventEvent)
   {
-    var self = this;
-    var appFactory = this.view.getAppFactory();
-    appFactory.createConditionTask(
-        function()
-        {
-          self._setMedicationData(medicationData);
-        },
-        function()
-        {
-          return self.formulaUnitCombo.isRendered();
-        },
-        20, 1000
-    );
-  },
-
-  _setMedicationData: function(medicationData)
-  {
-    var definingIngredient = tm.views.medications.MedicationUtils.getDefiningIngredient(medicationData);
-    if (definingIngredient)
+    var numeratorUnit = null;
+    if (!tm.jquery.Utils.isEmpty(medicationData))
     {
-      if (definingIngredient.strengthNumeratorUnit == 'i.e.')
+      var definingIngredient = !tm.jquery.Utils.isEmpty(medicationData) ?
+          medicationData.getDefiningIngredient() :
+          null;
+      numeratorUnit = definingIngredient ? definingIngredient.strengthNumeratorUnit : medicationData.basicUnit;
+    }
+
+    if (numeratorUnit)
+    {
+      if (numeratorUnit == 'g' ||
+          numeratorUnit == 'gram' ||
+          numeratorUnit == 'mg' ||
+          numeratorUnit == 'microgram' ||
+          numeratorUnit == 'nanogram')
       {
-        this._setIeFormulaComboOptions();
-      }
-      else if (definingIngredient.strengthNumeratorUnit == 'mmol')
-      {
-        this._setMmolFormulaComboOptions();
+        this._setGramFormulaComboOptions(continuousInfusion, preventEvent);
       }
       else
       {
-        this._setDefaultFormulaComboOptions();
+        this._setFormulaComboOptions(numeratorUnit, continuousInfusion, preventEvent);
       }
     }
     else
     {
-      this._setDefaultFormulaComboOptions();
+      this._setGramFormulaComboOptions(continuousInfusion, preventEvent);
     }
   },
 
@@ -175,28 +218,76 @@ Class.define('app.views.medications.ordering.InfusionRateFormulaUnitPane', 'tm.j
 
   setFormulaUnit: function(formulaUnitDisplay)
   {
-    var formulaUnit = this._getFormulaByDisplayValue(formulaUnitDisplay);
-    this.formulaUnitCombo.setSelections([formulaUnit]);
+    var self = this;
+    var appFactory = this.view.getAppFactory();
+    appFactory.createConditionTask(  //wait combo to be ready
+        function()
+        {
+          var formulaUnit = self._getFormulaByDisplayValue(formulaUnitDisplay);
+          self.formulaUnitCombo.setSelections([formulaUnit]);
+        },
+        function()
+        {
+          return self.formulaUnitCombo.getSelections().length > 0;
+        },
+        50, 1000
+    );
   },
 
   setFormulaUnitToLabel: function(formulaUnitDisplay)
   {
-    this.formulaUnitCombo.hide();
-    this.formulaUnitLabel.setHtml(formulaUnitDisplay ? formulaUnitDisplay : this.formulaUnitCombo.getSelections()[0].displayUnit);
-    this.formulaUnitLabel.show();
+    var self = this;
+    var appFactory = this.view.getAppFactory();
+    if (formulaUnitDisplay)
+    {
+      setFormulaAndShowLabel(formulaUnitDisplay);
+    }
+    else
+    {
+      appFactory.createConditionTask(
+          function()
+          {
+            setFormulaAndShowLabel(self.formulaUnitCombo.getSelections()[0].displayUnit);
+          },
+          function()
+          {
+            return self.formulaUnitCombo.getSelections().length > 0;
+          },
+          50, 1000
+      );
+    }
+
+    function setFormulaAndShowLabel(formula)
+    {
+      self.formulaUnitCombo.hide();
+      self.formulaUnitLabel.setHtml(formula);
+      self.formulaUnitLabel.show();
+    }
   },
 
   getDefaultValue: function()
   {
     if (!this.defaultValue)
     {
-      this._setDefaultFormulaComboOptions();
+      this._setGramFormulaComboOptions();
     }
     return this.defaultValue;
   },
 
+  /**
+   * @see tm.jquery.SelectBox#appendTo
+   * @returns {Boolean|Element|String}
+   */
+  getDropdownAppendTo: function()
+  {
+    return this.dropdownAppendTo;
+  },
+
   requestFocus: function()
   {
-    this.formulaUnitCombo._getChosenSearchInputDomElement().focus();
+    if(!this.formulaUnitCombo.isHidden())
+    {
+      this.formulaUnitCombo.focus();
+    }
   }
 });

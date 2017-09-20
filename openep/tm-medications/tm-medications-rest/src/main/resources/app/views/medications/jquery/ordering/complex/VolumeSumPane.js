@@ -18,6 +18,7 @@
  */
 
 Class.define('app.views.medications.ordering.VolumeSumPane', 'tm.jquery.Container', {
+  cls: "volume-sum-pane",
 
   /** configs */
   view: null,
@@ -31,13 +32,7 @@ Class.define('app.views.medications.ordering.VolumeSumPane', 'tm.jquery.Containe
   Constructor: function(config)
   {
     this.callSuper(config);
-    this.setLayout(new tm.jquery.HFlexboxLayout({
-      gap: 5,
-      alignment: new tm.jquery.FlexboxLayoutAlignment({
-        pack: 'end',
-        align: 'center'
-      })})
-    );
+    this.setLayout(tm.jquery.HFlexboxLayout.create("flex-end", "center", 5));
     this._buildComponents();
     this._buildGui();
   },
@@ -47,13 +42,13 @@ Class.define('app.views.medications.ordering.VolumeSumPane', 'tm.jquery.Containe
   {
     var self = this;
     this.adjustButton = new tm.jquery.Button({
-      cls: 'update-icon',
+      cls: 'update-icon adjust-volume-button',
       handler: function()
       {
         self.adjustVolumesEvent();
       }
     });
-    this.volumeField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, '0');
+    this.volumeField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, "volume-field");
     this.volumeField.setEnabled(false);
   },
 
@@ -61,7 +56,7 @@ Class.define('app.views.medications.ordering.VolumeSumPane', 'tm.jquery.Containe
   {
     this.add(this.adjustButton);
     this.add(this.volumeField);
-    this.add(tm.views.medications.MedicationUtils.crateLabel('TextData', 'ml'));
+    this.add(tm.views.medications.MedicationUtils.crateLabel('TextData', 'mL'));
   },
 
   /** public methods */

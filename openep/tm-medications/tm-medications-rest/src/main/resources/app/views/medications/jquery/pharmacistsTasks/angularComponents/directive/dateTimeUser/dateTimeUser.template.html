@@ -1,0 +1,5 @@
+<div class="textLineHeight">
+  <div class="textBold">{{$row.lastEditTimestamp | GetTimeFromDateTime }}</div>
+  <div data-ng-style="dateIsYesterday">{{$row.lastEditTimestamp | tmFriendlyDateFilter }}</div>
+  <div>{{$row.lastEditorName}}</div>
+</div>

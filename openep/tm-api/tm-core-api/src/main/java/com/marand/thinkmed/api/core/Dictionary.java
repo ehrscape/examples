@@ -20,11 +20,12 @@
 package com.marand.thinkmed.api.core;
 
 import java.util.Locale;
+import javax.annotation.Nonnull;
 
 /**
  * @author Bostjan Vester
  */
 public interface Dictionary
 {
-  String getEntry(String key, GrammaticalGender gender, Locale locale);
+  String getEntry(@Nonnull String key, @Nonnull GrammaticalGender gender, Locale locale);
 }

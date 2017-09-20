@@ -29,29 +29,35 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
   searchDate: null,
   grouping: null,
   isRoundsTime: true,
-  therapyDisplayProvider: null,
+  gridCellTherapyDisplayProvider: null,
   therapyFlowData: null,
   previousDayTherapyFlowData: null,
   nextDayTherapyFlowData: null,
   previousDayDataLoaded: false,
   nextDayDataLoaded: false,
   navigationLocked: false,
-  actionsQueue: [],
+  actionsQueue: null,
   therapyAction: null,
   /** privates: components */
   grid: null,
+  noTherapiesField: null,
+
+  _isGridReadyConditionalTask: null,
 
   /** constructor */
   Constructor: function(config)
   {
     config = tm.jquery.Utils.applyIf({
       cls: "therapy-flow-grid-container",
-      layout: new tm.jquery.BorderLayout()
+      //layout: new tm.jquery.BorderLayout()
+      layout: tm.jquery.VFlexboxLayout.create("flex-start", "stretch")
     }, config);
 
     this.callSuper(config);
-    this.therapyActions = new app.views.medications.TherapyActions({view: config.view});
-    this.therapyDisplayProvider = new app.views.medications.TherapyDisplayProvider({view: config.view});
+
+    this.actionsQueue = [];
+    this.therapyActions = new app.views.medications.TherapyActions({view: this.getView()});
+    this.gridCellTherapyDisplayProvider = new app.views.medications.TherapyDisplayProvider({view: this.getView()});
   },
 
   /** private methods */
@@ -61,7 +67,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
 
     this.grid = new tm.jquery.Grid({
       cls: 'therapy-grid',
-      height: 300,
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "100%"),
       selectable: false,
       highlighting: false,
 
@@ -77,64 +83,59 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
         rowNumbers: false,
         multiSelect: false
       }),
-      grouping: self.grouping
-    });
-
-    this.grid.on(tm.jquery.ComponentEvent.EVENT_TYPE_GRID_COMPLETE, function(component)
-    {
-      if (this.getPlugin() != null)
-      {
-        self._afterUpdateDataEventHandler(component.getGridData())
+      grouping: self.grouping,
+      options: {
+        autowidth: true,
+        shrinkToFit: true /* makes the column width property act as a proportion instead of fixed pixel size */
       }
     });
 
+    this.noTherapiesField = this.getView().getNoTherapiesField();
+    this.add(this.noTherapiesField);
+    this.noTherapiesField.hide();
     this.add(this.grid, {region: 'center'});
-  },
-
-  _afterUpdateDataEventHandler: function(data)
-  {
-    for (var i = 0; i < data.length; i++)
-    {
-      this._renderActionButtonsContainer(i, data[i]);
-    }
-  },
-
-  _renderActionButtonsContainer: function(index, rowDataItem)
-  {
-    var self = this;
-    var rowId = rowDataItem.id;
-
-    if (this.view.isEditAllowed() == true)
-    {
-      var actionButtonsRenderToElement = $("#" + this._createActionButtonsContainerId(rowId))[0];
-      if (!tm.jquery.Utils.isEmpty(actionButtonsRenderToElement))
-      {
-        $(actionButtonsRenderToElement).html("");
-        var container = new tm.views.medications.TherapyFlowTodayButtons(
-            {
-              renderToElement: actionButtonsRenderToElement,
-              view: self.view,
-              rowId: rowId,
-              dayTherapy: rowDataItem['column' + self.todayIndex] ? rowDataItem['column' + self.todayIndex].dayTherapy : null,
-              actionFunction: function(compositionUid, orderName, rowId, action)
-              {
-                self._addActionToQueue(compositionUid, orderName, rowId, action); //actions: CONFIRM, ABORT, REISSUE
-              }
-            }
-        );
-        container.doRender();
-      }
-    }
   },
 
   _setGridData: function(gridData, adjustedParams)
   {
-    var scrollPosition = $(this.grid.getScrollableElement()).scrollTop();
-    this._fixGridColumns(adjustedParams, true);
-    this.grid.setGridData(gridData);
-    this._fixGridColumns(adjustedParams, false);
-    $(this.grid.getScrollableElement()).scrollTop(scrollPosition);
-    this.view.hideLoaderMask();
+    var self = this;
+    var view = this.getView();
+    var appFactory = view.getAppFactory();
+
+    if (this._isGridReadyConditionalTask)
+    {
+      this._abortIsGridReadyConditionalTask();
+    }
+
+    this._isGridReadyConditionalTask = appFactory.createConditionTask(
+        function()
+        {
+          hideLoaderMaskClearTask();
+          var scrollPosition = $(self.grid.getScrollableElement()).scrollTop();
+          self.grid.setGridData(gridData);
+          self._fixGridColumns(adjustedParams);
+          $(self.grid.getScrollableElement()).scrollTop(scrollPosition);
+        },
+        function(task)
+        {
+          if (!self.isRendered())
+          {
+            task.abort();
+            hideLoaderMaskClearTask();
+          }
+          return self.grid && self.grid.isRendered() && !tm.jquery.Utils.isEmpty(self.grid.getPlugin())
+        },
+        function()
+        {
+          hideLoaderMaskClearTask();
+        },
+        100, 100);
+
+    function hideLoaderMaskClearTask()
+    {
+      self._isGridReadyConditionalTask = null;
+      view.hideLoaderMask();
+    }
   },
 
   _executeTaskWhenCondition: function(condition, task)
@@ -154,7 +155,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
     }
   },
 
-  _fixGridColumns: function(searchParams, reloadGrid)
+  _fixGridColumns: function(searchParams)
   {
     var lastColumnName = 'column' + this.dayCount;
     if (searchParams.todayIndex != null)
@@ -166,76 +167,80 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
       this.grid.getPlugin().jqGrid('showCol', lastColumnName);
     }
 
-    if (reloadGrid)
-    {
-      this.grid.getPlugin().trigger('reloadGrid');
-    }
-
     var date = new Date(searchParams.searchDate);
     for (var i = 0; i < searchParams.dayCount; i++)
     {
-      var headerId = '.therapy-flow-grid-container .therapy-grid #' + this.grid.id + '_grid_column' + i;
-      var columnId = '.therapy-flow-grid-container .therapy-grid tr.jqgfirstrow td:nth-child(' + (5 + i) + ')';
-      if (i == searchParams.todayIndex)
-      {
-        $(headerId).width(['50%']);
-        $(columnId).width(['50%']);
-      }
-      else
-      {
-        $(headerId).width(['25%']);
-        $(columnId).width(['25%']);
-      }
+      /* see http://stackoverflow.com/questions/12171640/jqgrid-changing-the-width-of-a-column-dynamically/12172228#12172228 */
+      this.grid.getPlugin().setColProp('column' + i, {
+        width: searchParams.todayIndex == i ? 2 : 1,
+        widthOrg: searchParams.todayIndex == i ? 2 : 1
+      });
+
       var headerLabel = this._getHeaderString(date, i == searchParams.todayIndex, i);
       this.grid.setHeaderLabel('column' + i, headerLabel);
       date.setDate(date.getDate() + 1);
     }
+
+    var gridWidth = jQuery(this.grid.getDom()).width();
+    /* we need the actual pixels */
+    this.grid.getPlugin().jqGrid('setGridWidth', gridWidth);
+    /* makes the grid resize the columns */
   },
 
   _loadData: function(searchParams, callback)
   {
     var self = this;
-    var findTherapyFlowDataUrl = self.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_LOAD_THERAPY_FLOW_DATA;
+    var view = this.getView();
+    var findTherapyFlowDataUrl = view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_LOAD_THERAPY_FLOW_DATA;
 
-    this.view.showLoaderMask();
+    view.showLoaderMask();
+    var patientId = view.getPatientId();
     var params = {
-      patientId: self.view.getPatientId(),
-      centralCaseId: self.view.getCentralCaseData() && self.view.getCentralCaseData().centralCaseId ?
-          self.view.getCentralCaseData().centralCaseId : null,
-      patientHeight: this.view.getPatientData().heightInCm,
+      patientId: patientId,
+      centralCaseId: view.getCentralCaseData() && view.getCentralCaseData().centralCaseId ?
+          view.getCentralCaseData().centralCaseId : null,
+      patientHeight: view.getPatientHeightInCm(),
       startDate: searchParams.searchDate.getTime(),
       dayCount: searchParams.dayCount,
       todayIndex: searchParams.todayIndex != null ? searchParams.todayIndex : -1,
-      roundsInterval: JSON.stringify(self.view.getRoundsInterval()),
+      roundsInterval: JSON.stringify(view.getRoundsInterval()),
       therapySortTypeEnum: this.therapySortTypeEnum,
-      knownOrganizationalEntity: self.view.getKnownOrganizationalEntity()
+      careProviderId: view.getCareProviderId()
     };
-    self.view.loadViewData(findTherapyFlowDataUrl, params, null, function(therapyFlowData)
+    view.loadViewData(findTherapyFlowDataUrl, params, null, function(therapyFlowData)
     {
-      self.therapyFlowData = therapyFlowData;
-      var gridData = self._buildGridData(therapyFlowData.therapyRows);
-      callback(gridData);
-      self.view.hideLoaderMask(self.view, null, 5000);
+      if (patientId == view.getPatientId())
+      {
+        self.therapyFlowData = therapyFlowData;
+        var gridData = self._buildGridData(therapyFlowData.therapyRows);
+        callback(gridData);
+      }
+      view.hideLoaderMask();
     });
   },
 
   _buildGridData: function(therapies)
   {
     var self = this;
+    var view = this.getView();
     var gridData = [];
     for (var i = 0; i < therapies.length; i++)
     {
       var rowData = therapies[i];
       var row = {
         id: i,
-        atcGroup: rowData.atcGroupName ? rowData.atcGroupName + ' (' + rowData.atcGroupCode + ')' : self.view.getDictionary("without.atc"),
-        route: rowData.route,
-        customGroup: tm.views.medications.MedicationUtils.getTherapyCustomGroupDisplayName(rowData, this.view)
+        atcGroup: rowData.atcGroupName ? rowData.atcGroupName + ' (' + rowData.atcGroupCode + ')' : view.getDictionary("without.atc"),
+        routes: self._createRowValueForRowDataRoutes(rowData.routes),
+        customGroup: tm.views.medications.MedicationUtils.getTherapyCustomGroupDisplayName(rowData, view)
       };
 
       for (var j = 0; j < self.dayCount + 1; j++)
       {
         var cellData = rowData.therapyFlowDayMap[j];
+        if (cellData && cellData.therapy)
+        {
+          cellData.therapy = app.views.medications.common.TherapyJsonConverter.convert(cellData.therapy);
+        }
         row['column' + j] = cellData ?
         {
           id: j,
@@ -251,29 +256,34 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
   {
     var self = this;
     this.previousDayDataLoaded = false;
+    var view = this.getView();
 
     var previousDate = new Date(this.searchDate);
     previousDate.setDate(previousDate.getDate() - 1);
     var adjustedParams = self._getAdjustedSearchParams(previousDate, false);
+    var patientId = view.getPatientId();
 
     var params = {
-      patientId: self.view.getPatientId(),
-      centralCaseId: self.view.getCentralCaseData() && self.view.getCentralCaseData().centralCaseId ?
-          self.view.getCentralCaseData().centralCaseId : null,
-      patientHeight: this.view.getPatientData().heightInCm,
+      patientId: patientId,
+      centralCaseId: view.getCentralCaseData() && view.getCentralCaseData().centralCaseId ?
+          view.getCentralCaseData().centralCaseId : null,
+      patientHeight: view.getPatientHeightInCm(),
       startDate: adjustedParams.searchDate.getTime(),
       dayCount: adjustedParams.dayCount,
       todayIndex: adjustedParams.todayIndex != null ? adjustedParams.todayIndex : -1,
-      roundsInterval: JSON.stringify(self.view.getRoundsInterval()),
+      roundsInterval: JSON.stringify(view.getRoundsInterval()),
       therapySortTypeEnum: this.therapySortTypeEnum,
-      knownOrganizationalEntity: self.view.getKnownOrganizationalEntity()
+      careProviderId: view.getCareProviderId()
     };
 
-    var findTherapyFlowDataUrl = self.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_LOAD_THERAPY_FLOW_DATA;
-    self.view.loadViewData(findTherapyFlowDataUrl, params, null, function(therapyFlowData)
+    var findTherapyFlowDataUrl = view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_LOAD_THERAPY_FLOW_DATA;
+    view.loadViewData(findTherapyFlowDataUrl, params, null, function(therapyFlowData)
     {
-      self.previousDayTherapyFlowData = therapyFlowData;
-      self.previousDayDataLoaded = true
+      if (patientId == view.getPatientId())
+      {
+        self.previousDayTherapyFlowData = therapyFlowData;
+        self.previousDayDataLoaded = true;
+      }
     });
   },
 
@@ -281,29 +291,34 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
   {
     var self = this;
     this.nextDayDataLoaded = false;
+    var view = this.getView();
 
     var nextDate = new Date(this.searchDate);
     nextDate.setDate(nextDate.getDate() + 1);
     var adjustedParams = self._getAdjustedSearchParams(nextDate, true);
+    var patientId = view.getPatientId();
 
     var params = {
-      patientId: self.view.getPatientId(),
-      centralCaseId: self.view.getCentralCaseData() && self.view.getCentralCaseData().centralCaseId ?
-          self.view.getCentralCaseData().centralCaseId : null,
-      patientHeight: this.view.getPatientData().heightInCm,
+      patientId: patientId,
+      centralCaseId: view.getCentralCaseData() && view.getCentralCaseData().centralCaseId ?
+          view.getCentralCaseData().centralCaseId : null,
+      patientHeight: view.getPatientHeightInCm(),
       startDate: adjustedParams.searchDate.getTime(),
       dayCount: adjustedParams.dayCount,
       todayIndex: adjustedParams.todayIndex != null ? adjustedParams.todayIndex : -1,
-      roundsInterval: JSON.stringify(self.view.getRoundsInterval()),
+      roundsInterval: JSON.stringify(view.getRoundsInterval()),
       therapySortTypeEnum: this.therapySortTypeEnum,
-      knownOrganizationalEntity: self.view.getKnownOrganizationalEntity()
+      careProviderId: view.getCareProviderId()
     };
 
-    var findTherapyFlowDataUrl = self.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_LOAD_THERAPY_FLOW_DATA;
-    self.view.loadViewData(findTherapyFlowDataUrl, params, null, function(therapyFlowData)
+    var findTherapyFlowDataUrl = view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_LOAD_THERAPY_FLOW_DATA;
+    view.loadViewData(findTherapyFlowDataUrl, params, null, function(therapyFlowData)
     {
-      self.nextDayTherapyFlowData = therapyFlowData;
-      self.nextDayDataLoaded = true
+      if (patientId == view.getPatientId())
+      {
+        self.nextDayTherapyFlowData = therapyFlowData;
+        self.nextDayDataLoaded = true;
+      }
     });
   },
 
@@ -349,7 +364,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
     var columns = [];
     columns.push("id");
     columns.push("atcGroup");
-    columns.push("route");
+    columns.push("routes");
     columns.push("customGroup");
     var date = new Date(searchDate);
     for (var j = 0; j < this.dayCount + 1; j++)
@@ -362,7 +377,8 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
 
   _getHeaderString: function(date, today, index)
   {
-    var dayString =  Globalize.format(date, "L");
+    var view = this.getView();
+    var dayString = view.getDisplayableValue(new Date(date), "short.date");
     var referenceWeightString = "";
     if (this.therapyFlowData)
     {
@@ -377,7 +393,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
     if (today)
     {
       return headerString +
-          "<div class='TextData'; style='float:left; width:33%; text-align:center; overflow: visible;'> <b>" + this.view.getDictionary("today") + " " + dayString + "</b></div>";
+          "<div class='TextData'; style='float:left; width:33%; text-align:center; overflow: visible;'> <b>" + view.getDictionary("today") + " " + dayString + "</b></div>";
     }
 
     return headerString +
@@ -387,7 +403,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
   _getTodayIndex: function(dayCount, searchDate)
   {
     var date = new Date(searchDate);
-    var today = new Date();
+    var today = CurrentTime.get();
     for (var j = 0; j < dayCount; j++)
     {
       if (today.getDate() == date.getDate() &&
@@ -409,33 +425,49 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
       name: 'id',
       index: 'id',
       width: 0,
-      hidden: true});
+      hidden: true
+    });
     columns.push({
       name: 'atcGroup',
       index: 'atcGroup',
       width: 0,
-      hidden: true});
+      hidden: true,
+      sorttype: function(cellValue, obj)
+      {
+        return obj.atcGroup + "." + tm.views.medications.MedicationUtils.pad(obj.id, 4);
+      }
+    });
     columns.push({
-      name: 'route',
-      index: 'route',
+      name: 'routes',
+      index: 'routes',
       width: 0,
-      hidden: true});
+      hidden: true,
+      sorttype: function(cellValue, obj)
+      {
+        return obj.routes + "." + tm.views.medications.MedicationUtils.pad(obj.id, 4);
+      }
+    });
     columns.push({
       name: 'customGroup',
       index: 'customGroup',
       width: 0,
-      hidden: true});
+      hidden: true,
+      sorttype: function(cellValue, obj)
+      {
+        return obj.customGroup + "." + tm.views.medications.MedicationUtils.pad(obj.id, 4);
+      }
+    });
 
     for (var i = 0; i < this.dayCount + 1; i++)
     {
-      var columnWidth = i == self.todayIndex ? '50%' : '25%';
       columns.push({
             name: 'column' + i,
             index: i,
-            width: columnWidth,
+            width: this.todayIndex == i ? 2 : 1,
             sortable: false,
             title: false,
             hidden: self.todayIndex > 0 && i == self.dayCount,
+            resizable: false,
             formatter: new tm.jquery.GridCellFormatter({
               content: function(cellvalue, options)
               {
@@ -443,7 +475,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
                 {
                   if (options.colModel.index == self.todayIndex)
                   {
-                    return self._createTodayCellHtmlTemplate(options.rowId, self.todayIndex, cellvalue.dayTherapy);
+                    return self._createTodayCellTherapyContainer(options.rowId, self.todayIndex, cellvalue.dayTherapy);
                   }
                   else
                   {
@@ -458,19 +490,32 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
               var cellData = rowObject[colModel.name];
               var enums = app.views.medications.TherapyEnums;
               var dayTherapy = cellData ? cellData.dayTherapy : null;
-              if (dayTherapy && dayTherapy.active && dayTherapy.therapyStatus != enums.therapyStatusEnum.ABORTED && dayTherapy.therapyStatus != enums.therapyStatusEnum.CANCELLED && dayTherapy.therapyStatus != enums.therapyStatusEnum.SUSPENDED)
+              if (dayTherapy)
               {
-                return 'style="vertical-align:top; background:#fff';
+                var isPastDay = self._isPastDay(colModel.index);
+                var isActiveTodayOrFutureTherapy = !isPastDay && dayTherapy.active && dayTherapy.therapyStatus != enums.therapyStatusEnum.ABORTED && dayTherapy.therapyStatus != enums.therapyStatusEnum.CANCELLED && dayTherapy.therapyStatus != enums.therapyStatusEnum.SUSPENDED;
+                var isActivePastTherapy = isPastDay && dayTherapy.activeAnyPartOfDay;
+                if (isActiveTodayOrFutureTherapy || isActivePastTherapy)
+                {
+                  return 'style="vertical-align:top; background:#fff';
+                }
               }
-              else
-              {
-                return 'style="vertical-align:top;background:#E2DFDF"';
-              }
+              return 'style="vertical-align:top;background:#E2DFDF"';
             }
           }
       );
     }
     return columns;
+  },
+
+  _isPastDay: function(index)
+  {
+    var todayIndex = this._getTodayIndex(this.dayCount, this.searchDate);
+    if (todayIndex)
+    {
+      return index < todayIndex;
+    }
+    return this.searchDate < CurrentTime.get();
   },
 
   _createCellHtmlTemplate: function(rowId, columnIndex, dayTherapy)
@@ -479,29 +524,28 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
       cls: 'cell-item',
       padding: dayTherapy.showConsecutiveDay ? "5 5 5 3" : 5,
       scrollable: 'visible',
-      layout: tm.jquery.HFlexboxLayout.create('start', 'start'),
-      style: 'height:100%;'
+      layout: tm.jquery.HFlexboxLayout.create('flex-start', 'flex-start')
     });
 
     if (dayTherapy.showConsecutiveDay)
     {
       mainContainer.add(new tm.jquery.Container({
         cls: "icon_day_number",
-        layout: tm.jquery.VFlexboxLayout.create('end', 'end'),
+        flex: tm.jquery.flexbox.item.Flex.create(0, 0, "16px"), /* width has to be set otherwise IE10 will use auto style set on tm.jquery.Component! */
+        layout: tm.jquery.VFlexboxLayout.create('flex-end', 'flex-end'),
         html: dayTherapy.consecutiveDay
       }));
     }
 
     mainContainer.add(new tm.jquery.Container({
-      flex: 1,
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto"),
       scrollable: 'visible',
       html: dayTherapy.therapy.formattedTherapyDisplay,
       cls: 'TherapyDescription ShortDescription'
     }));
 
-    var therapyTaggedForPrescription = tm.views.medications.MedicationUtils.isTherapyTaggedForPrescription(dayTherapy.therapy.tags);
-    var contextMenu = this._createTherapyContextMenu(dayTherapy, rowId, false, therapyTaggedForPrescription);
-    if (contextMenu)
+    var contextMenu = this._createTherapyContextMenu(dayTherapy, rowId, false, false);
+    if (contextMenu && contextMenu.hasMenuItems())
     {
       mainContainer.setContextMenu(contextMenu);
     }
@@ -509,134 +553,93 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
     return mainContainer;
   },
 
-  _createTodayCellHtmlTemplate: function(rowId, columnIndex, dayTherapy)      // [TherapyDayDto.java]
+  /**
+   * @param {Number} rowId
+   * @param {Number} columnIndex
+   * @param {Object} dayTherapy
+   * @returns {app.views.medications.common.TherapyContainer}
+   * @private
+   */
+  _createTodayCellTherapyContainer: function(rowId, columnIndex, dayTherapy)
   {
-    var appFactory = this.view.getAppFactory();
-    var enums = app.views.medications.TherapyEnums;
-    var statusIcon = this.therapyDisplayProvider.getStatusIcon(dayTherapy.therapyStatus);
-    var validTo = dayTherapy.therapy.end ? Globalize.format(new Date(dayTherapy.therapy.end.data), "K") : '...';
-    //var validTo = dayTherapy.therapy.end ? new Date(dayTherapy.therapy.end.data).format("dd.mm.yyyy HH:MM") : '...';
-
-    var style = 'height:100%; position:relative;';
-    if (dayTherapy.active && dayTherapy.therapyStatus != enums.therapyStatusEnum.ABORTED && dayTherapy.therapyStatus != enums.therapyStatusEnum.CANCELLED && dayTherapy.therapyStatus != enums.therapyStatusEnum.SUSPENDED)
-    {
-      style += 'background:#fff;';
-    }
-    else
-    {
-      style += 'background:#E2DFDF;';
-    }
-
-    var id = 'id' + rowId + columnIndex;
-    var container = new tm.jquery.Container({cls: 'today-cell-item', id: "", layout: appFactory.createDefaultHFlexboxLayout('start', 'stretch'), style: style});
-
-    var isTherapyTaggedForPrescription = tm.views.medications.MedicationUtils.isTherapyTaggedForPrescription(dayTherapy.therapy.tags);
-    var contextMenu = this._createTherapyContextMenu(dayTherapy, rowId, true, isTherapyTaggedForPrescription);
-    if (contextMenu)
-    {
-      container.setContextMenu(contextMenu);
-    }
-
-    var options = {
-      background: {cls: tm.views.medications.MedicationUtils.getTherapyIcon(dayTherapy.therapy)},
-      layers: []
-    };
-
-    //todo something different to mark linked therapies
-    if (dayTherapy.therapy != null && (dayTherapy.therapy.linkFromTherapy || dayTherapy.therapy.linkToTherapy))
-    {
-      var link = dayTherapy.therapy.linkFromTherapy ? dayTherapy.therapy.linkFromTherapy : dayTherapy.therapy.linkToTherapy;
-      if (link.length <= 2)
-      {
-        options.layers.push({hpos: "left", vpos: "bottom", cls: "icon_link", html: link});
-      }
-    }
-    if (dayTherapy.modifiedFromLastReview)
-    {
-      options.layers.push({hpos: "left", vpos: "top", cls: "icon_changed"});
-    }
-    if (dayTherapy.showConsecutiveDay)
-    {
-      options.layers.push({hpos: "right", vpos: "top", cls: "icon_day_number", html: dayTherapy.consecutiveDay});
-    }
-    if (dayTherapy.therapy.criticalWarnings.length > 0)
-    {
-      options.layers.push({hpos: "center", vpos: "center", cls: "icon_warning"});
-    }
-    options.layers.push({hpos: "right", vpos: "bottom", cls: statusIcon});
-
-    var iconContainer = new tm.jquery.Container({
-      cursor: "pointer",
-      margin: 5,
-      width: 48,
-      height: 48,
-      html: appFactory.createLayersContainerHtml(options)
-    });
-    
     var self = this;
-    iconContainer.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function(component)
+    var view = this.getView();
+    var enums = app.views.medications.TherapyEnums;
+    var pharmacistReviewReferBack =
+        dayTherapy.therapyPharmacistReviewStatus == enums.therapyPharmacistReviewStatusEnum.REVIEWED_REFERRED_BACK;
+
+    var therapyContainer = new app.views.medications.common.TherapyContainer({
+      view: view,
+      data: dayTherapy,
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto"),
+      scrollableElement: this.grid.getScrollableElement(),
+      displayProvider: this.getGridCellTherapyDisplayProvider()
+    });
+
+    var toolBar = new tm.views.medications.therapy.GridTherapyContainerToolbar({
+      therapyContainer: therapyContainer
+    });
+    toolBar.setShowRelatedPharmacistReviewsEventCallback(function(therapyContainer)
     {
-      var now = new Date();
-      var today = {
-        startMillis: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime(),
-        endMillis: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).getTime()
-      };
-      var tooltip = tm.views.medications.MedicationUtils.createTherapyDetailsCardTooltip(
-          dayTherapy, self.grid.getScrollableElement(), self.view, today);
-      tooltip.setTrigger("manual");
-      iconContainer.setTooltip(tooltip);
-      setTimeout(function()
+      var data = therapyContainer.getData();
+      view.onShowRelatedPharmacistReviews(data, function()
       {
-        tooltip.show();
-      }, 200);
+        self.reloadGridData();
+      });
     });
-    container.add(iconContainer);
-
-    var html = '';
-
-    html += '<div style="float:right; padding-left: 10px">';
-    html += '<div style="text-align:right; float: right;">' + validTo + '</div>';
-    if (isTherapyTaggedForPrescription)
+    toolBar.setEditTherapyEventCallback(function(therapyContainer)
     {
-      html += '<div class="icon_prescription"></div>';
-    }
-
-    if (dayTherapy.therapyActionsAllowed)
-    {
-      html += '<div class="action-buttons" style="clear:both;" id="' + this._createActionButtonsContainerId(rowId) + '"></div>';
-    }
-
-    html += '</div>';
-    html += '<div class="TherapyDescription">' + dayTherapy.therapy.formattedTherapyDisplay + '</div>';
-
-    var contentContainer = new tm.jquery.Container({
-      flex: 1,
-      padding: 5,
-      html: html
+      tm.jquery.ComponentUtils.hideAllTooltips();
+      var data = therapyContainer.getData();
+      var therapy = data.therapy;
+      view.showEditTherapyDialog(therapy, false, data.modified);
     });
-    container.add(contentContainer);
-
-    if (dayTherapy.therapyEndsBeforeNextRounds)
+    toolBar.setTasksChangedEventCallback(function()
     {
-      contentContainer.setStyle('border-right: 5px solid grey;');
+      self.reloadGridData();
+    });
+    toolBar.setAbortTherapyEventCallback(function()
+    {
+      tm.jquery.ComponentUtils.hideAllTooltips();
+      var data = therapyContainer.getData();
+      var therapy = data.therapy;
+      this.disableActionButtons();
+      self._addActionToQueue(therapy.getCompositionUid(), therapy.getEhrOrderName(), rowId, 'ABORT');
+    });
+    toolBar.setConfirmTherapyEventCallback(function(callback)
+    {
+      tm.jquery.ComponentUtils.hideAllTooltips();
+      var data = therapyContainer.getData();
+      var therapy = data.therapy;
+
+      this.disableActionButtons();
+      var action = data.therapyStatus == 'SUSPENDED' ? 'REISSUE' : 'CONFIRM';
+      self._addActionToQueue(therapy.getCompositionUid(), therapy.getEhrOrderName(), rowId, action);
+    });
+
+    therapyContainer.setToolbar(toolBar);
+
+    var contextMenu = this._createTherapyContextMenu(dayTherapy, rowId, true, pharmacistReviewReferBack);
+    if (contextMenu && contextMenu.hasMenuItems())
+    {
+      therapyContainer.setContextMenu(contextMenu);
     }
 
-    return container;
+    return therapyContainer;
   },
 
   _createEmptyCellHtmlTemplate: function()
   {
-    var appFactory = this.view.getAppFactory();
     return new tm.jquery.Container({
       cls: 'cell-item',
-      layout: appFactory.createDefaultHFlexboxLayout('start', 'stretch'),
-      style: "position:relative; white-space: normal; background:#E2DFDF; height:100%"
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "stretch"),
+      style: "position:relative; white-space: normal; background:#E2DFDF;"
     });
   },
 
   _createActionButtonsContainerId: function(rowId)
   {
-    return this.view.getViewId() + "_action_buttons_" + rowId;
+    return this.getView().getViewId() + "_action_buttons_" + rowId;
   },
 
   //_createTherapyDetailsCardTooltip: function(dayTherapy)       // [TherapyDayDto.java]
@@ -675,157 +678,240 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
   //  return tooltip;
   //},
 
-  _createTherapyContextMenu: function(dayTherapy, rowId, today, therapyTaggedForPrescription)     // [TherapyDayDto.java]
+  _createTherapyContextMenu: function(dayTherapy, rowId, today, disableEditTherapy)     // [TherapyDayDto.java]
   {
     var self = this;
-    var appFactory = this.view.getAppFactory();
+    var view = this.getView();
+    var appFactory = view.getAppFactory();
     var enums = app.views.medications.TherapyEnums;
 
     var therapy = dayTherapy.therapy;
-    var ehrOrderName = dayTherapy.therapy.ehrOrderName;
-    var ehrCompositionId = dayTherapy.therapy.compositionUid;
+    var therapyModifiedInThePast = dayTherapy.modified;
+    var ehrOrderName = therapy.getEhrOrderName();
+    var ehrCompositionId = therapy.getCompositionUid();
     var therapyStatus = dayTherapy.therapyStatus;
-    var orderFormType = dayTherapy.therapy.medicationOrderFormType;
+    var orderFormType = therapy.getMedicationOrderFormType();
 
-    if (therapy == null || !this.view.isEditAllowed())
+    if (therapy == null || 
+        (!view.getTherapyAuthority().isManageInpatientPrescriptionsAllowed() && 
+        !view.getTherapyAuthority().isCopyPrescriptionAllowed()))
     {
-      return null
+      return null;
     }
 
     var contextMenu = appFactory.createContextMenu();
-
-    if (today && therapyStatus != enums.therapyStatusEnum.ABORTED && therapyStatus != enums.therapyStatusEnum.CANCELLED)
+    if (view.getTherapyAuthority().isManageInpatientPrescriptionsAllowed())
     {
-      if (orderFormType != enums.medicationOrderFormType.COMPLEX)
+      if (today && therapyStatus != enums.therapyStatusEnum.ABORTED && therapyStatus != enums.therapyStatusEnum.CANCELLED)
       {
-        var menuItemEdit = new tm.jquery.MenuItem({text: self.view.getDictionary("edit"), /*iconCls: 'icon-edit',*/
+        var menuItemEdit = new tm.jquery.MenuItem({
+          text: view.getDictionary("edit"), /*iconCls: 'icon-edit',*/
+          enabled: !disableEditTherapy,
           handler: function()
           {
-            if (therapy.medication.id != null)
-            {
-              self.view.showEditSimpleTherapyDialog(therapy, false);
-            }
-            else
-            {
-              self.view.openUniversalSimpleTherapyDialog(therapy);
-            }
-          }});
+            view.showEditTherapyDialog(therapy, false, therapyModifiedInThePast);
+          }
+        });
         contextMenu.addMenuItem(menuItemEdit);
       }
-      else if (orderFormType == enums.medicationOrderFormType.COMPLEX)
-      {
-        var menuItemAdjustSpeed = new tm.jquery.MenuItem({text: self.view.getDictionary("edit"), /* iconCls: 'icon-edit',*/
-          handler: function()
-          {
-            if (therapy.ingredientsList[0].medication.id != null)
-            {
-              self.view.showEditComplexTherapyDialog(therapy, false);
-            }
-            else
-            {
-              self.view.openUniversalComplexTherapyDialog(therapy);
-            }
-          }});
 
-        contextMenu.addMenuItem(menuItemAdjustSpeed);
-      }
-    }
-
-    if (today && therapyStatus != enums.therapyStatusEnum.ABORTED && therapyStatus != enums.therapyStatusEnum.CANCELLED)
-    {
-      var menuItemDelete = new tm.jquery.MenuItem({text: self.view.getDictionary("abort.therapy"),/* iconCls: 'icon-delete', */
-        handler: function()
-        {
-          self._addActionToQueue(ehrCompositionId, ehrOrderName, rowId, 'ABORT');
-        }});
-      contextMenu.addMenuItem(menuItemDelete);
-
-      if (therapyStatus != 'SUSPENDED')
-      {
-        var menuItemSuspend = new tm.jquery.MenuItem({text: self.view.getDictionary("suspend"), /*iconCls: 'icon-suspend', */
-          handler: function()
-          {
-            self._addActionToQueue(ehrCompositionId, ehrOrderName, rowId, 'SUSPEND');
-          }});
-        contextMenu.addMenuItem(menuItemSuspend);
-      }
-
-      var centralCaseExists = self.view.getCentralCaseData() && self.view.getCentralCaseData().centralCaseId;
+      var centralCaseExists = view.getCentralCaseData() && view.getCentralCaseData().centralCaseId;
 
       if (centralCaseExists)
       {
-        if (therapyTaggedForPrescription)
+        var therapyStart = therapy.getStart();
+        var consecutiveDay = dayTherapy.consecutiveDay;
+        var columnDate = new Date(therapyStart.getTime() + consecutiveDay * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0);
+        var effectiveEnd = view.getCentralCaseData().centralCaseEffective.end
+            ? new Date(view.getCentralCaseData().centralCaseEffective.end).setHours(0, 0, 0, 0) : null;
+
+        if (today || effectiveEnd && columnDate.getTime() === effectiveEnd.getTime())
         {
-          var menuItemTag = new tm.jquery.MenuItem({text: self.view.getDictionary("untag.therapy.for.prescription"),
-            handler: function()
-            {
-              self.view.untagTherapyForPrescription(self.view.getPatientId(), self.view.getCentralCaseData().centralCaseId, ehrCompositionId, ehrOrderName);
-            }});
-          contextMenu.addMenuItem(menuItemTag);
-        }
-        else
-        {
-          var menuItemUntag = new tm.jquery.MenuItem({text: self.view.getDictionary("tag.therapy.for.prescription"),
-            handler: function()
-            {
-              self.view.tagTherapyForPrescription(self.view.getPatientId(), self.view.getCentralCaseData().centralCaseId, ehrCompositionId, ehrOrderName);
-            }});
-          contextMenu.addMenuItem(menuItemUntag);
+          if (therapy.isTaggedForPrescription())
+          {
+            var menuItemTag = new tm.jquery.MenuItem({
+              text: view.getDictionary("untag.therapy.for.prescription"),
+              handler: function()
+              {
+                view.untagTherapyForPrescription(
+                    view.getPatientId(),
+                    view.getCentralCaseData().centralCaseId,
+                    ehrCompositionId,
+                    ehrOrderName);
+              }
+            });
+            contextMenu.addMenuItem(menuItemTag);
+          }
+          else
+          {
+            var menuItemUntag = new tm.jquery.MenuItem({
+              text: view.getDictionary("tag.therapy.for.prescription"),
+              handler: function()
+              {
+                view.tagTherapyForPrescription(
+                    view.getPatientId(),
+                    view.getCentralCaseData().centralCaseId,
+                    ehrCompositionId,
+                    ehrOrderName);
+              }
+            });
+            contextMenu.addMenuItem(menuItemUntag);
+          }
         }
       }
 
-      if (dayTherapy.showConsecutiveDay && !dayTherapy.modified)
+      if (today && therapyStatus != enums.therapyStatusEnum.ABORTED && therapyStatus != enums.therapyStatusEnum.CANCELLED)
       {
-        var menuItemConsecutive = new tm.jquery.MenuItem({text: self.view.getDictionary("consecutive.days.edit"), /*iconCls: 'icon-edit-consecutive-days',*/
+        var menuItemDelete = new tm.jquery.MenuItem({
+          text: view.getDictionary("stop.therapy"), /* iconCls: 'icon-delete', */
           handler: function()
           {
-            self.view.showEditConsecutiveDaysDialog(dayTherapy.therapy.pastDaysOfTherapy, ehrCompositionId, ehrOrderName);
-          }});
-        contextMenu.addMenuItem(menuItemConsecutive);
+            self._addActionToQueue(ehrCompositionId, ehrOrderName, rowId, 'ABORT');
+          }
+        });
+        contextMenu.addMenuItem(menuItemDelete);
+        if (therapyStatus != 'SUSPENDED')
+        {
+          var menuItemSuspend = new tm.jquery.MenuItem({
+            text: view.getDictionary("suspend"), /*iconCls: 'icon-suspend', */
+            handler: function()
+            {
+              self._addActionToQueue(ehrCompositionId, ehrOrderName, rowId, 'SUSPEND');
+            }
+          });
+          contextMenu.addMenuItem(menuItemSuspend);
+        }
+  
+        if (dayTherapy.showConsecutiveDay && !dayTherapy.modified)
+        {
+          var menuItemConsecutive = new tm.jquery.MenuItem({
+            text: view.getDictionary("consecutive.days.edit"), /*iconCls: 'icon-edit-consecutive-days',*/
+            handler: function()
+            {
+              view.showEditConsecutiveDaysDialog(therapy.getPastDaysOfTherapy(), ehrCompositionId, ehrOrderName);
+            }
+          });
+          contextMenu.addMenuItem(menuItemConsecutive);
+        }
       }
     }
 
-    if (orderFormType != enums.medicationOrderFormType.COMPLEX && therapy.medication.id != null)
+    if (view.getTherapyAuthority().isCopyPrescriptionAllowed())
     {
-      var menuItemCopySimpleTherapy = new tm.jquery.MenuItem({text: self.view.getDictionary("copy"), /*iconCls: 'icon-copy', */
+      var menuItemCopySimpleTherapy = new tm.jquery.MenuItem({
+        text: view.getDictionary("copy"), /*iconCls: 'icon-copy', */
         handler: function()
         {
-          self.view.showEditSimpleTherapyDialog(therapy, true);
-        }});
+          view.showEditTherapyDialog(therapy, true, false);
+        }
+      });
       contextMenu.addMenuItem(menuItemCopySimpleTherapy);
     }
-    else if (orderFormType == enums.medicationOrderFormType.COMPLEX && therapy.ingredientsList[0].medication.id != null)
-    {
-      var menuItemCopyComplexTherapy = new tm.jquery.MenuItem({text: self.view.getDictionary("copy"), /*iconCls: 'icon-copy', */
-        handler: function()
-        {
-          self.view.showEditComplexTherapyDialog(therapy, true);
-        }});
-      contextMenu.addMenuItem(menuItemCopyComplexTherapy);
-    }
 
-    if (today && therapyStatus != enums.therapyStatusEnum.ABORTED && therapyStatus != enums.therapyStatusEnum.CANCELLED)
-    {
-      var menuItemSuspendAll = new tm.jquery.MenuItem({text: self.view.getDictionary("suspend.all"),/* iconCls: 'icon-suspend-all', */
-        handler: function()
-        {
-          self._suspendAllTherapies();
-        }});
-      contextMenu.addMenuItem(menuItemSuspendAll);
-    }
+    if (view.getTherapyAuthority().isManageInpatientPrescriptionsAllowed())
 
+    {
+      if (today && therapyStatus != enums.therapyStatusEnum.ABORTED && therapyStatus != enums.therapyStatusEnum.CANCELLED)
+      {
+        var menuItemSuspendAll = new tm.jquery.MenuItem({
+          text: view.getDictionary("suspend.all"), /* iconCls: 'icon-suspend-all', */
+          handler: function()
+          {
+            self._suspendAllTherapies();
+          }
+        });
+        contextMenu.addMenuItem(menuItemSuspendAll);
+      }
+
+    }
     return contextMenu;
+  },
+
+  _canTherapyBeAborted: function(therapy)
+  {
+    var enums = app.views.medications.TherapyEnums;
+    if (therapy.linkName)
+    {
+      var nextTherapyLink = tm.views.medications.MedicationUtils.getNextLinkName(therapy.linkName);
+      var linkedTherapyDay = this._getTherapyDayByLinkName(nextTherapyLink);
+      if (linkedTherapyDay && linkedTherapyDay.therapyStatus)
+      {
+        if (linkedTherapyDay.therapyStatus != enums.therapyStatusEnum.ABORTED &&
+            linkedTherapyDay.therapyStatus != enums.therapyStatusEnum.CANCELLED)
+        {
+          return false;
+        }
+      }
+    }
+    return true;
+  },
+
+  _getTherapyDayByLinkName: function(linkName)
+  {
+    for (var i = 0; i < this.therapyFlowData.therapyRows.length; i++)
+    {
+      var therapyRow = this.therapyFlowData.therapyRows[i];
+      var therapyDay = therapyRow.therapyFlowDayMap[this.todayIndex];
+      if (therapyDay && therapyDay.therapy && therapyDay.therapy.linkName && therapyDay.therapy.linkName == linkName)
+      {
+        return therapyDay;
+      }
+    }
+    return null;
   },
 
   _addActionToQueue: function(ehrCompositionId, ehrOrderName, rowIndex, action)
   {
-    this.actionsQueue.push({ehrCompositionId: ehrCompositionId, ehrOrderName: ehrOrderName, rowIndex: rowIndex, action: action});
+    this.actionsQueue.push({
+      ehrCompositionId: ehrCompositionId,
+      ehrOrderName: ehrOrderName,
+      rowIndex: rowIndex,
+      action: action
+    });
     this._executeTasks(true);
+  },
+
+  _onAbortTherapy: function(nextTask, self, changeReason)
+  {
+    this.therapyActions.abortTherapy(nextTask.ehrCompositionId, nextTask.ehrOrderName, changeReason != null ? changeReason.value : null,
+        function()
+        {
+          self._reloadSingleTherapyChanges(nextTask.ehrCompositionId, nextTask.ehrOrderName, nextTask.rowIndex, function()
+          {
+            self.actionsQueue.shift();
+            self._executeTasks(false);
+          });
+        },
+        function()
+        {
+          self.actionsQueue.shift();
+          self._executeTasks(false);
+        });
+  },
+
+  _onSuspendTherapy: function(nextTask, self, changeReason)
+  {
+    this.therapyActions.suspendTherapy(nextTask.ehrCompositionId, nextTask.ehrOrderName, changeReason != null ? changeReason.value : null,
+        function()
+        {
+          self._reloadSingleTherapyChanges(nextTask.ehrCompositionId, nextTask.ehrOrderName, nextTask.rowIndex, function()
+          {
+            self.actionsQueue.shift();
+            self._executeTasks(false);
+          });
+        },
+        function()
+        {
+          self.actionsQueue.shift();
+          self._executeTasks(false);
+        });
   },
 
   _executeTasks: function(newTask)
   {
+    var actionEnums = app.views.medications.TherapyEnums.medicationOrderActionEnum;
     var self = this;
+    var view = this.getView();
     if (this.actionsQueue.length == 1 || (!newTask && this.actionsQueue.length > 0))
     {
       var nextTask = self.actionsQueue[0];
@@ -848,20 +934,48 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
       }
       else if (nextTask.action == 'ABORT')
       {
-        this.therapyActions.abortTherapy(nextTask.ehrCompositionId, nextTask.ehrOrderName,
-            function()
-            {
-              self._reloadSingleTherapyChanges(nextTask.ehrCompositionId, nextTask.ehrOrderName, nextTask.rowIndex, function()
-              {
-                self.actionsQueue.shift();
-                self._executeTasks(false);
-              });
-            },
-            function()
-            {
-              self.actionsQueue.shift();
-              self._executeTasks(false);
+        var rowData = this.therapyFlowData.therapyRows[nextTask.rowIndex];
+        var therapyDay = rowData.therapyFlowDayMap[this.todayIndex];
+        if (this._canTherapyBeAborted(therapyDay.therapy, therapyDay))
+        {
+          if (therapyDay.therapy.linkedToAdmission == true)
+          {
+            var abortConfirmationEntryPane = new app.views.medications.common.ChangeReasonDataEntryContainer({
+              titleIcon: "warningYellow_status_48.png",
+              titleText: view.getDictionary("therapy.needs.reason.for.stopping"),
+              view: view,
+              changeReasonTypeKey: actionEnums.ABORT
             });
+            var abortConfirmationDialog = view.getAppFactory().createDataEntryDialog(
+                view.getDictionary("warning"),
+                null,
+                abortConfirmationEntryPane, function(resultData)
+                {
+                  if (resultData != null && resultData.isSuccess())
+                  {
+                    self._onAbortTherapy(nextTask, self, resultData.value);
+                  }
+                  else
+                  {
+                    self.actionsQueue.shift();
+                    self._executeTasks(false);
+                  }
+                }, abortConfirmationEntryPane.defaultWidth, abortConfirmationEntryPane.defaultHeight
+            );
+            abortConfirmationDialog.show();
+          }
+          else
+          {
+            this._onAbortTherapy(nextTask, self, null);
+          }
+        }
+        else
+        {
+          self.actionsQueue.shift();
+          self._executeTasks(false);
+          var message = view.getDictionary('therapy.can.not.stop.if.linked');
+          view.getAppFactory().createWarningSystemDialog(message, 320, 160).show();
+        }
       }
       else if (nextTask.action == 'REISSUE')
       {
@@ -882,20 +996,18 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
       }
       else if (nextTask.action == 'SUSPEND')
       {
-        this.therapyActions.suspendTherapy(nextTask.ehrCompositionId, nextTask.ehrOrderName,
-            function()
-            {
-              self._reloadSingleTherapyChanges(nextTask.ehrCompositionId, nextTask.ehrOrderName, nextTask.rowIndex, function()
-              {
-                self.actionsQueue.shift();
-                self._executeTasks(false);
-              });
-            },
-            function()
-            {
-              self.actionsQueue.shift();
-              self._executeTasks(false);
-            });
+        var therapy = this.therapyFlowData.therapyRows[nextTask.rowIndex].therapyFlowDayMap[this.todayIndex].therapy;
+        if (therapy.linkedToAdmission == true)
+        {
+          var actionTypeEnum = actionEnums.SUSPEND;
+          var changeReasonMap = view.getTherapyChangeReasonTypeMap();
+          this._onSuspendTherapy(nextTask, self,
+              tm.views.medications.MedicationUtils.getFirstOrNullTherapyChangeReason(changeReasonMap, actionTypeEnum));
+        }
+        else
+        {
+          this._onSuspendTherapy(nextTask, self, null);
+        }
       }
     }
   },
@@ -903,16 +1015,17 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
   _reloadSingleTherapyChanges: function(ehrCompositionId, ehrOrderName, rowIndex, callback)
   {
     var self = this;
+    var view = this.getView();
     var reloadUrl =
-        this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_RELOAD_SINGLE_THERAPY_AFTER_ACTION;
-    var uidWithoutVersion = this.view.getUidWithoutVersion(ehrCompositionId);
+        view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_RELOAD_SINGLE_THERAPY_AFTER_ACTION;
+    var uidWithoutVersion = tm.views.medications.MedicationUtils.getUidWithoutVersion(ehrCompositionId);
     var params = {
-      patientId: this.view.getPatientId(),
+      patientId: view.getPatientId(),
       compositionUid: uidWithoutVersion,
       ehrOrderName: ehrOrderName,
-      roundsInterval: JSON.stringify(self.view.getRoundsInterval())
+      roundsInterval: JSON.stringify(view.getRoundsInterval())
     };
-    this.view.loadViewData(reloadUrl, params, null,
+    view.loadViewData(reloadUrl, params, null,
         function(reloadAfterActionDto) //TherapyReloadAfterActionDto.java
         {
           self._updateAllTherapiesCompositionUid(
@@ -920,7 +1033,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
               reloadAfterActionDto.ehrCompositionId,
               reloadAfterActionDto.ehrOrderName,
               reloadAfterActionDto.therapyStatus,
-              reloadAfterActionDto.therapyActionsAllowed,
+              reloadAfterActionDto.doctorReviewNeeded,
               reloadAfterActionDto.therapyEndsBeforeNextRounds,
               reloadAfterActionDto.therapyStart,
               reloadAfterActionDto.therapyEnd
@@ -930,39 +1043,43 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
         },
         function()
         {
-          callback()
+          callback();
         });
   },
 
   _refreshTherapiesAfterAction: function(rowIndex)
   {
+    var scrollPosition = tm.jquery.ComponentUtils.getScrollPosition(this.grid.getScrollableElement());
     var gridData = this._buildGridData(this.therapyFlowData.therapyRows);
     this.grid.setRowData(rowIndex, gridData[rowIndex]);
-    this._renderActionButtonsContainer(rowIndex, gridData[rowIndex])
+
+    if (!tm.jquery.Utils.isEmpty(scrollPosition) && scrollPosition.scrollTop)
+    {
+      this.grid.scrollTo(scrollPosition.scrollLeft, scrollPosition.scrollTop, 0);
+    }
   },
 
   _suspendAllTherapies: function()
   {
-    var self = this;
-    this.view.showLoaderMask(self.view, null, 5000);
+    var view = this.getView();
+
+    var viewHubNotifier = view.getHubNotifier();
+    var hubAction = tm.views.medications.TherapyView.THERAPY_SUSPEND_ALL_HUB;
+    viewHubNotifier.actionStarted(hubAction);
+
+    view.showLoaderMask();
     var suspendAllTherapiesUrl =
-        this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_SUSPEND_ALL_THERAPIES;
-    var params = {patientId: this.view.getPatientId()};
-    this.view.loadPostViewData(suspendAllTherapiesUrl, params, null, function()
+        view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_SUSPEND_ALL_THERAPIES;
+    var params = {patientId: view.getPatientId()};
+    view.loadPostViewData(suspendAllTherapiesUrl, params, null, function()
     {
-      self.view.refreshTherapies(false);
+      view.refreshTherapies(false);
+      view.hideLoaderMask();
+      viewHubNotifier.actionEnded(hubAction);
     });
   },
 
-  _updateAllTherapiesCompositionUid: function(
-      oldCompositionUid,
-      newCompositionUid,
-      ehrOrderName,
-      status,
-      therapyActionsAllowed,
-      therapyEndsBeforeNextRounds,
-      therapyStart,
-      therapyEnd)
+  _updateAllTherapiesCompositionUid: function(oldCompositionUid, newCompositionUid, ehrOrderName, status, doctorReviewNeeded, therapyEndsBeforeNextRounds, therapyStart, therapyEnd)
   {
     this._updateTherapiesCompositionUid(
         this.therapyFlowData.therapyRows,
@@ -970,7 +1087,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
         newCompositionUid,
         ehrOrderName,
         status,
-        therapyActionsAllowed,
+        doctorReviewNeeded,
         therapyEndsBeforeNextRounds,
         therapyStart,
         therapyEnd,
@@ -986,7 +1103,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
         newCompositionUid,
         ehrOrderName,
         status,
-        therapyActionsAllowed,
+        doctorReviewNeeded,
         therapyEndsBeforeNextRounds,
         therapyStart,
         therapyEnd,
@@ -1002,7 +1119,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
         newCompositionUid,
         ehrOrderName,
         status,
-        therapyActionsAllowed,
+        doctorReviewNeeded,
         therapyEndsBeforeNextRounds,
         therapyStart,
         therapyEnd,
@@ -1011,18 +1128,20 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
     );
   },
 
-  _updateTherapiesCompositionUid: function(
-      therapies,
-      oldCompositionUid,
-      newCompositionUid,
-      ehrOrderName,
-      status,
-      therapyActionsAllowed,
-      therapyEndsBeforeNextRounds,
-      therapyStart,
-      therapyEnd,
-      todayIndex,
-      forward)
+  /**
+   * Safely abort the conditional task that blocks setting data to the grid if it's not ready.
+   * @private
+   */
+  _abortIsGridReadyConditionalTask: function()
+  {
+    if (this._isGridReadyConditionalTask)
+    {
+      this._isGridReadyConditionalTask.abort();
+      this._isGridReadyConditionalTask = null;
+    }
+  },
+
+  _updateTherapiesCompositionUid: function(therapies, oldCompositionUid, newCompositionUid, ehrOrderName, status, doctorReviewNeeded, therapyEndsBeforeNextRounds, therapyStart, therapyEnd, todayIndex, forward)
   {
     var enums = app.views.medications.TherapyEnums;
     for (var i = 0; i < therapies.length; i++)
@@ -1032,15 +1151,15 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
       {
         var dayTherapy = therapyRow.therapyFlowDayMap[day];                                   // [TherapyDayDto.java]
         var therapy = dayTherapy.therapy;
-        var oldUidWithoutVersion = this.view.getUidWithoutVersion(oldCompositionUid);
-        var newUidWithoutVersion = this.view.getUidWithoutVersion(therapy.compositionUid);
+        var oldUidWithoutVersion = tm.views.medications.MedicationUtils.getUidWithoutVersion(oldCompositionUid);
+        var newUidWithoutVersion = tm.views.medications.MedicationUtils.getUidWithoutVersion(therapy.compositionUid);
         if (oldUidWithoutVersion == newUidWithoutVersion)
         {
           therapy.compositionUid = newCompositionUid;
           if (therapy.ehrOrderName == ehrOrderName)
           {
             dayTherapy.therapyStatus = status;
-            dayTherapy.therapyActionsAllowed = therapyActionsAllowed;
+            dayTherapy.doctorReviewNeeded = doctorReviewNeeded;
             dayTherapy.therapyEndsBeforeNextRounds = therapyEndsBeforeNextRounds;
             if (status == enums.therapyStatusEnum.ABORTED || status == enums.therapyStatusEnum.CANCELLED)
             {
@@ -1080,18 +1199,68 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
     }
   },
 
+  /**
+   * @param {Array<String>} routes
+   * @returns {String}
+   * @private
+   */
+  _createRowValueForRowDataRoutes: function(routes)
+  {
+    if (tm.jquery.Utils.isArray(routes))
+    {
+      if (routes.length > 0)
+      {
+        return routes.length === 1 ? routes[0] : this.getView().getDictionary("multiple.routes");
+      }
+      else
+      {
+        return "";
+      }
+    }
+
+    return routes ? routes : "";
+  },
+
+  getGridCellTherapyDisplayProvider: function()
+  {
+    return this.gridCellTherapyDisplayProvider;
+  },
+
+  /**
+   * Getters & Setters
+   */
+
+  /**
+   * @returns {app.views.common.AppView}
+   */
+  getView: function()
+  {
+    return this.view;
+  },
+
   /** public methods */
   reloadGridData: function()
   {
     var self = this;
 
-    var viewHubNotifier = this.view.getHubNotifier();
+    var viewHubNotifier = this.getView().getHubNotifier();
     var therapyFlowLoadHubAction = tm.views.medications.TherapyView.THERAPY_FLOW_LOAD_HUB;
     viewHubNotifier.actionStarted(therapyFlowLoadHubAction);
 
     var adjustedParams = this._getAdjustedSearchParams(this.searchDate, null);
     this._loadData(adjustedParams, function(gridData)
     {
+      if (gridData.isEmpty())
+      {
+        self.noTherapiesField.show();
+        self.grid.hide();
+      }
+      else
+      {
+        self.noTherapiesField.hide();
+        self.grid.show();
+        self.getView().updateCurrentBnfMaximumSum();
+      }
       self._setGridData(gridData, adjustedParams);
       viewHubNotifier.actionEnded(therapyFlowLoadHubAction);
     });
@@ -1104,7 +1273,7 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
 
   changeSearchDate: function(forward)
   {
-    var viewHubNotifier = this.view.getHubNotifier();
+    var viewHubNotifier = this.getView().getHubNotifier();
     var therapyFlowNavigateHubAction = tm.views.medications.TherapyView.THERAPY_FLOW_NAVIGATE_HUB;
     viewHubNotifier.actionStarted(therapyFlowNavigateHubAction);
 
@@ -1207,7 +1376,6 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
       this.grid.removeGrouping();
     }
     var adjustedParams = this._getAdjustedSearchParams(this.searchDate, null);
-    this._fixGridColumns(adjustedParams, true);
   },
 
   createGrouping: function(groupField)
@@ -1227,8 +1395,16 @@ Class.define('tm.views.medications.TherapyFlowGrid', 'tm.jquery.Container', {
       this.grouping = null;
     }
   },
+
   clear: function()
   {
     this.removeAll();
+  },
+
+  /* @Override */
+  destroy: function()
+  {
+    this._abortIsGridReadyConditionalTask();
+    this.callSuper();
   }
 });

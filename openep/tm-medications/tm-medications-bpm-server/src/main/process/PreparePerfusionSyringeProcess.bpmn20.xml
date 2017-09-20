@@ -1,0 +1,681 @@
+<?xml version="1.0" encoding="WINDOWS-1250" standalone="yes"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+        xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:yaoqiang="http://bpmn.sourceforge.net" exporter="Yaoqiang BPMN Editor" exporterVersion="2.2.18 (GPLv3, Non-Commercial)" expressionLanguage="http://www.w3.org/1999/XPath"
+        id="_1444652825653" name="" targetNamespace="http://sourceforge.net/bpmn/definitions/_1444652825653" typeLanguage="http://www.w3.org/2001/XMLSchema"
+        xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL http://bpmn.sourceforge.net/schemas/BPMN20.xsd">
+  <message id="cancelTherapyMessage" name="cancelTherapyMessage">
+    <extensionElements>
+      <yaoqiang:style init="1"/>
+      <yaoqiang:label offset-x="-59.0" offset-y="25.0"/>
+    </extensionElements>
+  </message>
+  <message id="cancelOrderMessage" name="Cancel order">
+    <extensionElements>
+      <yaoqiang:style init="1"/>
+      <yaoqiang:label offset-x="-52.0" offset-y="23.0"/>
+    </extensionElements>
+  </message>
+  <message id="medicationAdministrationMessage" name="Medication administration">
+    <extensionElements>
+      <yaoqiang:style init="1"/>
+      <yaoqiang:label offset-x="-83.0" offset-y="26.0"/>
+    </extensionElements>
+  </message>
+  <process id="PreparePerfusionSyringeProcess" isClosed="false" isExecutable="true" processType="None">
+    <extensionElements>
+      <yaoqiang:pageFormat height="842.4" imageableHeight="832.4" imageableWidth="587.6" imageableX="5.0" imageableY="5.0" orientation="0" width="597.6"/>
+      <yaoqiang:page background="#FFFFFF" horizontalCount="2" verticalCount="1"/>
+      <yaoqiang:pageFormat height="842.4" imageableHeight="832.4" imageableWidth="587.6" imageableX="5.0" imageableY="5.0" orientation="0" width="597.6"/>
+      <yaoqiang:page background="#FFFFFF" horizontalCount="2" verticalCount="1"/>
+    </extensionElements>
+    <laneSet>
+      <lane id="_2" name="Pharmacyst">
+        <flowNodeRef>_11</flowNodeRef>
+        <flowNodeRef>_27</flowNodeRef>
+        <flowNodeRef>_31</flowNodeRef>
+        <flowNodeRef>_21</flowNodeRef>
+        <flowNodeRef>_37</flowNodeRef>
+        <flowNodeRef>cancelOfPreparation</flowNodeRef>
+        <flowNodeRef>medicationDispensed</flowNodeRef>
+        <flowNodeRef>_19</flowNodeRef>
+        <flowNodeRef>_35</flowNodeRef>
+        <flowNodeRef>cancelOfRequest</flowNodeRef>
+        <flowNodeRef>_36</flowNodeRef>
+      </lane>
+      <lane id="_4" name="Doctor"/>
+      <lane id="_3" name="Nurse">
+        <flowNodeRef>startPreparationProcess</flowNodeRef>
+      </lane>
+    </laneSet>
+    <userTask completionQuantity="1" id="_11" implementation="##unspecified" isForCompensation="false" name="Start preparation" startQuantity="1">
+      <extensionElements>
+        <activiti:taskListener delegateExpression="${perfusionSyringeStartPreparationTaskListener}" event="create"/>
+        <activiti:taskListener delegateExpression="${perfusionSyringeStartPreparationTaskListener}" event="complete"/>
+        <yaoqiang:style fillColor="#FFFF66"/>
+      </extensionElements>
+      <incoming>_16</incoming>
+      <incoming>_50</incoming>
+      <outgoing>_23</outgoing>
+    </userTask>
+    <sequenceFlow id="_16" sourceRef="startPreparationProcess" targetRef="_11"/>
+    <sequenceFlow id="_23" sourceRef="_11" targetRef="_21"/>
+    <sequenceFlow id="_25" sourceRef="_21" targetRef="cancelOfRequest">
+      <extensionElements>
+        <yaoqiang:label offset-x="0.0" offset-y="7.0" x="0.0" y="16.0"/>
+        <yaoqiang:style horizontal="0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ cancelPreparation == true }]]></conditionExpression>
+    </sequenceFlow>
+    <userTask completionQuantity="1" id="_27" implementation="##unspecified" isForCompensation="false" name="Complete preparation" startQuantity="1">
+      <extensionElements>
+        <activiti:taskListener delegateExpression="${perfusionSyringeCompletePreparationTaskListener}" event="create"/>
+        <yaoqiang:style fillColor="#FFCC66"/>
+      </extensionElements>
+      <incoming>_45</incoming>
+      <incoming>_52</incoming>
+      <outgoing>_47</outgoing>
+    </userTask>
+    <userTask completionQuantity="1" id="_31" implementation="##unspecified" isForCompensation="false" name="Dispense medication" startQuantity="1">
+      <extensionElements>
+        <activiti:taskListener delegateExpression="${perfusionSyringeDispenseMedicationTaskListener}" event="create"/>
+        <yaoqiang:style fillColor="#99CC00"/>
+      </extensionElements>
+      <incoming>_51</incoming>
+      <outgoing>_53</outgoing>
+    </userTask>
+    <sequenceFlow id="_45" sourceRef="_21" targetRef="_27">
+      <extensionElements>
+        <yaoqiang:label offset-x="14.0" offset-y="14.0" x="0.0" y="-14.0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ cancelPreparation == false }]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_46" sourceRef="_36" targetRef="_19">
+      <extensionElements>
+        <yaoqiang:style horizontal="1"/>
+        <yaoqiang:label offset-x="38.0" offset-y="0.0" x="0.0" y="14.0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ cancelPreparation == true }]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_47" sourceRef="_27" targetRef="_36">
+      <extensionElements>
+        <yaoqiang:style edgeStyle="elbowEdgeStyle" elbow="vertical" shape="connector"/>
+      </extensionElements>
+    </sequenceFlow>
+    <sequenceFlow id="_48" sourceRef="_36" targetRef="_35">
+      <extensionElements>
+        <yaoqiang:label offset-x="-2.0" offset-y="0.0" x="0.0" y="9.0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ cancelPreparation == false }]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_50" sourceRef="_35" targetRef="_11">
+      <extensionElements>
+        <yaoqiang:label offset-x="0.0" offset-y="-78.0" x="1.0" y="-12.0"/>
+        <yaoqiang:style horizontal="0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ undoState == true }]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_51" sourceRef="_35" targetRef="_31">
+      <extensionElements>
+        <yaoqiang:label offset-x="-57.0" offset-y="0.0" x="0.0" y="9.0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ undoState == false }]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_52" sourceRef="_37" targetRef="_27">
+      <extensionElements>
+        <yaoqiang:label offset-x="11.0" offset-y="0.0" x="0.0" y="-9.0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ undoState == true }]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_53" sourceRef="_31" targetRef="_37"/>
+    <sequenceFlow id="_58" sourceRef="_37" targetRef="medicationDispensed">
+      <extensionElements>
+        <yaoqiang:label offset-x="0.0" offset-y="-7.0" x="0.0" y="14.0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ undoState == false }]]></conditionExpression>
+    </sequenceFlow>
+    <exclusiveGateway gatewayDirection="Diverging" id="_21" name="Cancel">
+      <extensionElements>
+        <yaoqiang:style fontSize="12" fontStyle="1"/>
+      </extensionElements>
+      <incoming>_23</incoming>
+      <outgoing>_25</outgoing>
+      <outgoing>_45</outgoing>
+    </exclusiveGateway>
+    <boundaryEvent attachedToRef="_31" cancelActivity="true" id="medicationAdministrationEvent" name="Boundary Event" parallelMultiple="false">
+      <extensionElements>
+        <yaoqiang:style align="right" labelPosition="left" noLabel="1" verticalAlign="middle" verticalLabelPosition="bottom"/>
+        <yaoqiang:label offset-x="108.0" offset-y="-16.0" x="0.0" y="1.0"/>
+      </extensionElements>
+      <outgoing>_7</outgoing>
+      <messageEventDefinition id="_38_ED_1" messageRef="medicationAdministrationMessage"/>
+    </boundaryEvent>
+    <startEvent id="startPreparationProcess" isInterrupting="true" name="Preparation of &#10;perfusion syringe request" parallelMultiple="false">
+      <extensionElements>
+        <yaoqiang:label offset-x="0.0" offset-y="6.0"/>
+      </extensionElements>
+      <outgoing>_16</outgoing>
+    </startEvent>
+    <sequenceFlow id="_7" sourceRef="medicationAdministrationEvent" targetRef="medicationDispensed"/>
+    <boundaryEvent attachedToRef="_31" cancelActivity="true" id="cancelTherapyAtDispenseEvent" parallelMultiple="false">
+      <extensionElements>
+        <yaoqiang:style align="right" labelPosition="left" verticalAlign="middle" verticalLabelPosition="top"/>
+        <yaoqiang:label offset-x="-16.0" offset-y="59.55555555555554" x="0.0" y="0.0"/>
+      </extensionElements>
+      <outgoing>_14</outgoing>
+      <messageEventDefinition id="_43_ED_1" messageRef="cancelTherapyMessage"/>
+    </boundaryEvent>
+    <boundaryEvent attachedToRef="_11" cancelActivity="true" id="cancelTherapyAtStartEvent" parallelMultiple="false">
+      <extensionElements>
+        <yaoqiang:style align="right" labelPosition="left" verticalAlign="middle" verticalLabelPosition="bottom"/>
+        <yaoqiang:label offset-x="60.66666666666666" offset-y="-16.0" x="0.0" y="1.0"/>
+      </extensionElements>
+      <outgoing>_13</outgoing>
+      <messageEventDefinition id="_13_ED_1" messageRef="cancelTherapyMessage"/>
+    </boundaryEvent>
+    <exclusiveGateway gatewayDirection="Diverging" id="_37" name="Undo">
+      <extensionElements>
+        <yaoqiang:style fontSize="12" fontStyle="1"/>
+        <yaoqiang:label offset-x="1.0" offset-y="-29.0"/>
+      </extensionElements>
+      <incoming>_53</incoming>
+      <outgoing>_52</outgoing>
+      <outgoing>_58</outgoing>
+    </exclusiveGateway>
+    <boundaryEvent attachedToRef="_27" cancelActivity="false" id="cancelOrderAtCompleteEvent" parallelMultiple="false">
+      <extensionElements>
+        <yaoqiang:style align="right" labelPosition="left" verticalAlign="middle" verticalLabelPosition="top"/>
+        <yaoqiang:label offset-x="27.0" offset-y="-16.0" x="0.0" y="1.0"/>
+      </extensionElements>
+      <outgoing>_9</outgoing>
+      <messageEventDefinition id="_40_ED_1" messageRef="cancelOrderMessage"/>
+    </boundaryEvent>
+    <sequenceFlow id="_9" sourceRef="cancelOrderAtCompleteEvent" targetRef="consumeMessage"/>
+    <sequenceFlow id="_10" sourceRef="cancelTherapyAtCompleteEvent" targetRef="consumeMessage"/>
+    <boundaryEvent attachedToRef="_27" cancelActivity="false" id="cancelTherapyAtCompleteEvent" parallelMultiple="false">
+      <extensionElements>
+        <yaoqiang:style align="left" labelPosition="right" verticalAlign="middle" verticalLabelPosition="top"/>
+        <yaoqiang:label offset-x="70.0" offset-y="-16.0" x="0.0" y="1.0"/>
+      </extensionElements>
+      <outgoing>_10</outgoing>
+      <messageEventDefinition id="_28_ED_1" messageRef="cancelTherapyMessage"/>
+    </boundaryEvent>
+    <sequenceFlow id="_13" sourceRef="cancelTherapyAtStartEvent" targetRef="therapyCanceled">
+      <extensionElements>
+        <yaoqiang:style edgeStyle="elbowEdgeStyle" elbow="vertical" shape="connector"/>
+      </extensionElements>
+    </sequenceFlow>
+    <sequenceFlow id="_14" sourceRef="cancelTherapyAtDispenseEvent" targetRef="therapyCanceled">
+      <extensionElements>
+        <yaoqiang:style edgeStyle="elbowEdgeStyle" elbow="vertical" shape="connector"/>
+      </extensionElements>
+    </sequenceFlow>
+    <endEvent id="consumeMessage" name="Non interupting message consumed">
+      <incoming>_9</incoming>
+      <incoming>_10</incoming>
+    </endEvent>
+    <endEvent id="therapyCanceled" name="Therapy canceled">
+      <incoming>_13</incoming>
+      <incoming>_14</incoming>
+      <incoming>_28</incoming>
+    </endEvent>
+    <endEvent id="orderCanceled" name="Order canceled">
+      <incoming>_18</incoming>
+      <incoming>_26</incoming>
+    </endEvent>
+    <sequenceFlow id="_18" sourceRef="cancelOrderAtStartEvent" targetRef="orderCanceled">
+      <extensionElements>
+        <yaoqiang:style edgeStyle="elbowEdgeStyle" elbow="vertical" shape="connector"/>
+      </extensionElements>
+    </sequenceFlow>
+    <boundaryEvent attachedToRef="_11" cancelActivity="true" id="cancelOrderAtStartEvent" parallelMultiple="false">
+      <extensionElements>
+        <yaoqiang:style align="right" labelPosition="left" verticalAlign="middle" verticalLabelPosition="top"/>
+        <yaoqiang:label offset-x="110.0" offset-y="-16.0" x="0.0" y="1.0"/>
+      </extensionElements>
+      <outgoing>_18</outgoing>
+      <messageEventDefinition id="_12_ED_1" messageRef="cancelOrderMessage"/>
+    </boundaryEvent>
+    <sequenceFlow id="_20" sourceRef="_19" targetRef="cancelOfPreparation">
+      <extensionElements>
+        <yaoqiang:label offset-x="18.0" offset-y="0.0" x="0.0" y="12.0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ orderCanceled == false && therapyCanceled == false }]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_26" sourceRef="_19" targetRef="orderCanceled">
+      <extensionElements>
+        <yaoqiang:style horizontal="0"/>
+        <yaoqiang:label offset-x="0.0" offset-y="-133.0" x="0.0" y="-13.0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ orderCanceled == true }]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="_28" sourceRef="_19" targetRef="therapyCanceled">
+      <extensionElements>
+        <yaoqiang:style horizontal="0"/>
+        <yaoqiang:label offset-x="0.0" offset-y="-192.0" x="0.0" y="-15.0"/>
+      </extensionElements>
+      <conditionExpression><![CDATA[${ therapyCanceled == true }]]></conditionExpression>
+    </sequenceFlow>
+    <endEvent id="cancelOfPreparation" name="Cancel of preparation">
+      <extensionElements>
+        <yaoqiang:label offset-x="2.0" offset-y="-2.0"/>
+      </extensionElements>
+      <incoming>_20</incoming>
+    </endEvent>
+    <endEvent id="medicationDispensed" name="Medication dispensed">
+      <incoming>_58</incoming>
+      <incoming>_7</incoming>
+    </endEvent>
+    <exclusiveGateway gatewayDirection="Diverging" id="_19" name="Cancel&#10;Type">
+      <extensionElements>
+        <yaoqiang:label offset-x="1.0" offset-y="-39.0"/>
+        <yaoqiang:style fontStyle="1"/>
+      </extensionElements>
+      <incoming>_46</incoming>
+      <outgoing>_20</outgoing>
+      <outgoing>_26</outgoing>
+      <outgoing>_28</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway gatewayDirection="Diverging" id="_35" name="Undo">
+      <extensionElements>
+        <yaoqiang:style fontSize="12" fontStyle="1" whiteSpace="wrap"/>
+        <yaoqiang:label offset-x="1.0" offset-y="-32.0"/>
+      </extensionElements>
+      <incoming>_48</incoming>
+      <outgoing>_50</outgoing>
+      <outgoing>_51</outgoing>
+    </exclusiveGateway>
+    <endEvent id="cancelOfRequest" name="Cancel of request">
+      <extensionElements>
+        <yaoqiang:label offset-x="1.0" offset-y="-58.0"/>
+      </extensionElements>
+      <incoming>_25</incoming>
+    </endEvent>
+    <exclusiveGateway gatewayDirection="Diverging" id="_36" name="Cancel">
+      <extensionElements>
+        <yaoqiang:label offset-x="0.0" offset-y="-32.0"/>
+        <yaoqiang:style fontSize="12" fontStyle="1"/>
+      </extensionElements>
+      <incoming>_47</incoming>
+      <outgoing>_46</outgoing>
+      <outgoing>_48</outgoing>
+    </exclusiveGateway>
+    <association associationDirection="None" id="_17" sourceRef="cancelOrderMessage" targetRef="cancelOrderAtStartEvent"/>
+    <association associationDirection="None" id="_6" sourceRef="cancelTherapyMessage" targetRef="cancelTherapyAtStartEvent"/>
+    <association associationDirection="None" id="_42" sourceRef="cancelTherapyMessage" targetRef="cancelTherapyAtDispenseEvent"/>
+    <association associationDirection="None" id="_41" sourceRef="medicationAdministrationMessage" targetRef="medicationAdministrationEvent"/>
+    <association associationDirection="None" id="_32" sourceRef="cancelTherapyMessage" targetRef="cancelTherapyAtCompleteEvent"/>
+    <association associationDirection="None" id="_33" sourceRef="cancelOrderMessage" targetRef="cancelOrderAtCompleteEvent"/>
+  </process>
+  <dataStore id="DS_1" isUnlimited="false" name="Data Store"/>
+  <bpmndi:BPMNDiagram id="Yaoqiang_Diagram-_1" name="Untitled Diagram" resolution="96.0">
+    <bpmndi:BPMNPlane bpmnElement="PreparePerfusionSyringeProcess">
+      <bpmndi:BPMNShape bpmnElement="_3" id="Yaoqiang-_3" isExpanded="true" isHorizontal="true">
+        <dc:Bounds height="163.0" width="2258.0" x="50.0" y="400.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="48.0" width="23.609375" x="55.6953125" y="457.5"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_4" id="Yaoqiang-_4" isExpanded="true" isHorizontal="true">
+        <dc:Bounds height="98.0" width="2258.0" x="50.0" y="575.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="53.0" width="23.609375" x="55.6953125" y="597.5"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_2" id="Yaoqiang-_2" isExpanded="true" isHorizontal="true">
+        <dc:Bounds height="384.0" width="2258.0" x="50.0" y="4.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="86.0" width="23.609375" x="55.6953125" y="153.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="cancelTherapyMessage" id="Yaoqiang-cancelTherapyMessage">
+        <dc:Bounds height="30.0" width="35.0" x="424.05555555555543" y="604.5"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="79.0" x="400.05555555555543" y="636.58203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="cancelOrderMessage" id="Yaoqiang-cancelOrderMessage">
+        <dc:Bounds height="30.0" width="35.0" x="426.5" y="449.49999999999994"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="68.0" x="409.5" y="479.5820312499999"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="medicationAdministrationMessage" id="Yaoqiang-medicationAdministrationMessage">
+        <dc:Bounds height="30.0" width="35.0" x="980.3888888888888" y="452.9444444444444"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="126.0" x="932.3888888888888" y="486.02647569444446"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="consumeMessage" id="Yaoqiang-consumeMessage">
+        <dc:Bounds height="32.0" width="32.0" x="701.2368421052631" y="683.1315789473684"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="178.0" x="628.2368421052631" y="723.2136101973684"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="therapyCanceled" id="Yaoqiang-therapyCanceled">
+        <dc:Bounds height="32.0" width="32.0" x="480.9736842105263" y="777.2368421052631"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="93.0" x="450.4736842105263" y="817.3188733552631"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="orderCanceled" id="Yaoqiang-orderCanceled">
+        <dc:Bounds height="32.0" width="32.0" x="549.078947368421" y="729.2368421052631"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="81.0" x="524.578947368421" y="769.3188733552631"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startPreparationProcess" id="Yaoqiang-startPreparationProcess">
+        <dc:Bounds height="32.0" width="32.0" x="145.0" y="485.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="34.8359375" width="131.0" x="95.5" y="523.58203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_11" id="Yaoqiang-_11">
+        <dc:Bounds height="78.0" width="156.0" x="147.0" y="236.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="87.0" x="181.5" y="267.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_27" id="Yaoqiang-_27">
+        <dc:Bounds height="83.0" width="177.0" x="594.0" y="234.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="108.0" x="628.5" y="267.58203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_31" id="Yaoqiang-_31">
+        <dc:Bounds height="73.0" width="180.0" x="872.0" y="235.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="105.0" x="909.5" y="263.58203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_21" id="Yaoqiang-_21" isMarkerVisible="false">
+        <dc:Bounds height="42.0" width="42.0" x="384.94444444444446" y="254.22222222222223"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="21.09375" width="45.0" x="383.44444444444446" y="298.22222222222223"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_37" id="Yaoqiang-_37" isMarkerVisible="false">
+        <dc:Bounds height="42.0" width="42.0" x="943.0555555555554" y="155.16666666666663"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="21.09375" width="35.0" x="947.5555555555554" y="170.16666666666663"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="cancelOfPreparation" id="Yaoqiang-cancelOfPreparation">
+        <dc:Bounds height="32.0" width="32.0" x="1174.3888888888887" y="86.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="110.0" x="1137.3888888888887" y="124.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="medicationDispensed" id="Yaoqiang-medicationDispensed">
+        <dc:Bounds height="32.0" width="32.0" x="1170.0555555555554" y="160.05555555555554"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="110.0" x="1131.0555555555554" y="200.13758680555554"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_19" id="Yaoqiang-_19" isMarkerVisible="false">
+        <dc:Bounds height="42.0" width="42.0" x="846.7631578947369" y="24.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="34.8359375" width="43.0" x="847.2631578947369" y="29.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_35" id="Yaoqiang-_35" isMarkerVisible="false">
+        <dc:Bounds height="42.0" width="42.0" x="690.8333333333333" y="111.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="21.09375" width="35.0" x="695.3333333333333" y="123.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="cancelOfRequest" id="Yaoqiang-cancelOfRequest">
+        <dc:Bounds height="32.0" width="32.0" x="391.94444444444446" y="24.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="92.0" x="362.94444444444446" y="6.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_36" id="Yaoqiang-_36" isMarkerVisible="false">
+        <dc:Bounds height="42.0" width="42.0" x="462.3888888888888" y="109.7222222222222"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="21.09375" width="45.0" x="460.8888888888888" y="121.7222222222222"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="cancelTherapyAtStartEvent" id="Yaoqiang-cancelTherapyAtStartEvent">
+        <dc:Bounds height="32.0" width="32.0" x="207.66666666666666" y="298.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="201.66666666666666" y="338.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="cancelOrderAtStartEvent" id="Yaoqiang-cancelOrderAtStartEvent">
+        <dc:Bounds height="32.0" width="32.0" x="257.0" y="298.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="251.0" y="274.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="cancelOrderAtCompleteEvent" id="Yaoqiang-cancelOrderAtCompleteEvent">
+        <dc:Bounds height="32.0" width="32.0" x="621.0" y="301.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="615.0" y="277.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="cancelTherapyAtCompleteEvent" id="Yaoqiang-cancelTherapyAtCompleteEvent">
+        <dc:Bounds height="32.0" width="32.0" x="664.0" y="301.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="696.0" y="277.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="medicationAdministrationEvent" id="Yaoqiang-medicationAdministrationEvent">
+        <dc:Bounds height="32.0" width="32.0" x="980.0" y="292.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="974.0" y="332.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="cancelTherapyAtDispenseEvent" id="Yaoqiang-cancelTherapyAtDispenseEvent">
+        <dc:Bounds height="32.0" width="32.0" x="856.0" y="294.55555555555554"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="850.0" y="270.63758680555554"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="_28" id="Yaoqiang-_28">
+        <di:waypoint x="888.7905154991" y="45.0"/>
+        <di:waypoint x="1312.0" y="401.0"/>
+        <di:waypoint x="512.9937735560009" y="793.2368421052631"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="145.0" width="19.8359375" x="1287.08203125" y="342.5167920241811"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_26" id="Yaoqiang-_26">
+        <di:waypoint x="888.7905154991" y="45.0"/>
+        <di:waypoint x="1265.0" y="317.0"/>
+        <di:waypoint x="580.9937735560009" y="745.2368421052631"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="134.0" width="19.8359375" x="1242.08203125" y="349.016792024181"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_58" id="Yaoqiang-_58">
+        <di:waypoint x="984.6238488324334" y="176.16666666666663"/>
+        <di:waypoint x="1170.0021953453459" y="176.05555555555554"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="117.0" x="1018.8685776444452" y="145.24869791666663"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_25" id="Yaoqiang-_25">
+        <di:waypoint x="407.94444444444446" y="255.73495994354448"/>
+        <di:waypoint x="407.94444444444446" y="55.790419048192035"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="150.0" width="19.8359375" x="382.02647569444446" y="87.76268949586824"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_23" id="Yaoqiang-_23">
+        <di:waypoint x="303.0" y="275.0"/>
+        <di:waypoint x="385.4317067231222" y="275.22222222222223"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="341.10474225045" y="265.30425347222223"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_53" id="Yaoqiang-_53">
+        <di:waypoint x="964.0555555555554" y="234.79051549910002"/>
+        <di:waypoint x="964.0555555555554" y="196.7349599435446"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="961.0555555555554" y="205.8447689713223"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_20" id="Yaoqiang-_20">
+        <di:waypoint x="869.0" y="64.79051549910002"/>
+        <di:waypoint x="869.0" y="105.0"/>
+        <di:waypoint x="1174.3252046508262" y="105.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="283.0" x="878.0578600749632" y="83.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_52" id="Yaoqiang-_52">
+        <di:waypoint x="943.2094845009" y="176.0"/>
+        <di:waypoint x="700.0" y="176.0"/>
+        <di:waypoint x="700.0" y="233.79051549910002"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="112.0" x="747.7094845009" y="157.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_51" id="Yaoqiang-_51">
+        <di:waypoint x="732.2094845009" y="131.0"/>
+        <di:waypoint x="899.0" y="131.0"/>
+        <di:waypoint x="899.0" y="234.79051549910002"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="117.0" x="752.0" y="112.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_50" id="Yaoqiang-_50">
+        <di:waypoint x="711.8333333333333" y="110.95718216576677"/>
+        <di:waypoint x="672.0" y="76.0"/>
+        <di:waypoint x="225.0" y="235.79051549910002"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="112.0" width="19.8359375" x="203.08203125" y="101.79051549910002"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_9" id="Yaoqiang-_9">
+        <di:waypoint x="637.0" y="332.7905154991"/>
+        <di:waypoint x="637.0" y="517.0"/>
+        <di:waypoint x="701.0036355466546" y="699.1315789473684"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="634.0" y="538.0448962465615"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_18" id="Yaoqiang-_18">
+        <di:waypoint x="273.0" y="329.7905154991"/>
+        <di:waypoint x="444.0" y="748.0"/>
+        <di:waypoint x="549.3252046508261" y="748.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="270.0" y="667.1398913249631"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_7" id="Yaoqiang-_7">
+        <di:waypoint x="1011.9986285738461" y="308.0"/>
+        <di:waypoint x="1170.0021953453459" y="176.05555555555554"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="1088.0277777777778" y="232.13717484595963"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_16" id="Yaoqiang-_16">
+        <di:waypoint x="145.00137142615398" y="501.0"/>
+        <di:waypoint x="116.0" y="276.0"/>
+        <di:waypoint x="147.0" y="276.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="113.0" y="377.582716963077"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_48" id="Yaoqiang-_48">
+        <di:waypoint x="502.7905154991" y="132.0"/>
+        <di:waypoint x="616.0" y="132.0"/>
+        <di:waypoint x="691.2094845009" y="132.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="155.0" x="517.5" y="113.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_47" id="Yaoqiang-_47">
+        <di:waypoint x="682.5" y="233.79051549910002"/>
+        <di:waypoint x="536.0" y="209.0"/>
+        <di:waypoint x="483.3888888888888" y="151.40162661021122"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="563.5405154991" y="199.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_14" id="Yaoqiang-_14">
+        <di:waypoint x="872.0" y="326.7905154991"/>
+        <di:waypoint x="695.0" y="794.0"/>
+        <di:waypoint x="512.9542203583278" y="794.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="869.0" y="730.0001788203862"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_46" id="Yaoqiang-_46">
+        <di:waypoint x="483.0" y="109.79051549910002"/>
+        <di:waypoint x="483.0" y="80.0"/>
+        <di:waypoint x="847.2094845009" y="45.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="150.0" x="595.7094845009" y="21.08203125"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_13" id="Yaoqiang-_13">
+        <di:waypoint x="223.66666666666666" y="329.7870429000358"/>
+        <di:waypoint x="378.0" y="793.0"/>
+        <di:waypoint x="481.001371426154" y="793.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="220.66666666666666" y="680.1429050797616"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_45" id="Yaoqiang-_45">
+        <di:waypoint x="426.5682932768778" y="275.22222222222223"/>
+        <di:waypoint x="594.0" y="275.5"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="155.0" x="446.9230355273278" y="293.30425347222223"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_10" id="Yaoqiang-_10">
+        <di:waypoint x="679.0" y="332.75923492177134"/>
+        <di:waypoint x="679.0" y="507.0"/>
+        <di:waypoint x="701.0036355466546" y="699.1315789473684"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="676.0" y="517.0292559578971"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_17" id="Yaoqiang-_17">
+        <di:waypoint x="427.4623011035973" y="449.7905154991"/>
+        <di:waypoint x="285.0034238195006" y="324.3696372305781"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="353.23286246154896" y="377.1621076148391"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_6" id="Yaoqiang-_6">
+        <di:waypoint x="430.83880742619164" y="604.7905154991"/>
+        <di:waypoint x="233.27697204511406" y="326.82653443412033"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="329.05788973565285" y="455.8905562166102"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_42" id="Yaoqiang-_42">
+        <di:waypoint x="459.0" y="607.2292225518515"/>
+        <di:waypoint x="858.9981346186573" y="320.11529413483026"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="655.9990673093287" y="453.7542895933409"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_41" id="Yaoqiang-_41">
+        <di:waypoint x="997.363406703227" y="452.7905154991"/>
+        <di:waypoint x="996.1886942185863" y="323.78940280985046"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="993.7760504609066" y="378.37199040447524"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_33" id="Yaoqiang-_33">
+        <di:waypoint x="462.0" y="451.33164521332424"/>
+        <di:waypoint x="624.2941273742822" y="326.51475330054495"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="540.1470636871411" y="379.0052305069346"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_32" id="Yaoqiang-_32">
+        <di:waypoint x="453.30655944650925" y="604.7905154991"/>
+        <di:waypoint x="670.0994262348548" y="329.3594708702054"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="19.8359375" width="6.0" x="558.7029928406821" y="457.1570244346527"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

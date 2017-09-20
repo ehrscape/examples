@@ -21,25 +21,24 @@ package com.marand.thinkmed.medications.dto.report;
 
 import java.util.List;
 
-import com.marand.maf.core.data.object.DataObject;
-import com.marand.thinkmed.medications.dto.ComplexTherapyDto;
-import com.marand.thinkmed.medications.dto.SimpleTherapyDto;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
+import com.marand.thinkmed.medications.connector.data.object.PatientDataForTherapyReportDto;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
 
-public class TherapyDayReportDto extends DataObject
+public class TherapyDayReportDto extends DataTransferObject
 {
   private final boolean forEmptyReport;
 
   private int patientSortOrder;
   private PatientDataForTherapyReportDto patientData;
 
-  private List<TherapyDayElementReportDto<SimpleTherapyDto>> simpleElements;
+  private List<TherapyDayElementReportDto> simpleElements;
 
-  private List<TherapyDayElementReportDto<ComplexTherapyDto>> complexElements;
+  private List<TherapyDayElementReportDto> complexElements;
 
   public TherapyDayReportDto(final boolean forEmptyReport)
   {
@@ -71,22 +70,22 @@ public class TherapyDayReportDto extends DataObject
     this.patientData = patientData;
   }
 
-  public List<TherapyDayElementReportDto<SimpleTherapyDto>> getSimpleElements()
+  public List<TherapyDayElementReportDto> getSimpleElements()
   {
     return simpleElements;
   }
 
-  public void setSimpleElements(final List<TherapyDayElementReportDto<SimpleTherapyDto>> simpleElements)
+  public void setSimpleElements(final List<TherapyDayElementReportDto> simpleElements)
   {
     this.simpleElements = simpleElements;
   }
 
-  public List<TherapyDayElementReportDto<ComplexTherapyDto>> getComplexElements()
+  public List<TherapyDayElementReportDto> getComplexElements()
   {
     return complexElements;
   }
 
-  public void setComplexElements(final List<TherapyDayElementReportDto<ComplexTherapyDto>> complexElements)
+  public void setComplexElements(final List<TherapyDayElementReportDto> complexElements)
   {
     this.complexElements = complexElements;
   }

@@ -22,14 +22,14 @@ package com.marand.thinkmed.medications.dto;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
-import com.marand.maf.core.data.object.DataObject;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import com.marand.thinkmed.medications.DosingFrequencyTypeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
-public class DosingFrequencyDto extends DataObject
+public class DosingFrequencyDto extends DataTransferObject
 {
   private DosingFrequencyTypeEnum type;
   private Integer value;

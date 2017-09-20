@@ -25,6 +25,8 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
   medicationData: null,
   timedDoseElements: null,
   frequency: null,
+  addDosageCalculationPane: false,
+  showDosageCalculationPanes: false,
   /** privates*/
   validationForm: null,
   initialState: null,
@@ -34,6 +36,13 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
   /** privates: components */
   dosingFrequencyPane: null,
   rowsContainer: null,
+  dosageCalculationUnitCombo: null,
+  dosageCalculationBtn: null,
+  dosageCalculationUnitHeader: null,
+  _dosingPatternValidator: null,
+  _testRenderCoordinator: null,
+
+  visibilityContext: null,
 
   /** constructor */
   Constructor: function(config)
@@ -44,12 +53,21 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
     this.timeFields = [];
     this.dosePanes = [];
 
-    this.setLayout(tm.jquery.VFlexboxLayout.create("start", "stretch"));
+    this._testRenderCoordinator = new app.views.medications.common.testing.RenderCoordinator({
+      attributeName: 'simple-variable-dose-pane-coordinator',
+      view: this.getView(),
+      component: this
+    });
+
+    this.setLayout(tm.jquery.VFlexboxLayout.create("flex-start", "stretch"));
     this._buildComponents();
     this._buildGui();
+    this._setDosageCalculationUnits();
+    this.dosingFrequencyPane.setFrequency(this.frequency, false);
 
-    this.dosingFrequencyPane.setFrequency(this.frequency);
-
+    this._dosingPatternValidator = new app.views.medications.common.DosingPatternValidator({
+     view: this.getView()
+    });
     var self = this;
     this.on(tm.jquery.ComponentEvent.EVENT_TYPE_RENDER, function()
     {
@@ -64,15 +82,55 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
   _buildComponents: function()
   {
     var self = this;
+    this.dosageCalculationUnitHeader = new tm.jquery.Container({
+      cls: "TextLabel",
+      width: 250,
+      html: this.view.getDictionary('dosage.calculation')
+    });
+    this.dosageCalculationUnitCombo = new tm.jquery.SelectBox({
+      cls: "dosage-calculation-unit-combo",
+      width: 125,
+      padding: '0 5 0 0',
+      allowSingleDeselect: false,
+      multiple: false,
+      defaultValueCompareToFunction: function(value1, value2)
+      {
+        return (tm.jquery.Utils.isEmpty(value1) ? null : value1.id)
+            === (tm.jquery.Utils.isEmpty(value2) ? null : value2.id);
+      },
+      hidden: true
+    });
+
+    this.dosageCalculationUnitCombo.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function(component)
+    {
+      self._changeDosageCalculationUnits(component.getSelections()[0]);
+    });
+
+    this.dosageCalculationBtn = new tm.jquery.Button({
+      cls: "dosage-calculation-icon dosage-calculation-button",
+      handler: function()
+      {
+        self.showDosageCalculationPanes = true;
+        self.dosageCalculationUnitCombo.show();
+        self.dosageCalculationBtn.hide();
+        self._showDosageCalculationPanes(self.dosageCalculationUnitCombo.getSelections()[0]);
+        self.dosageCalculationUnitHeader.setHtml(self.view.getDictionary('dosage.calculation.unit'));
+      }
+    });
+
     this.dosingFrequencyPane = new app.views.medications.ordering.DosingFrequencyPane({
       view: this.view,
       withSingleFrequencies: false,
+      visibilityContext: this.visibilityContext,
       frequencyChangeEvent: function()
       {
         self._handleDosingFrequencyChange();
       }
     });
-    this.rowsContainer = new tm.jquery.Container({layout: tm.jquery.VFlexboxLayout.create("start", "stretch", 5)});
+    this.rowsContainer = new tm.jquery.Container({
+      layout: tm.jquery.VFlexboxLayout.create("flex-start", "stretch", 5),
+      scrollable: 'visible'
+    });
 
     this.validationForm = new tm.jquery.Form({
       onValidationSuccess: function()
@@ -89,7 +147,17 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
 
   _buildGui: function()
   {
-    var container = new tm.jquery.Container({layout: tm.jquery.VFlexboxLayout.create("start", "stretch")});
+    var container = new tm.jquery.Container({
+      layout: tm.jquery.VFlexboxLayout.create("flex-start", "stretch"),
+      flex: tm.jquery.flexbox.item.Flex.create(0, 0, "auto"),
+      scrollable: 'visible'
+    });
+    if (this.addDosageCalculationPane)
+    {
+      container.add(this.dosageCalculationUnitHeader);
+      container.add(this.dosageCalculationUnitCombo);
+      container.add(this.dosageCalculationBtn);
+    }
     container.add(tm.views.medications.MedicationUtils.crateLabel('TextLabel', this.view.getDictionary('dosing.interval')));
     container.add(this.dosingFrequencyPane);
     container.add(new tm.jquery.Spacer({type: 'vertical', size: 7}));
@@ -98,23 +166,49 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
     this.add(container);
   },
 
-  _addField: function(doseTime, numerator)
+  _addField: function(doseTime, numerator, denominator, enabled, frequencyType)
   {
     var self = this;
 
     if (doseTime)
     {
-      var time = new Date();
+      var time = CurrentTime.get();
       time.setHours(doseTime.hour);
       time.setMinutes(doseTime.minute);
     }
-    var timePicker = new tm.jquery.TimePicker({time: time ? time : null});
+    var timePicker = new tm.jquery.TimePicker({
+      cls: "time-field",
+      time: time ? time : null,
+      enabled: enabled,
+      currentTimeProvider: function()
+      {
+        return CurrentTime.get();
+      }
+    });
     this.timeFields.push(timePicker);
 
+    timePicker.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function(component)
+    {
+      if (!tm.jquery.Utils.isEmpty(frequencyType))
+      {
+        if (component.isEnabled() &&
+            frequencyType === app.views.medications.TherapyEnums.dosingFrequencyTypeEnum.BETWEEN_DOSES)
+        {
+          self._recalculateTimesForBetweenDoses();
+        }
+      }
+    });
+
     var dosePane = new app.views.medications.ordering.DosePane({
+      cls: "dose-pane with-large-input",
       view: this.view,
       medicationData: this.medicationData,
       doseNumerator: numerator,
+      doseDenominator: denominator,
+      addDosageCalculationPane: true,
+      showDoseUnitCombos: false,
+      showDosageCalculation: this.showDosageCalculationPanes,
+      showRounding: true,
       numeratorFocusLostEvent: function(dosePane)
       {
         var index = self.dosePanes.indexOf(dosePane);
@@ -125,11 +219,19 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
           if (nextDosePane)
           {
             nextDosePane.requestFocusToNumerator();
+            dosePane.suppressDosageCalculationTooltips();
           }
         }
         else
         {
-          dosePane.requestFocusToDenominator();
+          if (!dosePane.denominatorField.isHidden())
+          {
+            dosePane.requestFocusToDenominator();
+          }
+          else if (!dosePane.isDosageCalculationHidden())
+          {
+            dosePane.requestFocusToDosageCalculation();
+          }
         }
       },
       denominatorFocusLostEvent: function(dosePane)
@@ -142,20 +244,64 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
           {
             nextDosePane.requestFocusToDenominator();
           }
+          else if (!dosePane.isDosageCalculationHidden())
+          {
+            dosePane.requestFocusToDosageCalculation();
+          }
           else
           {
             nextDosePane.requestFocusToNumerator();
           }
+          dosePane.suppressDosageCalculationTooltips();
+        }
+        else if (!dosePane.isDosageCalculationHidden())
+        {
+          dosePane.requestFocusToDosageCalculation();
         }
         else
         {
           dosePane.requestFocusToDenominator();
         }
+      },
+      dosageCalculationFocusLostEvent: function(dosePane)
+      {
+        var index = self.dosePanes.indexOf(dosePane);
+        var nextDosePane = self.dosePanes[index + 1];
+        if (nextDosePane)
+        {
+          if (!tm.jquery.Utils.isEmpty(dosePane.getDosageCalculation()))
+          {
+            nextDosePane.requestFocusToDosageCalculation();
+          }
+          else
+          {
+            nextDosePane.requestFocusToNumerator();
+          }
+          dosePane.suppressDosageCalculationTooltips();
+        }
+        else
+        {
+          timePicker.focus();
+        }
       }
     });
+    if (this.showDosageCalculationPanes)
+    {
+      if (this.dosageCalculationUnitCombo.getSelections().length > 0)
+      {
+        dosePane.setDosageCalculationUnitLabel(this.dosageCalculationUnitCombo.getSelections()[0]);
+      }
+      else if (this.dosageCalculationUnitCombo.getOptions().length > 0)
+      {
+        dosePane.setDosageCalculationUnitLabel(this.dosageCalculationUnitCombo.getOptions()[0].value);
+      }
+    }
     this.dosePanes.push(dosePane);
-
-    var row = new tm.jquery.Container({layout: tm.jquery.HFlexboxLayout.create("start", "start", 5)});
+    var row = new tm.jquery.Container({
+      cls: "dose-row",
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "start", 5),
+      scrollable: 'visible'
+    });
     row.add(timePicker);
     row.add(dosePane);
     this.rowsContainer.add(row);
@@ -167,7 +313,8 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
     {
       this._addField(
           this.timedDoseElements[i].doseTime,
-          this.timedDoseElements[i].doseElement ? this.timedDoseElements[i].doseElement.quantity : null);
+          this.timedDoseElements[i].doseElement ? this.timedDoseElements[i].doseElement.quantity : null,
+          this.timedDoseElements[i].doseElement ? this.timedDoseElements[i].doseElement.quantityDenominator : null);
     }
     this.rowsContainer.repaint();
   },
@@ -179,14 +326,16 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
     this.dosePanes.removeAll();
     this.rowsContainer.removeAll(true);
     var frequencyKey = this.dosingFrequencyPane.getFrequencyKey();
+    var frequencyType = this.dosingFrequencyPane.getFrequencyType();
     var administrationTimes =
-        tm.views.medications.MedicationTimingUtils.getFrequencyAdministrationTimesOfDay(
-            this.view.getAdministrationTiming(), frequencyKey);
+        tm.views.medications.MedicationTimingUtils.getFrequencyTimingPattern(
+            this.view.getAdministrationTiming(), frequencyKey, frequencyType);
     if (administrationTimes.length > 0)
     {
       for (var i = 0; i < administrationTimes.length; i++)
       {
-        this._addField(administrationTimes[i]);
+        var enabled = i === 0 || frequencyType === app.views.medications.TherapyEnums.dosingFrequencyTypeEnum.DAILY_COUNT;
+        this._addField(administrationTimes[i], null, null, enabled, frequencyType);
       }
     }
     else
@@ -246,6 +395,7 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
     this.validationForm.reset();
     this._addValidations(this.dosingFrequencyPane.getDosingFrequencyPaneValidations());
 
+    var times = [];
     for (var i = 0; i < this.timeFields.length; i++)
     {
       var dosePane = this.dosePanes[i];
@@ -261,7 +411,9 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
         }
       });
       this._addValidations([timeFieldValidation]);
+      times.push(this.timeFields[i].getTime());
     }
+    this.validationForm.addFormField(this._dosingPatternValidator.getDosingPatternValidation(this.rowsContainer, times));
   },
 
   _addValidations: function(validation)
@@ -295,6 +447,87 @@ Class.define('app.views.medications.ordering.SimpleVariableDosePane', 'app.views
       frequency: this.dosingFrequencyPane.getFrequency()
     };
     this.resultCallback(new app.views.common.AppResultData({success: true, value: resultValue}));
+  },
+
+  _changeDosageCalculationUnits: function(selectedUnit)
+  {
+    for (var i = 0; i < this.dosePanes.length; i++)
+    {
+      var dosePane = this.dosePanes[i];
+      dosePane.setDosageCalculationUnitLabel(selectedUnit);
+    }
+  },
+
+  _showDosageCalculationPanes: function(selectedUnit)
+  {
+    for (var i = 0; i < this.dosePanes.length; i++)
+    {
+      var dosePane = this.dosePanes[i];
+      dosePane.showDosageCalculationFields();
+      dosePane.setDosageCalculationUnitLabel(selectedUnit);
+      dosePane.setDosageCalculationFieldValue();
+    }
+  },
+
+  _setDosageCalculationUnits: function()
+  {
+    if (!tm.jquery.Utils.isEmpty(this.medicationData))
+    {
+      var doseUnit = this.medicationData.getStrengthNumeratorUnit();
+      this.dosageCalculationUnitCombo.removeAllOptions();
+      var patientHeight = this.view.getPatientHeightInCm();
+      var dosageCalculationUnits = tm.views.medications.MedicationUtils.getDosageCalculationUnitOptions(this.view, doseUnit, patientHeight);
+      var selectedId = null;
+      var selectedOption = null;
+      var setOptionSelected = null;
+      var selectBoxOptions = dosageCalculationUnits.map(function(option)
+      {
+        selectedId = option.doseUnit == doseUnit && option.patientUnit == "kg" ? option.id : selectedId;
+        setOptionSelected = option.doseUnit == doseUnit && option.patientUnit == "kg";
+        var currentOption = tm.jquery.SelectBox.createOption(option, option.displayUnit, null, null, setOptionSelected);
+        if (setOptionSelected)
+        {
+          selectedOption = currentOption.value;
+        }
+        return currentOption;
+      });
+      this.dosageCalculationUnitCombo.addOptions(selectBoxOptions);
+
+      if (!tm.jquery.Utils.isEmpty(selectedOption))
+      {
+        this.dosageCalculationUnitCombo.setSelections([selectedOption]);
+      }
+    }
+    else
+    {
+      this.dosageCalculationUnitCombo.hide()
+    }
+
+  },
+
+  _recalculateTimesForBetweenDoses: function()
+  {
+    var frequency = this.dosingFrequencyPane.getFrequencyValue();
+
+    if (this.timeFields.length > 0)
+    {
+      var firstTime = this.timeFields[0].getTime();
+      if (firstTime)
+      {
+        for (var i = 1; i < this.timeFields.length; i++)
+        {
+          this.timeFields[i].setTime(new Date(firstTime.getTime() + i * frequency * 60 * 60 * 1000), true);
+        }
+      }
+    }
+  },
+
+  /**
+   * @returns {app.views.common.AppView}
+   */
+  getView: function()
+  {
+    return this.view;
   },
 
   /** public methods */

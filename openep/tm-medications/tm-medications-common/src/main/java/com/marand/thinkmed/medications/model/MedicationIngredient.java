@@ -20,10 +20,14 @@
 package com.marand.thinkmed.medications.model;
 
 import com.marand.maf.core.data.entity.EffectiveCatalogEntity;
+import com.marand.thinkmed.medications.rule.MedicationRuleEnum;
 
 /**
  * @author Mitja Lapajne
  */
 public interface MedicationIngredient extends EffectiveCatalogEntity
 {
+  void setRule(final MedicationRuleEnum rule);
+
+  MedicationRuleEnum getRule();
 }

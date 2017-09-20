@@ -15,19 +15,21 @@
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses />.
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>tm-parent</artifactId>
-        <groupId>com.marand.thinkmed</groupId>
-        <version>2.1.3.1-SNAPSHOT</version>
-        <relativePath>../tm-parent/pom.xml</relativePath>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>com.marand.thinkmed</groupId>
+        <artifactId>tm-core-config</artifactId>
+        <version>2.4.1.1-SNAPSHOT</version>
+        <relativePath>../tm-project-configs/tm-core-config/pom.xml</relativePath>
+    </parent>
+
     <artifactId>tm-medications</artifactId>
+    <version>2.4.1.1-SNAPSHOT</version>
     <name>Think!Med - Medications</name>
     <modules>
         <module>tm-medications-common</module>
@@ -36,7 +38,286 @@
         <module>tm-medications-client</module>
         <module>tm-medications-bpm-server</module>
         <module>tm-medications-bpm-common</module>
+        <module>tm-medications-connector_</module>
+        <module>tm-medications-report</module>
     </modules>
     <packaging>pom</packaging>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-medications-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-medications-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-patient-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-medications-report</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-scheduling-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.maf</groupId>
+                <artifactId>maf-core-server</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calsvci</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calsvc</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-mail</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calcorei</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calcore</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-settings</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.zefer</groupId>
+                        <artifactId>pd4ml.pro</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-bpm-common</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.zefer</groupId>
+                        <artifactId>pd4ml.pro</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-clinical-html-ui</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.marand.thinkmed</groupId>
+                        <artifactId>tm-themes-common</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-medications-bpm-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-core-server-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calsvci</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calsvc</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-mail</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calcorei</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calcore</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-settings</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-bpm-server</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.marand.ispek</groupId>
+                        <artifactId>ispek-radiology-integration-common</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calsvci</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calsvc</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-mail</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calcorei</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-calendarapi-calcore</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.ispek.scheduling</groupId>
+                        <artifactId>ispek-scheduling-settings</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.zefer</groupId>
+                        <artifactId>pd4ml.pro</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-bpm-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-medications-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-medications-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-medications-external-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-ehr-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-process-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-ehr-common-server</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.marand.ispek</groupId>
+                        <artifactId>ispek-security-common</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-medications-external-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-rest</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.marand.ispek</groupId>
+                        <artifactId>ispek-common</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.thinkmed</groupId>
+                        <artifactId>tm-gui-resources</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.marand.thinkmed</groupId>
+                        <artifactId>tm-themes-common</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.zefer</groupId>
+                        <artifactId>pd4ml.pro</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.thinkmed</groupId>
+                <artifactId>tm-html-ui-common</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.marand.thinkmed</groupId>
+                        <artifactId>tm-themes-common</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-print-jasperreports-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.marand.ispek</groupId>
+                <artifactId>ispek-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
 
 </project>

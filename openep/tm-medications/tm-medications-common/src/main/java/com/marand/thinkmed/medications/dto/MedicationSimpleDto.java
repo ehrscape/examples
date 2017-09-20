@@ -19,19 +19,21 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.DataObject;
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.JsonSerializable;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
-public class MedicationSimpleDto extends DataObject implements JsonSerializable
+public class MedicationSimpleDto extends DataTransferObject implements JsonSerializable
 {
   private long id;
   private String name;
   private String genericName;
   private boolean active;
+  private boolean outpatientMedication;
+  private boolean inpatientMedication;
 
   public long getId()
   {
@@ -73,12 +75,36 @@ public class MedicationSimpleDto extends DataObject implements JsonSerializable
     this.active = active;
   }
 
+  public boolean isOutpatientMedication()
+  {
+    return outpatientMedication;
+  }
+
+  public void setOutpatientMedication(final boolean outpatientMedication)
+  {
+    this.outpatientMedication = outpatientMedication;
+  }
+
+  public boolean isInpatientMedication()
+  {
+    return inpatientMedication;
+  }
+
+  public void setInpatientMedication(final boolean inpatientMedication)
+  {
+    this.inpatientMedication = inpatientMedication;
+  }
+
   @Override
   protected void appendToString(final ToStringBuilder tsb)
   {
-    tsb.append("id", id);
-    tsb.append("name", name);
-    tsb.append("genericName", genericName);
-    tsb.append("active", active);
+    tsb
+        .append("id", id)
+        .append("name", name)
+        .append("genericName", genericName)
+        .append("active", active)
+        .append("inpatientMedication", inpatientMedication)
+        .append("outpatientMedication", outpatientMedication)
+    ;
   }
 }

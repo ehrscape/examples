@@ -22,16 +22,16 @@ package com.marand.thinkmed.medications.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.marand.maf.core.data.object.DataObject;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import com.marand.maf.core.data.object.HourMinuteDto;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
-public class AdministrationTimingDto extends DataObject
+public class AdministrationTimingDto extends DataTransferObject
 {
-  private List<AdministrationTimestampsDto> timestampsList = new ArrayList<AdministrationTimestampsDto>();
+  private List<AdministrationTimestampsDto> timestampsList = new ArrayList<>();
 
   public List<AdministrationTimestampsDto> getTimestampsList()
   {
@@ -49,10 +49,10 @@ public class AdministrationTimingDto extends DataObject
     tsb.append("timestampsList", timestampsList);
   }
 
-  public static class AdministrationTimestampsDto extends DataObject
+  public static class AdministrationTimestampsDto extends DataTransferObject
   {
     private String frequency;
-    private List<HourMinuteDto> timesList = new ArrayList<HourMinuteDto>();
+    private List<HourMinuteDto> timesList = new ArrayList<>();
 
     public String getFrequency()
     {

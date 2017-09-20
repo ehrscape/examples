@@ -19,7 +19,7 @@
 
 package com.marand.thinkmed.medications.mapper;
 
-import com.marand.maf.core.data.mapper.AbstractCatalogIdentityMapper;
+import com.marand.maf.core.data.mapper.AbstractSimpleCatalogIdentityMapper;
 import com.marand.thinkmed.medications.dto.DoseFormDto;
 import com.marand.thinkmed.medications.model.DoseForm;
 import org.joda.time.DateTime;
@@ -27,19 +27,18 @@ import org.joda.time.DateTime;
 /**
  * @author Mitja Lapajne
  */
-public class DoseFormDtoMapper extends AbstractCatalogIdentityMapper<DoseForm, DoseFormDto>
+public class DoseFormDtoMapper extends AbstractSimpleCatalogIdentityMapper<DoseForm, DoseFormDto>
 {
-  @Override
-  protected void mapCatalogIdentity(
-      final DoseForm from, final DoseFormDto to, final DateTime timestamp)
-  {
-    to.setDoseFormType(from.getDoseFormType());
-    to.setMedicationOrderFormType(from.getMedicationOrderFormType());
-  }
-
   @Override
   protected Class<DoseFormDto> getDestinationType()
   {
     return DoseFormDto.class;
+  }
+
+  @Override
+  protected void mapSimpleCatalogIdentity(final DoseForm from, final DoseFormDto to, final DateTime timestamp)
+  {
+    to.setDoseFormType(from.getDoseFormType());
+    to.setMedicationOrderFormType(from.getMedicationOrderFormType());
   }
 }

@@ -25,7 +25,6 @@ package com.marand.thinkmed.medications;
 public enum TherapyStatusEnum
 {
   NORMAL,
-  REVIEWED,
   ABORTED,
   CANCELLED,
   SUSPENDED,

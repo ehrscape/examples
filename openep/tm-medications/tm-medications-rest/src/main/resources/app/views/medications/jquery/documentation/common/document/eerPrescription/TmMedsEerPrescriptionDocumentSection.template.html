@@ -1,0 +1,66 @@
+<div class="section" data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch">
+    <div data-tm-flex-item="0 0 auto" class="title TextData">{{::vm.getSectionTitle()}}</div>
+    <div class="prescription-therapy" data-tm-flex-layout="row" data-justify-content="flex-start"
+         data-align-items="flex-start" data-tm-flex-item="0 0 auto"
+         data-ng-repeat="prescriptionTherapy in vm.getSectionTherapies()">
+        <div class="description" data-tm-flex-item="1 1 auto" data-tm-flex-layout="column" data-justify-content="flex-start"
+             data-align-items="stretch">
+            <div data-tm-flex-item="0 0 auto">
+                <div data-ng-bind-html="prescriptionTherapy.getTherapy().getFormattedTherapyDisplay()"></div>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescriptionTherapy.getTherapy().getPrescriptionLocalDetails().isMagistralPreparation()">
+                <span class="TextLabel light">{{::'magistral.preparation' | tmDictionaryTermFilter}}:</span>
+                <i class="checked-icon"></i>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescriptionTherapy.getTherapy().getPrescriptionLocalDetails().isUrgent()">
+                <span class="TextLabel light">{{::'urgent' | tmDictionaryTermFilter}}:</span>
+                <i class="checked-icon"></i>
+            </div>
+            <div data-tm-flex-item="0 0 auto" style="position: relative;"
+                 data-ng-if="prescriptionTherapy.getPrescriptionStatus()">
+                <i class="floating-icon-left prescription-status-icon {{prescriptionTherapy.getPrescriptionStatus() | lowercase}}"></i>
+                <span class="TextLabel light">{{::'prescription.status' | tmDictionaryTermFilter}}:&nbsp;</span>
+                <span class="TextData">
+                    {{prescriptionTherapy.getPrescriptionStatus() | tmMedsEnumTranslationFilter : 'PrescriptionStatus'}}</span>
+            </div>
+            <div data-tm-flex-item="0 0 auto" style="position: relative;"
+                 data-ng-if="prescriptionTherapy.getTherapy().getPrescriptionLocalDetails().getRemainingDispenses()">
+                <i class="floating-icon-left renewable-prescription-icon"></i>
+                <span class="TextLabel light">{{::'remaining.number.of.repetitions' | tmDictionaryTermFilter}}:&nbsp;</span>
+                <span class="TextData">
+                    {{prescriptionTherapy.getTherapy().getPrescriptionLocalDetails().getRemainingDispenses()}}</span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescriptionTherapy.getTherapy().getPrescriptionLocalDetails().getInstructionsToPharmacist()">
+                <span class="TextLabel light">{{::'instructions.for.pharmacist' | tmDictionaryTermFilter}}:&nbsp;</span>
+                <span class="TextData">
+                    {{prescriptionTherapy.getTherapy().getPrescriptionLocalDetails().getInstructionsToPharmacist()}}</span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="vm.hasAdditionalInformation(prescriptionTherapy)">
+                <span class="TextLabel light">{{::'additional.information' | tmDictionaryTermFilter}}:&nbsp;</span>
+                <span class="TextData">
+                    {{ prescriptionTherapy.getTherapy().getPrescriptionLocalDetails()
+                    | tmMedsPrescriptionLocalDetailsAdditionalInformationValueFilter | lowercase }}</span>
+            </div>
+            <div data-tm-flex-item="0 0 auto"
+                 data-ng-if="prescriptionTherapy.getPrescriptionTherapyId()">
+                <span class="TextLabel light">{{::'prescription.id' | tmDictionaryTermFilter}}:&nbsp;</span>
+                <span class="TextData">
+                    {{ prescriptionTherapy.getPrescriptionTherapyId()}}</span>
+            </div>
+        </div>
+        <tm-popup-menu data-tm-flex-item="0 0 auto" data-ng-if="vm.showPopupMenu(prescriptionTherapy)">
+            <tm-menu-item data-action="vm.cancelTherapyClickHandler({prescriptionTherapy: prescriptionTherapy})"
+                          data-ng-if="prescriptionTherapy.isCancelable()" data-icon-cls="icon-delete">
+                {{::'cancel' | tmDictionaryTermFilter}}
+            </tm-menu-item>
+            <tm-menu-item data-action="vm.removeTherapyClickHandler({prescriptionTherapy: prescriptionTherapy})"
+                          data-ng-if="prescriptionTherapy.isRemovable()" data-icon-cls="icon-delete">
+                {{::'remove' | tmDictionaryTermFilter}}
+            </tm-menu-item>
+        </tm-popup-menu>
+    </div>
+</div>

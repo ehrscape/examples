@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:util="http://www.springframework.org/schema/util"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <import resource="MedicationsDao-context.xml"/>
+
+    <bean id="medicationOnAdmissionHandler" class="com.marand.thinkmed.medications.admission.impl.MedicationOnAdmissionHandlerImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
+        <property name="medicationDataProvider" ref="medicationsBo"/>
+        <property name="medicationOnDischargeHandler" ref="medicationOnDischargeHandler"/>
+        <property name="medicationsConnector" ref="medicationsConnector"/>
+        <property name="taggingOpenEhrDao" ref="taggingOpenEhrDao"/>
+    </bean>
+
+    <bean id="allergiesHandler" class="com.marand.thinkmed.medications.allergies.impl.AllergiesHandlerImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="therapyWarningsProvider" ref="therapyWarningsProvider"/>
+        <property name="medicationsTasksHandler" ref="medicationsTasksHandler"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+    </bean>
+
+    <bean id="mentalHealthFormHandler" class="com.marand.thinkmed.medications.mentalhealth.impl.MentalHealthFormHandlerImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsTasksHandler" ref="medicationsTasksHandler"/>
+    </bean>
+
+    <bean id="mentalHealthFormProvider" class="com.marand.thinkmed.medications.mentalhealth.impl.MentalHealthFormProviderImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsValueHolder" ref="medicationsValueHolder"/>
+        <property name="medicationRoutesValueHolder" ref="medicationRoutesValueHolder"/>
+    </bean>
+
+    <bean id="medicationReconciliationHandler" class="com.marand.thinkmed.medications.reconciliation.impl.MedicationReconciliationHandlerImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationOnAdmissionHandler" ref="medicationOnAdmissionHandler"/>
+        <property name="medicationOnDischargeHandler" ref="medicationOnDischargeHandler"/>
+        <property name="therapyChangeCalculator" ref="therapyChangeCalculator"/>
+    </bean>
+
+    <bean id="medicationIngredientRuleHandler"
+            class="com.marand.thinkmed.medications.rule.impl.MedicationRuleHandlerImpl">
+        <property name="medicationRules">
+            <util:map id="medicationRules">
+                <entry key="#{T(com.marand.thinkmed.medications.rule.MedicationRuleEnum).PARACETAMOL_MAX_DAILY_DOSE}"
+                        value-ref="paracetamolRule"/>
+            </util:map>
+        </property>
+    </bean>
+
+    <bean id="paracetamolRule" class="com.marand.thinkmed.medications.rule.impl.ParacetamolRule">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsDao" ref="medicationsDao"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="medicationsValueHolder" ref="medicationsValueHolder"/>
+        <property name="medicationDataProvider" ref="medicationsBo"/>
+        <property name="ingredientCalculator" ref="ingredientCalculator"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="administrationFromEhrConverter" ref="administrationFromEhrConverter"/>
+        <property name="administrationUtils" ref="administrationUtils"/>
+    </bean>
+
+    <bean id="ingredientCalculator" class="com.marand.thinkmed.medications.ingredient.impl.IngredientCalculatorImpl">
+    </bean>
+
+    <bean id="administrationHandler" class="com.marand.thinkmed.medications.administration.impl.AdministrationHandlerImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="therapyUpdater" ref="therapyUpdater"/>
+        <property name="pharmacySupplyProcessHandler" ref="pharmacySupplyProcessHandler"/>
+        <property name="pharmacistTaskHandler" ref="pharmacistTaskHandler"/>
+        <property name="therapyCacheInvalidator" ref="therapyCacheInvalidator"/>
+        <property name="medicationsTasksHandler" ref="medicationsTasksHandler"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="processService" ref="processService"/>
+        <property name="administrationToEhrConverter" ref="administrationToEhrConverter"/>
+        <property name="tasksRescheduler" ref="tasksRescheduler"/>
+        <property name="administrationTaskCreator" ref="administrationTaskCreator"/>
+        <property name="administrationUtils" ref="administrationUtils"/>
+        <property name="administrationSaver" ref="administrationSaver"/>
+        <property name="administrationTaskConverter" ref="administrationTaskConverter"/>
+        <property name="taggingOpenEhrDao" ref="taggingOpenEhrDao"/>
+    </bean>
+
+    <bean id="administrationSaver" class="com.marand.thinkmed.medications.administration.impl.AdministrationSaverImpl"/>
+
+    <bean id="administrationFromEhrConverter" class="com.marand.thinkmed.medications.administration.impl.AdministrationFromEhrConverterImpl">
+        <property name="administrationUtils" ref="administrationUtils"/>
+        <property name="medicationDataProvider" ref="medicationsBo"/>
+    </bean>
+
+    <bean id="administrationToEhrConverter" class="com.marand.thinkmed.medications.administration.impl.AdministrationToEhrConverterImpl">
+        <property name="administrationUtils" ref="administrationUtils"/>
+    </bean>
+
+    <bean id="administrationProvider" class="com.marand.thinkmed.medications.administration.impl.AdministrationProviderImpl">
+        <property name="administrationFromEhrConverter" ref="administrationFromEhrConverter"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+    </bean>
+
+    <bean id="administrationUtils" class="com.marand.thinkmed.medications.administration.impl.AdministrationUtilsImpl"/>
+
+    <bean id="automaticAdministrationHandler" class="com.marand.thinkmed.medications.automatic.impl.AdministrationAutoTaskConfirmerHandlerImpl">
+        <property name="administrationTaskConverter" ref="administrationTaskConverter"/>
+        <property name="administrationHandler" ref="administrationHandler"/>
+        <property name="medicationsTasksHandler" ref="medicationsTasksHandler"/>
+        <property name="processService" ref="processService"/>
+    </bean>
+
+    <bean id="administrationAutoTaskCreatorHandler" class="com.marand.thinkmed.medications.automatic.impl.AdministrationAutoTaskCreatorHandlerImpl">
+        <property name="processService" ref="processService"/>
+        <property name="administrationTaskCreator" ref="administrationTaskCreator"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+    </bean>
+
+    <bean id="medicationOnDischargeHandler" class="com.marand.thinkmed.medications.discharge.impl.MedicationOnDischargeHandlerImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
+        <property name="medicationDataProvider" ref="medicationsBo"/>
+        <property name="therapyUpdater" ref="therapyUpdater"/>
+        <property name="taggingOpenEhrDao" ref="taggingOpenEhrDao"/>
+    </bean>
+
+    <bean id="medicationsBo" class="com.marand.thinkmed.medications.business.impl.DefaultMedicationsBo">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsDao" ref="medicationsDao"/>
+        <property name="taggingOpenEhrDao" ref="taggingOpenEhrDao"/>
+        <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
+        <property name="medicationsValueHolder" ref="medicationsValueHolder"/>
+        <property name="medicationRoutesValueHolder" ref="medicationRoutesValueHolder"/>
+        <property name="medicationHolderDtoMapper" ref="medicationHolderDtoMapper"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="medicationOnAdmissionHandler" ref="medicationOnAdmissionHandler"/>
+        <property name="administrationProvider" ref="administrationProvider"/>
+    </bean>
+
+    <bean id="overviewContentProvider" class="com.marand.thinkmed.medications.overview.impl.OverviewContentProviderImpl"/>
+
+    <bean id="therapyUpdater" class="com.marand.thinkmed.medications.therapy.impl.TherapyUpdaterImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="medicationsValueHolder" ref="medicationsValueHolder"/>
+        <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
+        <property name="medicationOnAdmissionHandler" ref="medicationOnAdmissionHandler"/>
+        <property name="administrationHandler" ref="administrationHandler"/>
+        <property name="processService" ref="processService"/>
+        <property name="medicationsDao" ref="medicationsDao"/>
+        <property name="preparePerfusionSyringeProcessHandler" ref="preparePerfusionSyringeProcessHandler"/>
+        <property name="pharmacistTaskHandler" ref="pharmacistTaskHandler"/>
+        <property name="medicationsTasksHandler" ref="medicationsTasksHandler"/>
+        <property name="administrationTaskCreator" ref="administrationTaskCreator"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="administrationProvider" ref="administrationProvider"/>
+        <property name="therapyChangeCalculator" ref="therapyChangeCalculator"/>
+    </bean>
+
+    <bean id="medicationHolderDtoMapper" class="com.marand.thinkmed.medications.business.mapper.MedicationHolderDtoMapper">
+        <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
+        <property name="markNonFormularyMedication" value="${medications.formulary.filter.enabled}"/>
+    </bean>
+
+    <bean id="medicationsFinder" class="com.marand.thinkmed.medications.business.MedicationsFinderImpl">
+        <property name="medicationsValueHolder" ref="medicationsValueHolder"/>
+        <property name="medicationsDao" ref="medicationsDao"/>
+        <property name="medicationHolderDtoMapper" ref="medicationHolderDtoMapper"/>
+    </bean>
+
+    <bean id="pharmacistReviewToEhrConverter" class="com.marand.thinkmed.medications.pharmacist.converter.impl.PharmacistReviewToEhrConverterImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+    </bean>
+
+    <bean id="pharmacistReviewFromEhrConverter" class="com.marand.thinkmed.medications.pharmacist.converter.impl.PharmacistReviewFromEhrConverterImpl">
+        <property name="medicationDataProvider" ref="medicationsBo"/>
+        <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="therapyChangeCalculator" ref="therapyChangeCalculator"/>
+    </bean>
+
+    <bean id="pharmacistReviewProvider" class="com.marand.thinkmed.medications.pharmacist.impl.PharmacistReviewProviderImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="pharmacistTaskProvider" ref="pharmacistTaskProvider"/>
+        <property name="pharmacistReviewFromEhrConverter" ref="pharmacistReviewFromEhrConverter"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+    </bean>
+
+    <bean id="pharmacistReviewSaver" class="com.marand.thinkmed.medications.pharmacist.impl.PharmacistReviewSaverImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="pharmacistTaskProvider" ref="pharmacistTaskProvider"/>
+        <property name="processService" ref="processService"/>
+        <property name="administrationTaskCreator" ref="administrationTaskCreator"/>
+        <property name="pharmacistReviewToEhrConverter" ref="pharmacistReviewToEhrConverter"/>
+        <property name="pharmacistReviewFromEhrConverter" ref="pharmacistReviewFromEhrConverter"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="medicationsService" ref="medicationsService"/>
+        <property name="medicationDataProvider" ref="medicationsBo"/>
+        <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
+    </bean>
+
+    <bean id="prescriptionHandler" class="com.marand.thinkmed.medications.prescription.impl.DefaultPrescriptionHandlerImpl"/>
+
+    <bean id="therapyDocumentProvider" class="com.marand.thinkmed.medications.document.impl.TherapyDocumentProviderImpl">
+        <property name="providerPlugins">
+            <list>
+                <ref bean="healthDocumentProviderPlugin"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="healthDocumentProviderPlugin" class="com.marand.thinkmed.medications.document.impl.MentalHealthDocumentProviderPluginImpl">
+        <property name="mentalHealthFormProvider" ref="mentalHealthFormProvider"/>
+    </bean>
+
+    <bean id="infusionBagHandler" class="com.marand.thinkmed.medications.infusion.impl.InfusionBagHandlerImpl">
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="infusionBagTaskHandler" ref="infusionBagTaskHandler"/>
+        <property name="infusionBagTaskProvider" ref="infusionBagTaskProvider"/>
+        <property name="administrationProvider" ref="administrationProvider"/>
+    </bean>
+
+    <bean id="therapyReportDataProvider" class="com.marand.thinkmed.therapy.report.impl.TherapyReportDataProviderImpl">
+        <property name="medicationsDao" ref="medicationsDao"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="medicationsConnector" ref="medicationsConnector"/>
+        <property name="overviewContentProvider" ref="overviewContentProvider"/>
+        <property name="administrationProvider" ref="administrationProvider"/>
+    </bean>
+
+    <bean id="therapyChangeRecorder" class="com.marand.thinkmed.medications.change.TherapyChangeRecorder">
+        <property name="eventDispatcher" ref="eventDispatcher"/>
+        <property name="entityDao" ref="entityDao"/>
+    </bean>
+
+    <bean id="infusionBagRecalculateEventHandler" class="com.marand.thinkmed.medications.infusion.impl.InfusionBagRecalculateEventHandler">
+        <property name="eventDispatcher" ref="eventDispatcher"/>
+        <property name="infusionBagHandler" ref="infusionBagHandler"/>
+    </bean>
+
+    <bean id="titrationDataProvider" class="com.marand.thinkmed.medications.titration.impl.TitrationDataProviderImpl">
+        <property name="medicationsConnector" ref="medicationsConnector"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsDao" ref="medicationsDao"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="administrationProvider" ref="administrationProvider"/>
+        <property name="overviewContentProvider" ref="overviewContentProvider"/>
+    </bean>
+
+    <bean id="therapyBatchActionHandler" class="com.marand.thinkmed.medications.batch.impl.TherapyBatchActionHandlerImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="therapyCacheInvalidator" ref="therapyCacheInvalidator"/>
+        <property name="therapyUpdater" ref="therapyUpdater"/>
+    </bean>
+
+    <bean id="additionalWarningsDelegator"
+            class="com.marand.thinkmed.medications.warnings.additional.impl.AdditionalWarningsDelegatorImpl">
+        <property name="additionalWarningsProviders">
+            <util:map id="additionalWarningsProviders">
+                <entry key="#{T(com.marand.thinkmed.medications.dto.warning.AdditionalWarningsType).ALLERGIES}"
+                        value-ref="allergiesAdditionalWarningsProvider"/>
+                <entry key="#{T(com.marand.thinkmed.medications.dto.warning.AdditionalWarningsType).MENTAL_HEALTH}"
+                        value-ref="mentalHealthAdditionalWarningsProvider"/>
+            </util:map>
+        </property>
+    </bean>
+
+    <bean id="allergiesAdditionalWarningsProvider" class="com.marand.thinkmed.medications.warnings.additional.impl.AllergiesAdditionalWarningsProvider">
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="allergiesHandler" ref="allergiesHandler"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="processService" ref="processService"/>
+    </bean>
+
+    <bean id="mentalHealthAdditionalWarningsProvider" class="com.marand.thinkmed.medications.warnings.additional.impl.MentalHealthAdditionalWarningsProvider">
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="mentalHealthFormProvider" ref="mentalHealthFormProvider"/>
+        <property name="mentalHealthWarningsHandler" ref="mentalHealthWarningsHandler"/>
+        <property name="processService" ref="processService"/>
+    </bean>
+
+    <bean id="mentalHealthWarningsHandler" class="com.marand.thinkmed.medications.warnings.additional.impl.MentalHealthWarningsHandlerImpl">
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="medicationsDao" ref="medicationsDao"/>
+        <property name="mentalHealthFormProvider" ref="mentalHealthFormProvider"/>
+    </bean>
+
+    <bean id="additionalWarningsActionHandler" class="com.marand.thinkmed.medications.warnings.additional.impl.AdditionalWarningsActionHandlerImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="processService" ref="processService"/>
+        <property name="medicationsService" ref="medicationsService"/>
+    </bean>
+
+    <bean id="therapyAuditTrailProvider"
+            class="com.marand.thinkmed.medications.audittrail.impl.TherapyAuditTrailProviderImpl">
+        <property name="therapyChangeCalculator" ref="therapyChangeCalculator"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+    </bean>
+
+    <bean id="patientDataProvider" class="com.marand.thinkmed.patient.impl.PatientDataProviderImpl">
+        <property name="medicationsConnector" ref="medicationsConnector"/>
+    </bean>
+
+    <bean id="barcodeTaskFinder" class="com.marand.thinkmed.medications.barcode.BarcodeTaskFinder">
+        <property name="medicationsDao" ref="medicationsDao"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="medicationsBo" ref="medicationsBo"/>
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsFinder" ref="medicationsFinder"/>
+    </bean>
+
+    <bean id="therapyChangeCalculator" class="com.marand.thinkmed.medications.change.impl.TherapyChangeCalculatorImpl"/>
+
+</beans>

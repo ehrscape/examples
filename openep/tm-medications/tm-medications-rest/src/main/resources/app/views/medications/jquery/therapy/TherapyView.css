@@ -18,11 +18,806 @@
  */
 
 /*------------------------------------------------------------------------------------------------------------*/
-.v-therapy-view {
-    /*font-family: ${font.family};*/
-    /*font-family: segoe ui, tahoma, arial, verdana, sans-serif;*/
-    /*font-size: 100%;*/
-    /*background: #ffffff;*/
+.v-therapy-view .TextLabel
+{
+    color: #848998;
+    line-height: 20px;
+}
+
+.v-therapy-view .TextLabel.MedicationLabel
+{
+    color: #7891D8;
+}
+
+.v-therapy-view .dose-pane .input-medium {
+    width: 100%;
+}
+
+.v-therapy-view .dose-pane .denominator-field,
+.v-therapy-view .dose-pane .dosage-calculation-field,
+.v-therapy-view .universal-dose-pane .numerator-field,
+.v-therapy-view .universal-dose-pane .denominator-field {
+    margin-left: 5px;
+}
+
+.v-therapy-view .TextDataSmallerDecimal {
+    font-size: 0.85em;
+}
+
+.v-therapy-view .softer-border {
+    border-color: #E4E4E4 !important;
+}
+
+.v-therapy-view .shadowless {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+.v-therapy-view .btn.green {
+    color: #ffffff;
+    background-image: none;
+    text-shadow: none;
+    border: 0;
+    background-color: #40C256;
+    border-bottom: 1px solid #349C65;
+}
+
+.v-therapy-view .btn.white {
+    color: #ffffff;
+    background-image: none;
+    text-shadow: none;
+    border: 0;
+    background-color: #ffffff;
+    border-bottom: 1px solid #DEDEDE;
+}
+
+/* support for hiding buttons in button groups */
+.v-therapy-view .btn-group.single-visible > .btn {
+    -webkit-border-top-right-radius: 4px;
+    border-top-right-radius: 4px;
+    -webkit-border-bottom-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    -moz-border-radius-topright: 4px;
+    -moz-border-radius-bottomright: 4px;
+}
+
+.v-therapy-view .icon-round-up-arrow {
+    background-image: url('${context.path}/resources/images/icons/arrowUp_24.png');
+}
+
+.v-therapy-view .icon-round-down-arrow {
+    background-image: url('${context.path}/resources/images/icons/arrowDown_24.png');
+}
+
+/* styling for audit trail container and components */
+
+.v-therapy-view .audit-trail-container .original-therapy-container {
+    border-right: 1px solid #DCDCDC;
+}
+
+.v-therapy-view .audit-trail-container .therapy-container {
+    padding: 0px 10px 10px 10px;
+}
+
+.v-therapy-view .audit-trail-container .therapies-container .title-label,
+.v-therapy-view .audit-trail-container .date-container {
+    background-color: #F8F8F8;
+    padding: 10px;
+    text-transform: none;
+}
+
+.v-therapy-view .audit-trail-container .change-row-container .title-label {
+    padding-bottom: 10px;
+}
+
+.v-therapy-view .audit-trail-container .crossed-out {
+    text-decoration: line-through;
+    color: #999999
+}
+
+.v-therapy-view .audit-trail-container .time-container {
+    padding: 10px 25px 0 0;
+}
+
+.v-therapy-view .audit-trail-container .change-row-container,
+.v-therapy-view .audit-trail-container .change-row-container .action-performer{
+    padding-left: 10px;
+}
+
+.v-therapy-view .audit-trail-container .change-content-container {
+    padding: 10px 10px 10px 0;
+    border-top: 1px solid #DCDCDC;
+}
+.v-therapy-view .audit-trail-container .borderless-change-content-container {
+    padding: 10px 10px 10px 0;
+}
+
+.v-therapy-view .audit-trail-footer .btn {
+    margin: 5px 10px 5px 5px;
+}
+
+.v-therapy-view .audit-trail-container .value-container {
+    max-width: 35%;
+}
+
+.v-therapy-view .audit-trail-container .protocol-btn div:first-child {
+    padding-top: 0 !important;
+}
+
+.v-therapy-view .audit-trail-container .protocol-btn {
+    border: none;
+}
+
+.v-therapy-view .audit-trail-container .arrow-icon {
+    background-image: url('${context.path}/resources/images/icons/arrowBoldRight_16.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+    margin: 0 10px 0 10px;
+}
+
+.v-therapy-view .protocol-summary-container {
+    margin: 10px;
+}
+.v-therapy-view .protocol-summary-container .protocol-summary-metadata {
+    margin-top: 40px;
+}
+
+.v-therapy-view .protocol-summary-containers {
+    padding: 5px;
+}
+
+.v-therapy-view .protocol-summary-cell,
+.v-therapy-view .protocol-unit-cell,
+.v-therapy-view .protocol-time-cell,
+.v-therapy-view .protocol-date-cell {
+    margin: 5px;
+    padding: 7px 5px 3px 5px;
+    vertical-align: middle;
+}
+
+.v-therapy-view .protocol-summary-cell {
+    background-color: rgba(216, 216, 216, 1);
+    text-align: right;
+}
+
+.v-therapy-view .protocol-unit-cell {
+    background-color: rgba(216, 216, 216, 1);
+    text-align: left;
+}
+
+.v-therapy-view .protocol-time-cell {
+    background-color: rgba(216, 216, 216, 1);
+    text-align: center;
+}
+
+.v-therapy-view .protocol-date-cell {
+    text-align: center;
+}
+
+.v-therapy-view .protocol-cell-crossed,
+.v-therapy-view .protocol-cell {
+    position: relative;
+}
+
+.v-therapy-view .protocol-cell-crossed {
+    color: #999999;
+}
+
+.v-therapy-view .protocol-cell-crossed:before {
+    position: absolute;
+    content: "";
+    left: 0;
+    top: 50%;
+    right: 0;
+    border-top: 1px solid;
+    border-color: #999999;
+    padding: 5px;
+}
+
+/* flat button, flat button group */
+.v-therapy-view .btn-flat,
+.v-therapy-view .splitbutton-flat > .btn {
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border: none;
+    background-color: #ffffff;
+    background-image: none;
+}
+
+.v-therapy-view .field-flat {
+    border-radius: 0;
+    border: none;
+    outline: 0;
+    border-bottom: 1px solid #d6d6d6;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none;
+    box-shadow: none !important;
+}
+
+.v-therapy-view .splitbutton-flat > .btn:hover,
+.v-therapy-view .splitbutton-flat > .btn:focus,
+.v-therapy-view .splitbutton-flat > .btn:disabled,
+.v-therapy-view .splitbutton-flat > .btn[disabled],
+.v-therapy-view .btn-flat:hover,
+.v-therapy-view .btn-flat:focus,
+.v-therapy-view .btn-flat.disabled,
+.v-therapy-view .btn-flat[disabled] {
+    color: #333333;
+    background-color: #e6e6e6;
+}
+
+.v-therapy-view .btn-group-flat.btn-flat:hover,
+.v-therapy-view .btn-group-flat.btn-flat:focus {
+    background-color: #ffffff;
+}
+
+.v-therapy-view .splitbutton-flat > .btn:active,
+.v-therapy-view .btn-group-flat > .btn-flat.active {
+    color: #333333;
+    background-color: #D1EAF8;
+}
+
+.v-therapy-view .splitbutton-flat > .btn:first-child,
+.v-therapy-view .btn-group-flat > .btn-flat:first-child {
+    margin-left: 0;
+    -webkit-border-bottom-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    -webkit-border-top-left-radius: 0px;
+    border-top-left-radius: 0px;
+    -moz-border-radius-bottomleft: 0px;
+    -moz-border-radius-topleft: 0px;
+}
+
+.v-therapy-view .splitbutton-flat > .btn:last-child,
+.v-therapy-view .btn-group-flat > .btn-flat:last-child,
+.v-therapy-view .btn-group-flat > .dropdown-toggle {
+    -webkit-border-top-right-radius: 0px;
+    border-top-right-radius: 0px;
+    -webkit-border-bottom-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    -moz-border-radius-topright: 0px;
+    -moz-border-radius-bottomright: 0px;
+}
+
+.v-therapy-view .splitbutton-flat.open .btn-flat.dropdown-toggle {
+    background-color: #D1EAF8;
+}
+
+.v-therapy-view .splitbutton-flat > .btn + .dropdown-toggle {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+.v-therapy-view .splitbutton-flat.open .dropdown-toggle {
+    background-image: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+/* end of flat button and groups styling */
+
+/* styling for new administration container components */
+
+/* bubble btns and btn-group with individual bubble btns*/
+
+.v-therapy-view .btn-bubble,
+.v-therapy-view .splitbutton-bubble > .btn {
+    -webkit-border-radius: 5px !important;
+    -moz-border-radius: 5px !important;
+    border-radius: 5px !important;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border: 1px solid #2978CC;
+    background-color: #ffffff;
+    color: #2978CC;
+    background-image: none;
+    text-shadow: none !important;
+}
+
+.v-therapy-view .administration-self-admin-container .btn-bubble,
+.v-therapy-view .administration-not-given-container .btn-bubble,
+.v-therapy-view .administration-defer-container .btn-bubble
+{
+    margin-right: 10px;
+    margin-top: 8px;
+    margin-left: 0px;
+}
+
+.v-therapy-view .mental-health-bnf-container {
+    border-top: 1px solid #DCDCDC;
+    min-height: 60px !important;
+}
+
+.v-therapy-view .mental-health-bnf-container .TextData {
+    align-self: center;
+}
+
+.v-therapy-view .route-selection-container {
+    margin: 10px 10px 10px 10px
+}
+
+.v-therapy-view .paracetamol-container {
+    padding: 5px 20px 0px 0px;
+    align-self: center;
+}
+
+.v-therapy-view .warning-popover-tooltip {
+    align-self: center;
+    padding: 5px 10px 5px 10px;
+}
+
+.v-therapy-view .therapy-administration-container .infusion-set-change-container .btn-bubble {
+    margin-right: 10px;
+}
+
+.v-therapy-view .therapy-administration-container .rate-content-container {
+    overflow: visible !important;
+}
+
+.v-therapy-view .splitbutton-bubble > .btn:active,
+.v-therapy-view .btn-bubble.active,
+.v-therapy-view .btn-bubble:active {
+    color: #ffffff;
+    background-color: #2978CC;
+}
+
+.v-therapy-view .btn-bubble:disabled {
+    border: 1px solid #999999;
+    background-color: #ffffff;
+    color: #999999;
+}
+
+.v-therapy-view .therapy-administration-container .btn-group-bubble {
+    padding-right: 50px !important;
+    flex-flow: row wrap !important;
+}
+
+.v-therapy-view .self-administration-container .btn-group-bubble {
+    padding: 5px;
+}
+
+/*btn-group with iOS-esque style*/
+.v-therapy-view .therapy-administration-container .routes-container .route-button,
+.v-therapy-view .btn-ios {
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border: 1px solid #2978CC;
+    border-right: none;
+    background-color: #ffffff;
+    color: #2978CC;
+    background-image: none;
+    text-shadow: none !important;
+    margin-left: 0px !important;
+    min-width: 105px !important;
+}
+
+.v-therapy-view .therapy-administration-container .routes-container .route-button.active,
+.v-therapy-view .btn-ios.active {
+    color: #ffffff;
+    background-color: #2978CC;
+}
+
+.v-therapy-view .therapy-administration-container .routes-container .tm-buttongroup > .route-button:first-child,
+.v-therapy-view .btn-group-ios > .btn-ios:first-child {
+    -webkit-border-bottom-left-radius: 5px !important;
+    border-bottom-left-radius: 5px !important;
+    -webkit-border-top-left-radius: 5px !important;
+    border-top-left-radius: 5px !important;
+    -moz-border-radius-bottomleft: 5px !important;
+    -moz-border-radius-topleft: 5px !important;
+}
+
+.v-therapy-view .therapy-administration-container .routes-container .tm-buttongroup > .route-button:last-child,
+.v-therapy-view .btn-group-ios > .btn-ios:last-child {
+    -webkit-border-top-right-radius: 5px !important;
+    border-top-right-radius: 5px !important;
+    -webkit-border-bottom-right-radius: 5px !important;
+    border-bottom-right-radius: 5px !important;
+    -moz-border-radius-topright: 5px !important;
+    -moz-border-radius-bottomright: 5px !important;
+    border-right: 1px solid #2978CC;
+}
+
+/* header style for new administration container*/
+
+.v-therapy-view .therapy-admin-header {
+    background-color: #E6E6E6 !important;
+}
+
+.v-therapy-view .therapy-admin-header .PopupHeading1 {
+    color: rgb(100, 100, 100);
+}
+
+/* labels and input fields style for new administration container */
+
+.v-therapy-view .therapy-administration-container .witness-pane,
+.v-therapy-view .therapy-administration-container .medication-container,
+.v-therapy-view .therapy-administration-container .medication-fields-container {
+    overflow: visible !important;
+}
+
+.v-therapy-view .therapy-administration-container .medication-field {
+    width: 100% !important;
+}
+.v-therapy-view .therapy-administration-container .medication-barcode-field {
+    margin-right: 7px;
+    margin-bottom: 5px;
+}
+
+.v-therapy-view .therapy-administration-container > *,
+.v-therapy-view .therapy-administration-container .with-top-border {
+    border-top: 1px solid #e6e6e6;
+    max-width: 550px;
+}
+
+.v-therapy-view .administration-defer-container.with-top-border,
+.v-therapy-view .administration-not-given-container.with-top-border {
+    margin: 0px 0px 10px 0px;
+}
+
+.v-therapy-view .administration-warning-container {
+    border: 0 !important;
+}
+
+.v-therapy-view .borderless {
+    border: 0 !important;
+}
+
+.v-therapy-view .therapy-administration-container .TherapyDescription .TextLabel {
+    color: #2978CC;
+}
+
+.v-therapy-view .therapy-administration-container .TextLabel,
+.v-therapy-view .perfusion-syringe-container .TextLabel {
+    color: #999999;
+}
+
+.v-therapy-view .therapy-administration-container .TextData.ml-label {
+    padding: 0px 7px 0px 5px;
+}
+
+.v-therapy-view .therapy-administration-container .TextLabel.volume-label,
+.v-therapy-view .therapy-administration-container .TextLabel.witness-label,
+.v-therapy-view .therapy-administration-container .TextLabel.request-supply-label,
+.v-therapy-view .therapy-administration-container .TextLabel.administration-time-label {
+    padding: 0px 5px 0px 0px;
+}
+
+.v-therapy-view .therapy-administration-container .TextLabel.route-label,
+.v-therapy-view .therapy-administration-container .TextLabel.rate-label {
+    padding: 5px 5px 0px 0px;
+}
+
+.v-therapy-view .therapy-administration-container .TextLabel.dose-label {
+    padding: 5px 5px 5px 0px;
+}
+
+.v-therapy-view .therapy-administration-container .TextLabel.medication-label {
+    padding: 0px 10px 0px 0px;
+}
+
+.v-therapy-view .therapy-administration-container .TextData,
+.v-therapy-view .therapy-administration-container .tm-numberfield,
+.v-therapy-view .therapy-administration-container input,
+.v-therapy-view .oxygen-starting-device-dialog input {
+    text-align: right;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
+.v-therapy-view .therapy-administration-container .tm-numberfield {
+    height: 24px !important;
+    min-height: 24px !important;
+}
+
+.v-therapy-view .therapy-administration-container .medication-field .dropdown-menu {
+    width: 448px !important;
+    left: 8px !important;
+}
+
+.v-therapy-view .therapy-administration-container .infusion-rate-pane .filter-option {
+    font-size: 15px !important;
+}
+
+.v-therapy-view .therapy-administration-container .dose-pane .TextData,
+.v-therapy-view .therapy-administration-container .volume-sum-container .TextData,
+.v-therapy-view .therapy-administration-container .bag-container .TextData,
+.v-therapy-view .therapy-administration-container .oxygen-route-container .TextData,
+.v-therapy-view .therapy-administration-container .infusion-rate-pane .TextData {
+    line-height: normal;
+    font-size: 17px;
+    color: #999999;
+}
+
+.v-therapy-view .therapy-administration-container .YesTextLabel {
+    font-size: 17px;
+    color: rgb(85, 85, 85);
+    padding: 0px 7px 0px 0px;
+}
+
+.v-therapy-view .therapy-administration-container .dose-pane,
+.v-therapy-view .therapy-administration-container .oxygen-route-container,
+.v-therapy-view .therapy-administration-container .volume-container {
+    min-height: 48px !important;
+}
+
+.v-therapy-view .therapy-administration-container .infusion-rate-pane {
+    margin-right: 5px !important;
+    min-height: 48px !important;
+}
+.v-therapy-view .therapy-administration-container .infusion-rate-pane .rate-unit-label {
+    display: block;
+    padding: 5px 0px 0px 0px;
+}
+
+.v-therapy-view .therapy-administration-container .dose-pane .input-medium,
+.v-therapy-view .therapy-administration-container .infusion-rate-pane .input-medium {
+    margin: 2px 2px 2px 2px !important;
+}
+
+.v-therapy-view .therapy-administration-container .tm-typeaheadfield .input-medium {
+    font-size: 17px !important;
+}
+
+.v-therapy-view .therapy-administration-container .input-xlarge,
+.v-therapy-view .therapy-administration-container .input-medium {
+    height: 20px !important;
+    min-height: 20px !important;
+    padding: 0px !important;
+}
+
+.v-therapy-view .therapy-administration-container .medication-field .input-medium {
+    min-height: 26px !important;
+    line-height: 24px !important;
+}
+
+.v-therapy-view .therapy-administration-container .witness-password-field {
+    font-size: 14px !important;
+    margin: 2px !important;
+}
+
+.v-therapy-view .therapy-administration-container .TextData {
+    min-width: 0px !important;
+    width: auto !important;
+}
+
+.v-therapy-view .therapy-administration-container .dropdown-toggle {
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border: none;
+    background-color: #ffffff;
+    background-image: none;
+}
+
+.v-therapy-view .therapy-administration-container .hasTimepicker,
+.v-therapy-view .oxygen-starting-device-dialog .hasTimepicker {
+    font-weight: bold;
+}
+
+.v-therapy-view .therapy-administration-container .tm-datetimepicker {
+    margin: 2px 7px 2px 0px !important;
+}
+
+.v-therapy-view .therapy-administration-container .filter-option,
+.v-therapy-view .therapy-administration-container .tm-textfield,
+.v-therapy-view .oxygen-starting-device-dialog .filter-option,
+.v-therapy-view .oxygen-starting-device-dialog .tm-textfield {
+    font-size: 17px;
+}
+
+.v-therapy-view .therapy-administration-container .comment-field {
+    text-align: left !important;
+    margin: 5px !important;
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border: none;
+}
+
+.v-therapy-view .therapy-administration-container .tm-textarea {
+    height: auto !important;
+}
+
+.v-therapy-view .therapy-administration-container .reset-button {
+    width: 60px !important;
+    text-align: start !important;
+}
+
+.v-therapy-view .therapy-administration-container .show-titration-data-icon {
+    background-position: center center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.v-therapy-view .therapy-administration-container .oxygen-route-container .venturi-mask-unit {
+    padding-right: 7px;
+}
+
+.v-therapy-view .therapy-container .TherapyDescription {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.v-therapy-view .administration-not-possible-label {
+    padding: 5px 0 0 8px;
+    border-top: 1px solid #e6e6e6;
+    width: 100% !important;
+}
+
+/* styling for buttons in administration container footer */
+
+.v-therapy-view .therapy-admin-footer {
+    height: 38px;
+    background-color: #ffffff !important;
+    padding: 0px !important;
+}
+
+.v-therapy-view .therapy-admin-footer .btn {
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border: none;
+    background-color: #ffffff;
+    background-image: none !important;
+    font-weight: bold;
+    color: #2978CC;
+    height: 38px !important;
+    width: 85px !important;
+    border-left: 1px solid rgb(230, 230, 230);
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+}
+
+.v-therapy-view .therapy-admin-footer .btn-link {
+    font-weight: lighter !important;
+}
+
+.v-therapy-view .therapy-admin-footer .btn-reset {
+    border-left: none;
+    border-right: 1px solid rgb(230, 230, 230);
+}
+
+.v-therapy-view .therapy-admin-footer .btn:active {
+    background-color: #e6e6e6;
+}
+
+.v-therapy-view .therapy-admin-footer .no-border-btn {
+    border: none !important;
+    width: 222px !important;
+}
+
+.v-therapy-view .therapy-admin-footer .footer-right-btn {
+    width: 222px !important;
+    border-left: 1px solid rgb(230, 230, 230);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+}
+
+.v-therapy-view .therapy-administration-container .CheckLabel {
+    background-image: url('${context.path}/resources/images/icons/finish_status_16.png') !important;
+    margin-right: 10px;
+}
+
+.v-therapy-view .therapy-administration-container .CrossLabel {
+    background-image: url('${context.path}/resources/images/icons/deleteRed_status_16.png') !important;
+    margin-right: 10px;
+}
+
+.v-therapy-view .therapy-administration-container .PartialCheckLabel {
+    background-image: url('${context.path}/resources/images/icons/finishPartial_status_16.png') !important;
+    margin-right: 10px;
+}
+
+.v-therapy-view .therapy-administration-container .doctors-comment {
+    margin: 2px 7px 3px 0;
+}
+
+/* end of styling for new administration container components */
+
+.v-therapy-view .therapy-administration-container .medication-info-button {
+    cursor: pointer;
+    margin: 0 0 0 5px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-image: url('${context.path}/resources/images/icons/information_16.png');
+}
+
+.v-therapy-view .medication-card-pane {
+    min-width: 150px;
+    max-width: 460px;
+    max-height: 500px;
+    padding: 10px;
+}
+
+.v-therapy-view .patient-data-container .TextLabel {
+    font-size: 11px;
+    line-height: 18px;
+    font-weight: normal;
+    color: #999999;
+}
+
+.v-therapy-view .patient-data-container .TextData {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: bold;
+    color: #61646D;
+}
+
+.v-therapy-view .patient-data-container .TextUnit {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: normal;
+    color: #848998
+}
+
+.v-therapy-view .patient-data-container {
+    border-bottom: 1px solid #bebebe;
+    padding: 0px 0px 0px 5px;
+}
+
+.v-therapy-view .ui-corner-all { /*ui-jqgrid ui-widget ui-widget-content*/
+    border-top: none !important;
+}
+
+/* styling for selectBox */
+.v-therapy-view .dose-pane .tm-selectbox .dropdown-toggle.selectpicker,
+.v-therapy-view .therapy-administration-container .tm-selectbox .dropdown-toggle.selectpicker,
+.v-therapy-view .oxygen-starting-device-dialog .oxygen-route-container .tm-selectbox .dropdown-toggle.selectpicker {
+    background-color: #ffffff;
+    webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    -moz-background-clip: border;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    border: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    padding: 0px;
+}
+
+.v-therapy-view .routes-container {
+    overflow: visible !important;
+}
+
+.v-therapy-view .dose-pane {
+    overflow: visible !important;
+}
+
+.v-therapy-view .rounding-tooltip-heading {
+    margin: 5px;
+}
+
+.v-therapy-view .routes-container .tm-selectbox {
+    margin-left: -5px;
+}
+
+.v-therapy-view .app-views-toolbar.portlet-header {
+    background-color: #ffffff;
 }
 
 .v-therapy-view .therapy-flow-grid-container .ui-jqgrid tr.jqgrow td {
@@ -33,6 +828,7 @@
 .v-therapy-view .portlet-header .icon-print,
 .v-therapy-view .portlet-header .icon-sort-time-asc,
 .v-therapy-view .portlet-header .icon-sort-time-desc,
+.v-therapy-view .portlet-header .icon-sort-link,
 .v-therapy-view .portlet-header .icon-sort-name-asc,
 .v-therapy-view .portlet-header .icon-sort-name-desc,
 .v-therapy-view .portlet-header .icon-reference-weight,
@@ -40,15 +836,36 @@
 .v-therapy-view .portlet-header .right-icon,
 .v-therapy-view .portlet-header .no-group-icon,
 .v-therapy-view .portlet-header .custom-group-icon,
+.v-therapy-view .reconciliation-container .remove-icon,
+.v-therapy-view .admission-meds-reconciliation-icon,
+.v-therapy-view .discharge-meds-reconciliation-icon,
+.v-therapy-view .icon-add-outpatient-prescription,
+.v-therapy-view .icon-show-external-outpatient-prescriptions,
+.v-therapy-view .therapy-group-panel .therapy-container .icon-therapy-to-basket,
+.v-therapy-view .therapy-group-panel .therapy-container .icon-therapy-to-basket-edit,
 .v-therapy-view .edit-icon,
-.v-therapy-view .delete-icon,
-.v-therapy-view .confirm-icon,
+.v-therapy-view .abort-icon,
+.v-therapy-view .review-icon,
 .v-therapy-view .timeline-icon,
-.v-therapy-view .flow-grid-icon {
+.v-therapy-view .pharmacist-review,
+.v-therapy-view .reconciliation-summary-icon,
+.v-therapy-view .therapy-documentation-icon,
+.v-therapy-view .flow-grid-icon,
+.v-therapy-view .icon-catheter-gray-24,
+.v-therapy-view .black-triangle-icon,
+.v-therapy-view .trial-medicine-icon,
+.v-therapy-view .controlled-drug-icon,
+.v-therapy-view .high-alert-icon,
+.v-therapy-view .non-formulary-icon,
+.v-therapy-view .unlicensed-medication-icon,
+.v-therapy-view .expensive-drug-icon {
     background-position: center center;
     background-repeat: no-repeat;
 }
 
+.v-therapy-view .portlet-header .icon-add,
+.v-therapy-view .icon-add-universal,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-add-universal,
 .v-therapy-view .portlet-header .icon-add,
 .v-therapy-view .portlet-header .dropdown-menu > li > a:hover > .icon-add,
 .v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-add {
@@ -65,6 +882,12 @@
 .v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-sort-time-desc,
 .v-therapy-view .portlet-header .dropdown-menu > li > a:hover > .icon-sort-time-desc {
     background-image: url('${context.path}/resources/images/icons/sortDown_24.png');
+}
+
+.v-therapy-view .portlet-header .icon-sort-link,
+.v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-sort-link,
+.v-therapy-view .portlet-header .dropdown-menu > li > a:hover > .icon-sort-link {
+    background-image: url('${context.path}/resources/images/icons/link_24.png');
 }
 
 .v-therapy-view .portlet-header .icon-sort-name-asc,
@@ -85,16 +908,22 @@
     background-image: url('${context.path}/resources/images/icons/print_24.png');
 }
 
+.v-therapy-view .icon-catheter-gray-24,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-catheter-gray-24,
+.v-therapy-view .v-therapy-view .portlet-header .dropdown-menu > .dropdown-submenu .icon-catheter-gray-24 {
+    background-image: url('${context.path}/resources/images/icons/catheter_24.png');
+}
+
 .v-therapy-view .portlet-header .icon-reference-weight {
     background-image: url('${context.path}/resources/images/icons/weightReferenceAdd_24.png');
 }
 
 .v-therapy-view .portlet-header .left-icon {
-    background-image: url('${context.path}/resources/images/icons/arrowBold_Left_24.png');
+    background-image: url('${context.path}/resources/images/icons/arrowLeft_24.png');
 }
 
 .v-therapy-view .portlet-header .right-icon {
-    background-image: url('${context.path}/resources/images/icons/arrowBold_Right_24.png');
+    background-image: url('${context.path}/resources/images/icons/arrowRight_24.png');
 }
 
 .v-therapy-view .portlet-header .no-group-icon {
@@ -105,12 +934,52 @@
     background-image: url('${context.path}/resources/images/icons/therapyApplication_24.png');
 }
 
+.v-therapy-view .portlet-header .icon-sort-show-menu,
+.v-therapy-view .icon-show-universal-ordering {
+    background-image: url('${context.path}/resources/images/icons/more_24.png');
+}
+
 .v-therapy-view .timeline-icon {
-    background-image: url('${context.path}/resources/images/icons/timeLine_tab_24.png');
+    background-image: url('${context.path}/resources/images/icons/nurse_24.png');
 }
 
 .v-therapy-view .flow-grid-icon {
-    background-image: url('${context.path}/resources/images/icons/list_24.png');
+    background-image: url('${context.path}/resources/images/icons/doctor_24.png');
+}
+
+.v-therapy-view .pharmacist-review {
+    background-image: url('${context.path}/resources/images/icons/mortar_24.png');
+}
+
+.v-therapy-view .reconciliation-summary-icon {
+    background-image: url('${context.path}/resources/images/icons/medSummary_list_off_24.png');
+}
+
+.v-therapy-view .therapy-documentation-icon {
+    background-image: url('${context.path}/resources/images/icons/documentation_off_24.png');
+}
+
+.v-therapy-view .admission-meds-reconciliation-icon {
+    background-image: url('${context.path}/resources/images/icons/therapyAdmissionAdd_24.png');
+}
+
+.v-therapy-view .discharge-meds-reconciliation-icon {
+    background-image: url('${context.path}/resources/images/icons/therapyDischargeAdd_24.png');
+}
+
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-add-outpatient-prescription,
+.v-therapy-view .icon-add-outpatient-prescription {
+    background-image: url('${context.path}/resources/images/icons/rxPrescriptionAdd_24.png');
+}
+
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-show-external-outpatient-prescriptions,
+.v-therapy-view .icon-show-external-outpatient-prescriptions {
+    background-image: url('${context.path}/resources/images/icons/externalSourceDownload_24.png');
+}
+
+.v-therapy-view .therapy-administration-container .show-titration-data-icon,
+.v-therapy-view .icon-titration-dosage-24 {
+    background-image: url('${context.path}/resources/images/icons/viewGraph_filter_24.png');
 }
 
 /* today-cell-item */
@@ -123,49 +992,27 @@
     border-bottom: none;
 }
 
-.v-therapy-view .today-cell-item .edit-icon {
-    background-image: url('${context.path}/resources/images/icons/edit_24.png');
-}
-
-.v-therapy-view .today-cell-item .delete-icon {
-    background-image: url('${context.path}/resources/images/icons/delete_24.png');
-}
-
-.v-therapy-view .today-cell-item .confirm-icon {
+.v-therapy-view .review-icon {
     background-image: url('${context.path}/resources/images/icons/extend_24.png');
 }
 
-/* today-cell-item - control */
-.v-therapy-view .today-cell-item .control {
-    padding-right: 0;
-}
-
-.v-therapy-view .today-cell-item .control .control-inner {
-    height: 100%;
-    width: 150px;
-    float: left;
-}
-
-.v-therapy-view .today-cell-item .control .control-inner .icon_timing {
-    width: 16px;
-    height: 16px;
-    /*background:blue;*/
-    float: right;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: 70%;
-}
-
-.v-therapy-view .today-cell-item .control .control-inner .icon_timing.suspend {
-    background-image: url('${context.path}/resources/images/icons/extend_24.png');
+.v-therapy-view .today-cell-item {
+    background-color: #ffffff;
 }
 
 .v-therapy-view .icon_pills,
 .v-therapy-view .icon_infusion,
 .v-therapy-view .icon_injection,
+.v-therapy-view .icon_inhalation,
+.v-therapy-view .icon_bolus,
 .v-therapy-view .icon_continuous_infusion,
 .v-therapy-view .icon_baseline_infusion,
-.v-therapy-view .icon_other_medication {
+.v-therapy-view .icon_other_medication,
+.v-therapy-view .mental-health-list-all-icon,
+.v-therapy-view .mental-health-list-oral-icon,
+.v-therapy-view .icon_pharmacist_review,
+.v-therapy-view .icon_blood_sugar,
+.v-therapy-view .icon_inr {
     background-size: 100%;
     width: 48px;
     height: 48px;
@@ -183,6 +1030,14 @@
     background-image: url('${context.path}/resources/images/icons/therapyInjection_48.png');
 }
 
+.v-therapy-view .icon_inhalation {
+    background-image: url('${context.path}/resources/images/icons/inhalation_48.png');
+}
+
+.v-therapy-view .icon_bolus {
+    background-image: url('${context.path}/resources/images/icons/bolus_48.png');
+}
+
 .v-therapy-view .icon_continuous_infusion {
     background-image: url('${context.path}/resources/images/icons/therapyInfusionPermanent_48.png');
 }
@@ -191,8 +1046,28 @@
     background-image: url('${context.path}/resources/images/icons/therapyInfusionOM_48.png');
 }
 
+.v-therapy-view .mental-health-list-all-icon {
+    background-image: url('${context.path}/resources/images/icons/therapyList_all_74.png');
+}
+
+.v-therapy-view .mental-health-list-oral-icon {
+    background-image: url('${context.path}/resources/images/icons/therapyList_oral_74.png');
+}
+
 .v-therapy-view .icon_other_medication {
     background-image: url('${context.path}/resources/images/icons/therapy_48.png');
+}
+
+.v-therapy-view .icon_pharmacist_review {
+    background-image: url('${context.path}/resources/images/icons/therapyPowder_48.png');
+}
+
+.v-therapy-view .icon_blood_sugar {
+    background-image: url('${context.path}/resources/images/icons/titrationBloodSugar_48.png');
+}
+
+.v-therapy-view .icon_inr {
+    background-image: url('${context.path}/resources/images/icons/titrationInr_48.png');
 }
 
 .v-therapy-view .icon_warning {
@@ -200,58 +1075,111 @@
     width: 16px;
     height: 16px;
     float: left;
+    margin: 2px 5px 0 0;
     background-image: url('${context.path}/resources/images/icons/warningCircleRed_status_16.png');
 }
 
-.v-therapy-view .today-cell-item .icon_reviewed, .therapy-timeline .icon_reviewed,
-.v-therapy-view .today-cell-item .icon_aborted, .therapy-timeline .icon_aborted,
-.v-therapy-view .today-cell-item .icon_suspended, .therapy-timeline .icon_suspended,
-.v-therapy-view .today-cell-item .icon_cancelled, .therapy-timeline .icon_cancelled,
-.v-therapy-view .today-cell-item .icon_late, .therapy-timeline .icon_late,
-.v-therapy-view .today-cell-item .icon_very_late, .therapy-timeline .icon_very_late {
+.therapy-timeline .icon_reviewed, .v-therapy-view .therapy-container .icon_reviewed,
+.therapy-timeline .icon_aborted, .v-therapy-view .therapy-container .icon_aborted,
+.therapy-timeline .icon_suspended, .v-therapy-view .therapy-container .icon_suspended,
+.therapy-timeline .icon_suspended_temporary_leave, .v-therapy-view .therapy-container .icon_suspended_temporary_leave,
+.therapy-timeline .icon_cancelled, .v-therapy-view .therapy-container .icon_cancelled,
+.therapy-timeline .icon_late, .v-therapy-view .therapy-container .icon_late,
+.therapy-timeline .icon_very_late, .v-therapy-view .therapy-container .icon_very_late,
+.v-therapy-view .icon_linked_to_admission,
+.v-therapy-view .icon_pharmacist_refer_back, .v-therapy-view .icon_pharmacist_not_reviewed {
     background-size: 100%;
     margin-top: -18px;
     width: 16px;
     height: 16px;
+
 }
 
-.v-therapy-view .today-cell-item .icon_reviewed, .therapy-timeline .icon_reviewed {
+.v-therapy-view .timeline-date-field input {
+    text-align: center;
+}
+
+.v-therapy-view .icon_self_admin_automatic,
+.v-therapy-view .icon_self_admin_nurse {
+    background-size: 100%;
+    width: 16px;
+    height: 16px;
+}
+
+.v-therapy-view .high-alert-icon {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.v-therapy-view .icon_reviewed {
     background-image: url('${context.path}/resources/images/icons/finish_status_16.png');
     float: right;
 }
 
-.v-therapy-view .today-cell-item .icon_aborted, .therapy-timeline .icon_aborted {
-    background-image: url('${context.path}/resources/images/icons/deleteGrey_status_16.png');
+.v-therapy-view .icon_aborted {
+    background-image: url('${context.path}/resources/images/icons/deleteRed_status_16.png');
     float: right;
 }
 
-.v-therapy-view .today-cell-item .icon_suspended, .therapy-timeline .icon_suspended {
-    background-image: url('${context.path}/resources/images/icons/stop_status_16.png');
+.v-therapy-view .icon_suspended {
+    background-image: url('${context.path}/resources/images/icons/suspend_status_16.png');
     float: right;
 }
 
-.v-therapy-view .today-cell-item .icon_cancelled, .therapy-timeline .icon_cancelled {
+.v-therapy-view .icon_suspended_temporary_leave {
+    background-image: url('${context.path}/resources/images/icons/suspend_temp_leave_status_16.png');
+    float: right;
+}
+
+.v-therapy-view .icon_cancelled {
     background-image: url('${context.path}/resources/images/icons/cancel_status_16.png');
     float: right;
 }
 
-.v-therapy-view .today-cell-item .icon_late, .therapy-timeline .icon_late {
+.v-therapy-view .icon_late, .v-therapy-view .icon_pharmacist_review_status {
     background-image: url('${context.path}/resources/images/icons/warningYellow_status_16.png');
     float: right;
 }
 
-.v-therapy-view .today-cell-item .icon_very_late, .therapy-timeline .icon_very_late {
+.v-therapy-view .icon_very_late {
     background-image: url('${context.path}/resources/images/icons/warningRed_status_16.png');
     float: right;
 }
 
-.v-therapy-view .today-cell-item .icon_changed,
-.therapy-timeline .timeline-groups-text .icon_changed {
+.v-therapy-view .icon_changed {
     background-image: url('${context.path}/resources/images/icons/change_status_16.png');
     background-size: 100%;
     width: 16px;
     height: 16px;
     float: left;
+}
+
+.v-therapy-view .icon_linked_to_admission {
+    background-image: url('${context.path}/resources/images/icons/linkedAdmission_status_16.png');
+}
+
+.v-therapy-view .icon_pharmacist_refer_back {
+    background-image: url('${context.path}/resources/images/icons/pharmacyRed_status_16.png');
+}
+
+.v-therapy-view .icon_pharmacist_not_reviewed {
+    background-image: url('${context.path}/resources/images/icons/pharmacyYellow_status_16.png');
+}
+
+.v-therapy-view .icon_self_admin_automatic {
+    background-image: url('${context.path}/resources/images/icons/selfAdministratedAuto.png');
+}
+
+.v-therapy-view .icon_self_admin_nurse {
+    background-image: url('${context.path}/resources/images/icons/selfAdministratedNurse.png');
+}
+
+.v-therapy-view .additional_warnings {
+    background-image: url('${context.path}/resources/images/icons/warningRed_status_48.png');
+}
+
+.v-therapy-view .action_warning {
+    background-image: url('${context.path}/resources/images/icons/warningYellow_status_48.png');
 }
 
 .v-therapy-view .icon_day_number {
@@ -310,12 +1238,23 @@
 
 /** medication info tooltip */
 .v-therapy-view .medication-details-card {
-    white-space: nowrap;
+    min-width: 150px;
+    max-width: 450px;
+    max-height: 500px;
+    padding: 10px;
 }
 
 .v-therapy-view .medication-details-card .detail .strength-label {
     text-align: right;
     padding-left: 3px;
+}
+
+.v-therapy-view .medication-details-card .detail .therapy-details-warning {
+    color: #646464;
+}
+
+.v-therapy-view .pharmacists-review .therapy-details-warning {
+    word-break: break-all;
 }
 
 .v-therapy-view .medication-details-card .detail .ingredient-label {
@@ -326,77 +1265,53 @@
     padding-left: 3px;
 }
 
-/** order info tooltip */
-.v-therapy-view .today-cell-item .therapy-info-selector,
-.v-therapy-view .cell-item .therapy-info-selector {
-    position: absolute;
-    opacity: 0.01;
-    filter: alpha(opacity=1);
-    top: 0;
-    left: 0;
-    width: 26px;
-    height: 26px;
-    background: #cbd0ff url('${context.path}/resources/images/icons/information_24.png');
-    overflow: visible;
-    border: 1px solid #555;
-    background-position: center center;
-    background-repeat: no-repeat;
-}
-
-.v-therapy-view .tooltip-order-card-info {
+.v-therapy-view .main-details-container {
     height: auto;
+    min-width: 200px; /* just to prevent any possible colapsing by the other column */
 }
 
-.v-therapy-view .similar-therapies-container {
-    border-left: 1px solid #cccccc;
-}
-
-.v-therapy-view .tooltip-order-card-info .current-order {
-
-}
-
-.v-therapy-view .tooltip-order-card-info .info-icon {
+.v-therapy-view .main-details-container .info-icon {
     float: right;
     background-position: center center;
     background-repeat: no-repeat;
     background-image: url('${context.path}/resources/images/icons/information_16.png');
 }
 
-.v-therapy-view .tooltip-order-card-info .divider {
+.v-therapy-view .main-details-container .divider {
     margin-top: 2px;
     border-top: 1px solid #cccccc;
     margin-bottom: 5px;
 }
 
-.v-therapy-view .tooltip-order-card-info .header {
+.v-therapy-view .main-details-container .header {
     margin-top: 2px;
     margin-bottom: 5px;
 }
 
-.v-therapy-view .tooltip-order-card-info .content .time,
-.v-therapy-view .tooltip-order-card-info .change-history .time {
+.v-therapy-view .main-details-container .content .time,
+.v-therapy-view .main-details-container .change-history .time {
     width: 80px;
 }
 
-.v-therapy-view .tooltip-order-card-info .content .detail,
-.v-therapy-view .tooltip-order-card-info .change-history .detail {
+.v-therapy-view .main-details-container .content .detail,
+.v-therapy-view .main-details-container .change-history .detail {
     padding-left: 5px;
 }
 
-.v-therapy-view .tooltip-order-card-info .change-history .detail {
+.v-therapy-view .main-details-container .change-history .detail {
     padding-bottom: 10px;
 }
 
-.v-therapy-view .tooltip-order-card-info .content .detail .checkBox_on-icon {
+.v-therapy-view .therapy-details-content .main-details-container .checkbox-on-icon {
     display: inline-block;
     width: 14px;
     height: 14px;
     background: url('${context.path}/resources/images/icons/checkBox_on_small.png');
-    background-position: center center;
+    background-position: left center;
     background-repeat: no-repeat;
 }
 
-.v-therapy-view .tooltip-order-card-info .icon_day_number {
+.v-therapy-view .main-details-container .icon_day_number {
     font-size: 10px;
     font-weight: bold;
     color: #ffffff;
@@ -424,20 +1339,26 @@
     margin: 2px 0 0 5px;
 }
 
-.v-therapy-view .tooltip-order-card-info .icon_late,
-.v-therapy-view .tooltip-order-card-info .icon_very_late {
+.v-therapy-view .main-details-container .icon_late,
+.v-therapy-view .main-details-container .icon_very_late {
     background-size: 100%;
     width: 16px;
     height: 16px;
     float: left;
 }
 
-.v-therapy-view .tooltip-order-card-info .icon_late {
-    background-image: url('${context.path}/resources/images/icons/status_warningYellow_16.png');
+.v-therapy-view .main-details-container .icon_late {
+    background-image: url('${context.path}/resources/images/icons/warningYellow_status_16.png');
 }
 
-.v-therapy-view .tooltip-order-card-info .icon_very_late {
+.v-therapy-view .main-details-container .icon_very_late {
     background-image: url('${context.path}/resources/images/icons/status_warningRed_16.png');
+}
+
+.v-therapy-view .icon-revert,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-revert,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-revert {
+    background-image: url('${context.path}/resources/images/icons/revert_24.png');
 }
 
 .v-therapy-view .icon-delete,
@@ -449,7 +1370,7 @@
 .v-therapy-view .icon-suspend,
 .v-therapy-view .dropdown-menu > li > a:hover > .icon-suspend,
 .v-therapy-view .dropdown-menu > .dropdown-submenu .icon-suspend {
-    background-image: url('${context.path}/resources/images/icons/schedule_24.png');
+    background-image: url('${context.path}/resources/images/icons/suspend_24.png');
 }
 
 .v-therapy-view .icon-suspend-all,
@@ -464,10 +1385,26 @@
     background-image: url('${context.path}/resources/images/icons/copy_24.png');
 }
 
+.v-therapy-view .icon-info,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-info,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-info {
+    background-image: url('${context.path}/resources/images/icons/information_16.png');
+}
+
+.v-therapy-view .icon-check-24 {
+    background-image: url('${context.path}/resources/images/icons/check_24.png');
+}
+
 .v-therapy-view .icon-edit-consecutive-days,
 .v-therapy-view .dropdown-menu > li > a:hover > .icon-edit-consecutive-days,
 .v-therapy-view .dropdown-menu > .dropdown-submenu .icon-edit-consecutive-days {
     background-image: url('${context.path}/resources/images/icons/therapy_filter_24.png');
+}
+
+.v-therapy-view .icon-doctors-comment,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-doctors-comment,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-doctors-comment{
+    background-image: url('${context.path}/resources/images/icons/doctor_24.png');
 }
 
 .v-therapy-view .icon-confirm,
@@ -500,8 +1437,31 @@
     background-image: url('${context.path}/resources/images/icons/addTo_24.png');
 }
 
+.v-therapy-view .icon-finish-24,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-finish-24,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-finish-24 {
+    background-image: url('${context.path}/resources/images/icons/finish_24.png');
+}
+
+.v-therapy-view .icon-extend-24,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-extend-24,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-extend-24 {
+    background-image: url('${context.path}/resources/images/icons/extend_24.png');
+}
+
+.v-therapy-view .icon-extend-edit-24,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-extend-edit-24,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-extend-edit-24 {
+    background-image: url('${context.path}/resources/images/icons/extendEdit_24.png');
+}
+
+.v-therapy-view .icon-refresh-from-eer-24 {
+    background-image: url('${context.path}/resources/images/icons/refreshFromER_24.png');
+}
+
 .v-therapy-view .performer-container {
     border-top: 1px solid #d6d6d6;
+    padding: 0px 5px 0px 5px;
 }
 
 .v-therapy-view .edit-consecutive-days-container {
@@ -512,23 +1472,24 @@
 /*MEDICATION ORDERING*/
 /*********************/
 
-.v-therapy-view .medications-ordering-container .ordering-container .add-to-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .delete-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .show-days-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .conditions-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .add-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .edit-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .info-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .remove-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .update-icon,
+.v-therapy-view .ordering-container .add-to-icon,
+.v-therapy-view .ordering-container .abort-icon,
+.v-therapy-view .ordering-container .show-days-icon,
+.v-therapy-view .ordering-container .conditions-icon,
+.v-therapy-view .ordering-container .add-icon,
+.v-therapy-view .ordering-container .edit-icon,
+.v-therapy-view .ordering-container .info-icon,
+.v-therapy-view .ordering-container .remove-icon,
+.v-therapy-view .ordering-container .update-icon,
+.v-therapy-view .dosage-calculation-icon,
 .v-therapy-view .fluid-balance-icon {
     background-position: center center;
     background-repeat: no-repeat;
 }
 
-.v-therapy-view .medications-ordering-container .ordering-container .add-to-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .dropdown-menu > li > a:hover > .add-to-icon,
-.v-therapy-view .medications-ordering-container .ordering-container .dropdown-menu > .dropdown-submenu .add-to-icon {
+.v-therapy-view .ordering-container .add-to-icon,
+.v-therapy-view .ordering-container .dropdown-menu > li > a:hover > .add-to-icon,
+.v-therapy-view .ordering-container .dropdown-menu > .dropdown-submenu .add-to-icon {
     background-image: url('${context.path}/resources/images/icons/addTo_24.png');
 }
 
@@ -538,11 +1499,11 @@
     background-image: url('${context.path}/resources/images/icons/addTo_24.png');
 }
 
-.v-therapy-view .medications-ordering-container .ordering-container .show-days-icon {
+.v-therapy-view .ordering-container .show-days-icon {
     background-image: url('${context.path}/resources/images/icons/calendar_24.png');
 }
 
-.v-therapy-view .medications-ordering-container .ordering-container .conditions-icon {
+.v-therapy-view .ordering-container .conditions-icon {
     background-image: url('${context.path}/resources/images/icons/warning_24.png');
 }
 
@@ -550,24 +1511,98 @@
     background-image: url('${context.path}/resources/images/icons/balance_tab_24.png');
 }
 
-.v-therapy-view .medications-ordering-container .ordering-container .add-icon {
+.v-therapy-view .ordering-container .add-icon {
     background-image: url('${context.path}/resources/images/icons/plus_16.png');
 }
 
-.v-therapy-view .medications-ordering-container .ordering-container .edit-icon {
+.v-therapy-view .ordering-container .edit-icon {
     background-image: url('${context.path}/resources/images/icons/edit_16.png');
 }
 
-.v-therapy-view .medications-ordering-container .ordering-container .remove-icon {
+.v-therapy-view .icon-remove-small,
+.v-therapy-view .ordering-container .remove-icon {
     background-image: url('${context.path}/resources/images/icons/delete_16.png');
 }
 
-.v-therapy-view .medications-ordering-container .ordering-container .info-icon {
+.v-therapy-view .ordering-container .info-icon {
     background-image: url('${context.path}/resources/images/icons/information_16.png');
 }
 
-.v-therapy-view .medications-ordering-container .ordering-container .update-icon {
+.v-therapy-view .ordering-container .update-icon {
     background-image: url('${context.path}/resources/images/icons/update_16.png');
+}
+
+.v-therapy-view .black-triangle-icon {
+    background-image: url('${context.path}/resources/images/icons/blackTriangleMedicine_16.png');
+}
+
+.v-therapy-view .trial-medicine-icon {
+    background-image: url('${context.path}/resources/images/icons/clinicalTrialMedicine_16.png');
+}
+
+.v-therapy-view .controlled-drug-icon {
+    background-image: url('${context.path}/resources/images/icons/controlledDrug_16.png');
+}
+
+.v-therapy-view .high-alert-icon {
+    background-image: url('${context.path}/resources/images/icons/highAlertMedicine_16.png');
+}
+
+.v-therapy-view .non-formulary-icon {
+    background-image: url('${context.path}/resources/images/icons/nonFormulary_16.png');
+}
+
+.v-therapy-view .unlicensed-medication-icon {
+    background-image: url('${context.path}/resources/images/icons/unlicensedMedicine_16.png');
+}
+
+.v-therapy-view .expensive-drug-icon {
+    background-image: url('${context.path}/resources/images/icons/expensiveMeds_16.png');
+}
+
+.v-therapy-view .high-risk-icon {
+    min-width: 25px !important;
+    min-height: 30px !important;
+}
+
+.v-therapy-view .medication-search-field .toggle-button {
+    padding: 4px 6px !important;
+}
+
+.v-therapy-view .ordering-container .round-icon {
+    background-image: url('${context.path}/resources/images/icons/round_16.png');
+}
+
+.v-therapy-view .simple-therapy-container .toggle-titration-button,
+.v-therapy-view .complex-therapy-medication-pane .toggle-titration-button {
+    margin: 2px 0px 2px 10px; /* compensate for taller input */
+}
+
+.v-therapy-view .complex-therapy-container .dosage-calculation-button,
+.v-therapy-view .variable-dose-days-pane .dosage-calculation-button,
+.v-therapy-view .simple-therapy-container .dosage-calculation-button {
+    margin-left: 10px;
+}
+
+.v-therapy-view .ordering-container .search-container {
+    border-bottom: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .ordering-container .search-container .medication-search-field {
+    margin-top: 10px;
+    margin-bottom: 10px !important;
+    margin-left: 20px;
+}
+
+.v-therapy-view .simple-therapy-container .comment-indication-pane,
+.v-therapy-view .complex-therapy-container .comment-indication-pane {
+    padding-right: 20px;
+}
+
+.v-therapy-view .comment-indication-pane .indication-container .title-label,
+.v-therapy-view .comment-indication-pane .indication-container .indication-combo,
+.v-therapy-view .comment-indication-pane .indication-container .indication-field {
+    margin-left: 5px
 }
 
 .v-therapy-view .medications-ordering-container .title-header {
@@ -584,36 +1619,6 @@
     border-top: 1px solid #d6d6d6;
 }
 
-.v-therapy-view .medications-ordering-container .warnings-container {
-    border-top: 1px solid #d6d6d6;
-}
-
-.v-therapy-view .medications-ordering-container .warnings-container .severity {
-    float: left;
-    background-repeat: no-repeat;
-    background-position: center top;
-    margin: 5px 5px 0;
-    width: 50px;
-    height: 35px;
-}
-
-.v-therapy-view .medications-ordering-container .warnings-container .severity span {
-    margin-top: 20px;
-    display: block;
-    text-align: center;
-    font-size: 8px;
-    font-weight: bold;
-}
-
-.v-therapy-view .medications-ordering-container .warnings-container .severity.high-icon {
-    background-image: url('${context.path}/resources/images/icons/status_warningRed_24.png');
-}
-
-.v-therapy-view .medications-ordering-container .warnings-container .severity.significant-icon {
-    background-image: url('${context.path}/resources/images/icons/warningYellow_status_24.png');
-}
-
-.v-therapy-view .medications-ordering-container .templates-container .tm-list .item,
 .v-therapy-view .medications-ordering-container .basket-container .tm-list .item {
     padding: 0;
 }
@@ -625,8 +1630,46 @@
     height: 16px;
 }
 
+.v-therapy-view .ordering-container .therapy-container.item-selected {
+    background-color: #c6cce1;
+}
+
+.v-therapy-view .icon-show-universal-ordering {
+    /*margin-right: 10px;*/
+    align-self: center !important;
+}
+
+.v-therapy-view .universal-medication-data-container {
+    padding: 8px;
+}
+
 .v-therapy-view .therapy-days-container .separator-container {
     border-bottom: 1px solid #CFCFCF;
+}
+
+.v-therapy-view .universal-medication-data-container .universal-medication-label {
+    margin-top: 5px;
+}
+
+.v-therapy-view .simple-therapy-edit-container .medication-container,
+.v-therapy-view .medications-ordering-container .medication-container {
+    margin-right: 15px;
+}
+
+.v-therapy-view .medication-search-field .tm-tree .fancytree-unselectable .fancytree-title {
+    color: #9A9A9A !important;
+}
+
+.v-therapy-view .medication-search-field .tm-tree span.fancytree-node.non-formulary .fancytree-title {
+    font-style: italic;
+}
+
+.v-therapy-view .medication-search-field .toggle-formulary-button {
+    margin: 5px 0px 5px 22px;
+}
+
+.v-therapy-view .medication-info {
+    margin-left: 5px;
 }
 
 .v-therapy-view .pointer-cursor {
@@ -639,30 +1682,34 @@
     top: 0;
 }
 
+.v-therapy-view .route-button-unlicensed,
+.v-therapy-view .route-option-unlicensed {
+    color: #b22222
+}
+
+.v-therapy-view .route-button-discretionary {
+    background-image: url('${context.path}/resources/images/icons/circleBlue_status_16.png') !important;
+    background-repeat: no-repeat;
+    background-position: right bottom;
+    background-size: 7px;
+}
+
+.v-therapy-view .route-option-discretionary,
+.v-therapy-view .route-option-discretionary:hover,
+.v-therapy-view .route-option-discretionary:focus {
+    background-image: url('${context.path}/resources/images/icons/circleBlue_status_16.png') !important;
+    background-repeat: no-repeat !important;
+    background-position: right center !important;
+    background-size: 7px !important;
+}
+
+.v-therapy-view .reconciliation-container .panel-header.template-group-panel-header,
 .v-therapy-view .medications-ordering-container .panel-header.template-group-panel-header {
     background-color: #f6f6f6;
-    border-top: 1px solid #E4E4E4;
-    border-bottom: 1px solid #E4E4E4;
+    border-bottom: 1px solid #d6d6d6;
 }
 
-.v-therapy-view .medications-ordering-container .panel-header.template-panel-header {
-    background-color: #ffffff;
-    border-bottom: 1px solid #ffffff;
-}
-
-.v-therapy-view .medications-ordering-container .panel-header.template-panel-header-selected {
-    background-color: #e0eff9;
-    border-bottom: 1px solid #ffffff;
-}
-
-.v-therapy-view .medications-ordering-container .panel-header.template-panel-header .template-bottom-border {
-    border-bottom: 1px solid #E4E4E4;
-}
-
-.v-therapy-view .medications-ordering-container .incomplete-therapy {
-    background-color: #fdf1d8;
-}
-
+.v-therapy-view .reconciliation-container .incomplete-therapy,
 .v-therapy-view .medications-ordering-container .incomplete-therapy {
     background-color: #fdf1d8;
 }
@@ -678,19 +1725,107 @@
 }
 
 /*COMPLEX VARIABLE RATE PANE*/
+.v-therapy-view .variable-rate-pane {
+    padding: 10px;
+}
 
+.v-therapy-view .variable-rate-pane > *,
+.v-therapy-view .rate-rows-container > * {
+    margin-bottom: 5px;
+}
+
+.v-therapy-view .variable-rate-pane  .recurring-checkbox {
+    margin: 10px 0px;
+}
+
+.v-therapy-view .variable-rate-pane .add-row-button,
+.v-therapy-view .variable-rate-pane .remove-row-button {
+    cursor: pointer;
+}
+
+.v-therapy-view .variable-rate-pane .rate-rows-container {
+    margin-bottom: 0;
+}
+
+.v-therapy-view .variable-rate-pane .rate-rows-container .rate-row > * {
+    margin-right: 5px;
+}
+
+.v-therapy-view .variable-rate-pane .rate-rows-container .rate-row .end-label,
+.v-therapy-view .variable-rate-pane .rate-rows-container .rate-row .end-field {
+    margin-right: 20px;
+}
+
+.v-therapy-view .variable-dose-days-pane .add-icon,
 .v-therapy-view .variable-rate-pane .add-icon,
+.v-therapy-view .variable-dose-days-pane .remove-icon,
 .v-therapy-view .variable-rate-pane .remove-icon {
     background-position: center center;
     background-repeat: no-repeat;
 }
 
+.v-therapy-view .variable-dose-days-pane .reference-dose-container {
+    padding-left: 67px;
+}
+
+.v-therapy-view .variable-dose-days-pane .repeat-field {
+    margin-right: 5px;
+}
+
+.v-therapy-view .variable-dose-days-pane .add-icon,
 .v-therapy-view .variable-rate-pane .add-icon {
     background-image: url('${context.path}/resources/images/icons/plus_16.png');
 }
 
+.v-therapy-view .variable-dose-days-pane .remove-icon,
 .v-therapy-view .variable-rate-pane .remove-icon {
     background-image: url('${context.path}/resources/images/icons/delete_16.png');
+}
+
+.v-therapy-view .protocol-options-container .end-date-field {
+    margin-left: 5px;
+}
+
+.v-therapy-view .protocol-options-container {
+    margin: 8px;
+}
+
+.v-therapy-view .protocol-options-container .tm-radiobutton {
+    margin-left: 15px;
+}
+
+.v-therapy-view .protocol-options-container .repeat-whole-protocol-field {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.v-therapy-view .next-administration-warning-label,
+.v-therapy-view .variable-dose-days-pane .late-administration,
+.v-therapy-view .variable-dose-days-pane .dose-pane .late-dose {
+    color: red;
+}
+
+.v-therapy-view .variable-dose-days-pane .three-dots-container {
+    padding: 8px 5px 0px 3px;
+    margin: 0px 0px 5px 1px;
+    background-color: #F8F8F8;
+    border: 1px solid #ccc;
+    webkit-border-top-right-radius-: 4px;
+    -moz-border-top-rightradius: 4px;
+    border-top-right-radius: 4px;
+    webkit-border-bottom-right-radius-: 4px;
+    -moz-border-bottom-rightradius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.v-therapy-view .variable-dose-days-pane .dose-pane .sharp-borders {
+    background-color: #F8F8F8;
+    webkit-border-top-right-radius-: 0px;
+    -moz-border-top-rightradius: 0px;
+    border-top-right-radius: 0px;
+    webkit-border-bottom-right-radius-: 0px;
+    -moz-border-bottom-rightradius: 0px;
+    border-bottom-right-radius: 0px;
 }
 
 /*********************/
@@ -759,7 +1894,11 @@
     background-image: url('${context.path}/resources/images/icons/update_16.png');
 }
 
-.v-therapy-view .medications-ordering-container .menu-icon {
+.v-therapy-view .reconciliation-container .menu-icon,
+.v-therapy-view .medications-ordering-container .menu-icon,
+.v-therapy-view .therapy-administration-container .menu-icon,
+.v-therapy-view .universal-complex-therapy-container .menu-icon,
+.v-therapy-view .therapy-timeline .menu-icon {
     background-image: url('${context.path}/resources/images/icons/more_16.png');
     background-repeat: no-repeat;
     width: 16px;
@@ -768,6 +1907,232 @@
 
 .v-therapy-view .button-align-left {
     text-align: left !important;
+}
+
+/* ADMISSION PREVIEW TIMELINE */
+/* vis.js timeline */
+.v-therapy-view .vis-timeline .vis-item .vis-item-overflow {
+    overflow: visible;
+}
+
+.v-therapy-view .vis-timeline .vis-panel.vis-center {
+    background: #ECECEC;
+}
+
+.v-therapy-view .vis-timeline .vis-item-content {
+    padding: 0px;
+}
+
+.v-therapy-view .vis-timeline .task {
+    margin-left: 0px;
+}
+
+.v-therapy-view .vis-timeline .vis-item.vis-point > .vis-item-content {
+    margin-left: -12px !important;
+    overflow: visible;
+}
+
+.v-therapy-view .vis-timeline .vis-item.vis-dot {
+    display: none;
+}
+
+.v-therapy-view .vis-timeline .vis-item.empty-task {
+    visibility: hidden;
+}
+
+/* preview timeline */
+.v-therapy-view .vis-timeline .vis-item.vis-point > .vis-item-content .orderState {
+    min-height: 24px;
+}
+
+.v-therapy-view .vis-timeline .vis-item.vis-point > .vis-item-content .timeLabel {
+    position: relative;
+    width: 40px;
+    text-align: center;
+    left: -10px;
+}
+
+.v-therapy-view .vis-timeline .vis-item.vis-box {
+    border-style: none;
+    border: 0;
+}
+
+.v-therapy-view .vis-timeline .vis-item.duration-line {
+    height: 5px;
+    border: none;
+    z-index: 9;
+    background-color: #BDE3F8;
+}
+
+.v-therapy-view .vis-timeline .vis-item.infusion-rate-label {
+    border-color: #BDE3F8;
+}
+
+/* hides the boxes */
+.v-therapy-view .vis-timeline .vis-background .vis-item.vis-line {
+    display: none;
+}
+
+/* categorically changing the z-order so we can implement the work-hours background */
+.v-therapy-view .vis-timeline .vis-item.vis-background.work-hours {
+    background: #FFFFFF;
+    z-index: 4;
+}
+
+.v-therapy-view .vis-timeline .vis-time-axis {
+    z-index: 5;
+}
+
+.v-therapy-view .vis-timeline .vis-item {
+    z-index: 10;
+}
+
+.v-therapy-view .vis-timeline .vis-current-time {
+    z-index: 15;
+}
+
+.v-therapy-view .vis-timeline .vis-custom-time {
+    z-index: 15;
+}
+
+.v-therapy-view .vis-timeline .vis-foreground .vis-group {
+    z-index: 15;
+}
+
+/* end of general style */
+.v-therapy-view .admission-preview-timeline .vis-timeline div.timeline-axis {
+    display: block;
+}
+
+.v-therapy-view .admission-preview-timeline .vis-timeline .timeline-axis-text-major {
+    display: block;
+}
+
+.v-therapy-view .admission-preview-timeline .vis-timeline .timeline-groups-axis.timeline-groups-axis-onleft {
+    display: none;
+}
+
+.v-therapy-view .admission-preview-timeline .vis-timeline .task {
+    cursor: default;
+}
+
+.v-therapy-view .admission-preview-timeline .vis-timeline .vis-item.duration-line {
+    margin-top: -22px;
+}
+
+.v-therapy-view .therapy-interval-pane {
+    margin-top: 5px;
+}
+
+.v-therapy-view .therapy-interval-pane > *,
+.v-therapy-view .therapy-interval-pane .start-date-field,
+.v-therapy-view .therapy-interval-pane .therapy-duration-container > * {
+    margin-right: 5px;
+}
+
+.v-therapy-view .therapy-interval-pane .therapy-start-container {
+    max-width: 250px;
+}
+
+.v-therapy-view .therapy-interval-pane .therapy-duration-container {
+    margin: 5px 0 5px 0;
+}
+
+.v-therapy-view .therapy-interval-pane .therapy-duration-fields-container .title-label,
+.v-therapy-view .therapy-interval-pane .btns-reminder-container .title-label {
+    min-height: 18px !important;
+}
+
+.v-therapy-view .therapy-interval-pane .max-frequency-container,
+.v-therapy-view .therapy-interval-pane .right-btns-container .btn {
+    margin-left: 5px;
+}
+
+.v-therapy-view .therapy-interval-pane .right-btns-container,
+.v-therapy-view .therapy-interval-pane .max-daily-frequency-field {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.v-therapy-view .therapy-interval-pane .therapy-duration-container .tm-datetimepicker > tm-spacer {
+    padding-left: 5px !important;
+}
+
+.v-therapy-view .therapy-supply-container {
+    margin-top: 5px;
+    margin-right: 20px;
+}
+
+.v-therapy-view .therapy-supply-container > .vertically-titled-component {
+    margin-right: 50px;
+}
+
+.v-therapy-view .therapy-supply-container .left-margin {
+    margin-left: 5px;
+}
+
+.v-therapy-view .therapy-supply-container .when-needed-button {
+    margin-top: 18px; /* match TextLabel size */
+}
+
+.v-therapy-view .therapy-supply-container .supply-units-list p {
+    margin: 0px;
+}
+
+/* COMMON LARGE START DATE/TIME INPUT */
+.v-therapy-view .larger-date-time-field input,
+.v-therapy-view .therapy-interval-pane .start-date-field input,
+.v-therapy-view .therapy-interval-pane .start-hour-field input,
+.v-therapy-view .therapy-interval-pane .start-hour-combo .filter-option {
+    font-size: 22px;
+    line-height: 22px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+.v-therapy-view .therapy-interval-pane .start-hour-combo button {
+    height: 40px;
+}
+
+.v-therapy-view .dose-pane.with-large-input .tm-numberfield,
+.v-therapy-view .dose-pane.with-large-input .tm-typeaheadfield,
+.v-therapy-view .dose-pane.with-large-input .input-medium,
+.v-therapy-view .dose-pane.with-large-input .TextData,
+.v-therapy-view .dose-pane.with-large-input .dosage-calculation-unit-combo,
+.v-therapy-view .dose-pane.with-large-input .dosage-calculation-unit-combo .btn,
+.v-therapy-view .dose-pane.with-large-input .denominator-unit-field .btn,
+.v-therapy-view .dose-pane.with-large-input .numerator-unit-field .btn {
+    height: 34px !important;
+    font-size: 18px;
+    line-height: 24px;
+    text-align: end;
+}
+
+.v-therapy-view .dose-pane.with-large-input .filter-option {
+    color: #646464;
+    font-size: 18px;
+}
+
+.v-therapy-view .variable-dose-pane .hasTimepicker,
+.v-therapy-view .variable-dose-pane .tm-fieldpicker .btn {
+    height: 34px !important;
+    font-size: 18px;
+}
+
+.v-therapy-view .variable-dose-pane .tm-timepicker {
+    width: 90px !important;
+}
+
+.v-therapy-view .variable-dose-pane .tm-timepicker .tm-fieldpicker {
+    width: 100% !important;
+}
+
+.v-therapy-view .dose-pane .with-large-input .btn:focus {
+    outline: 0 !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    box-shadow: none !important;
 }
 
 /*VARIABLE DOSE*/
@@ -784,6 +2149,10 @@
 
 .v-therapy-view .variable-dose-pane .remove-icon {
     background-image: url('${context.path}/resources/images/icons/delete_16.png')
+}
+
+.v-therapy-view .dosage-calculation-icon {
+    background-image: url('${context.path}/resources/images/icons/calculator_blue_24.png');
 }
 
 /*UNIVERSAL SIMPLE*/
@@ -818,87 +2187,238 @@
     background-image: url('${context.path}/resources/images/icons/warning_24.png');
 }
 
-.v-therapy-view .universal-complex-therapy-container .menu-icon {
-    background-image: url('${context.path}/resources/images/icons/arrowDown_16.png');
+/** OXYGEN THERAP */
+.v-therapy-view .oxygen-therapy-container > *
+{
+    margin: 5px 20px 0px 20px;
+}
+
+
+.v-therapy-view .oxygen-therapy-container .info-icon {
+    background-position: center center;
     background-repeat: no-repeat;
-    width: 16px;
-    height: 16px;
+    background-image: url('${context.path}/resources/images/icons/information_16.png');
+}
+
+.v-therapy-view .oxygen-therapy-container .medication-container {
+    margin-top: 10px;
+}
+
+.v-therapy-view .ordering-container .clear-button {
+    cursor: pointer;
+}
+
+.v-therapy-view .ordering-container .oxygen-therapy-container .comment-indication-pane {
+    padding-right: 0;
+}
+
+.v-therapy-view .oxygen-therapy-container .oxygen-saturation-container .custom-input-btn {
+    margin-left: 5px;
+}
+
+.v-therapy-view .oxygen-therapy-container .oxygen-saturation-container .range-dash,
+.v-therapy-view .oxygen-route-container .device-selectbox {
+    margin-right: 5px;
+}
+
+.v-therapy-view .oxygen-therapy-container .start-flow-rate-label,
+.v-therapy-view .oxygen-therapy-container .oxygen-saturation-container .range-dash,
+.v-therapy-view .oxygen-therapy-container .oxygen-saturation-container .range-unit,
+.v-therapy-view .oxygen-route-container .venturi-mask-unit {
+    margin-left: 5px;
+}
+
+.v-therapy-view .oxygen-therapy-container .navigation-container {
+    margin: 20px 0px 0px 0px;
+    padding: 7px 20px 7px 20px;
+    border-top: 1px solid rgb(214, 214, 214);
+    border-bottom: 1px solid rgb(214, 214, 214);
+}
+
+.v-therapy-view .oxygen-therapy-container .navigation-container .save-to-template-button {
+    margin: auto;
+}
+
+.v-therapy-view .oxygen-therapy-container .navigation-container .add-to-basket-button {
+    margin-left: auto;
+}
+
+.v-therapy-view .edit-oxygen-therapy-dialog .therapy-save-date-pane {
+    margin: 5px 20px 10px 20px;
+}
+
+/* EER PRESCRIPTION EXTENSIONS */
+.v-therapy-view .eer-prescription-extension {
+    background-color: #F9F9F9;
+}
+
+.v-therapy-view .complex-therapy-container .extensions-container,
+.v-therapy-view .simple-therapy-container .extensions-container {
+    margin-top: 5px;
+}
+
+.v-therapy-view .complex-therapy-container .extensions-container .eer-prescription-extension .content,
+.v-therapy-view .simple-therapy-container .extensions-container .eer-prescription-extension .content {
+    background-color: #F9F9F9;
+}
+
+.v-therapy-view .complex-therapy-container .extensions-container .eer-prescription-extension .content,
+.v-therapy-view .simple-therapy-container .extensions-container .eer-prescription-extension .content {
+    margin: 5px 20px 5px 15px; /* compensate for the 5px status line, match 20 px */
+}
+
+.v-therapy-view .eer-prescription-extension .status-line {
+    background-color: #5EDB72;
+}
+
+.v-therapy-view .eer-prescription-extension.white-prescription .status-line {
+    background-color: white;
+}
+
+.v-therapy-view .eer-prescription-extension .type-of-coverage {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.v-therapy-view .eer-prescription-extension .acute-chronic-container {
+    margin-top: 5px;
+}
+
+.v-therapy-view .eer-prescription-extension .prescription-repetitions,
+.v-therapy-view .eer-prescription-extension .payment-options {
+    margin: 0px 5px 0px 5px;
 }
 
 /*TIMELINE */
-
-.v-therapy-view .therapy-timeline .menu-icon {
-    background-image: url('${context.path}/resources/images/icons/more_16.png');
-    background-repeat: no-repeat;
-    width: 16px;
-    height: 16px;
+.v-therapy-view .TherapyDescription.container {
+    padding: 5px 0px 0px 8px;
 }
 
-.v-therapy-view .therapy-timeline .task {
+.v-therapy-view .TextData.administration-not-possible-label {
+    padding: 0px 0px 0px 8px;
+}
+
+.v-therapy-view .therapy-timeline-container .past-therapies-filter-container {
+    padding: 0px 5px 0px 0px;
+}
+
+.v-therapy-view .therapy-timeline-container .panel-title-pane {
+    padding: 3px 0px 0px 0px;
+}
+
+.v-therapy-view .vis-timeline .task {
     width: 22px;
     height: 22px;
     border: 1px solid;
     border-radius: 5px;
-    margin-top: 22px;
-    margin-left: -11px;
     font-weight: bold;
     color: white;
     text-align: center;
     cursor: pointer;
-    float: left;
 }
 
-.v-therapy-view .therapy-timeline .task.PLANNED {
+.v-therapy-view .vis-timeline .task.PLANNED {
     background-color: #2aa4e5;
     border-color: #2aa4e5;
 }
 
-.v-therapy-view .therapy-timeline .task.FAILED {
+.v-therapy-view .vis-timeline .task.FAILED {
     background-color: #B9CEDA;
     border-color: #B9CEDA;
 }
 
-.v-therapy-view .therapy-timeline .task.LATE {
+.v-therapy-view .vis-timeline .task.DEFER {
+    background-color: #B9CEDA;
+    border-color: #B9CEDA;
+    border-width: 2px;
+    width: 20px;
+    height: 20px;
+    color: #b22222;
+}
+
+.v-therapy-view .vis-timeline .task.LATE {
     background-color: #b22222;
     border-color: #b22222;
 }
 
-.v-therapy-view .therapy-timeline .task.COMPLETED, .therapy-timeline .task.COMPLETED_EARLY, .therapy-timeline .task.COMPLETED_LATE {
+.v-therapy-view .vis-timeline .task.COMPLETED, .vis-timeline .task.COMPLETED_EARLY, .vis-timeline .task.COMPLETED_LATE {
     background-color: #1CDF56;
     border-color: #1CDF56;
     color: #b22222;
 }
 
-.v-therapy-view .therapy-timeline .task.ADDITIONAL {
+.v-therapy-view .vis-timeline .task.ADDITIONAL {
     background-color: #84dfa2;
     border-color: #84dfa2;
     color: #b22222;
 }
+.v-therapy-view .vis-timeline .task.RATE_CHANGE {
+    color: #ffffff;
+}
 
-.v-therapy-view .therapy-timeline .task.DIFFERENT {
+.v-therapy-view .vis-timeline .task.DIFFERENT {
     border-color: #b22222;
     border-width: 2px;
     width: 20px;
     height: 20px;
 }
 
-.v-therapy-view .therapy-timeline .task.COMPLETED_EARLY {
+.v-therapy-view .vis-timeline .task.COMPLETED_EARLY {
     border-color: #b22222;
     border-width: 2px 6px 2px 2px;
     width: 16px;
     height: 20px;
 }
 
-.v-therapy-view .therapy-timeline .task.COMPLETED_LATE {
+.v-therapy-view .vis-timeline .task.COMPLETED_LATE {
     border-color: #b22222;
     border-width: 2px 2px 2px 6px;
     width: 16px;
     height: 20px;
 }
 
-.v-therapy-view .therapy-timeline .task.DUE {
+.v-therapy-view .vis-timeline .task.DUE {
     background-color: #F5F519;
     border-color: #F5F519;
+}
+
+.v-therapy-view .vis-timeline .task.TITRATION_DOSE_NOT_SET,
+.v-therapy-view .vis-timeline .task.DOCTOR_NOT_REVIEWED {
+    background-color: white;
+    border-width: 2px;
+    width: 20px;
+    height: 20px;
+}
+
+.v-therapy-view .vis-timeline .task.ADDITIONAL_WARNING {
+    opacity: 0.5;
+}
+
+.v-therapy-view .vis-timeline .task.DOCTOR_DO_NOT_ADMINISTER {
+    background-color: white;
+    border-width: 2px;
+    border-color: #B9CEDA;
+    width: 20px;
+    height: 20px;
+    color: rgb(85, 85, 85);
+}
+
+/* repositioning items from the top of the content */
+.v-therapy-view .therapy-timeline .vis-item.vis-point {
+    margin-top: 25px;
+}
+
+.v-therapy-view .therapy-timeline.hide-info-elements .timeline-admin-info-label {
+    visibility: hidden;
+}
+
+.v-therapy-view .therapy-timeline .timeline-admin-info-label {
+    visibility: initial;
+}
+
+.v-therapy-view .vis-timeline .vis-item.when-needed-line,
+.v-therapy-view .therapy-timeline .vis-item.vis-range.duration-line {
+    margin-top: 20px;
 }
 
 .v-therapy-view .therapy-timeline .task.INFUSION_SYRINGE_CHANGE {
@@ -911,41 +2431,42 @@
     background-image: url('${context.path}/resources/images/icons/infusionSystemChangeTransp_status_24.png');
 }
 
-.v-therapy-view .therapy-timeline .empty-task {
-    z-index: 10;
+.v-therapy-view .therapy-timeline .task.BOLUS {
+    background-size: 100%;
+    background-image: url('${context.path}/resources/images/icons/bolus_24.png');
 }
 
-.v-therapy-view .therapy-timeline .timeline-event.duration-line {
-    height: 5px;
-    width: 100%;
-    margin-top: 16px;
-    z-index: 60;
-    background-color: #BDE3F8;
+.v-therapy-view .therapy-timeline .task.INFUSION_BAG_CHANGE {
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-image: url('${context.path}/resources/images/icons/changeBag_white_24.png');
 }
 
-.v-therapy-view .therapy-timeline .timeline-event.when-needed-line {
-    margin-top: 16px;
-    z-index: 60;
-    border-top: 3px dotted #c9c4c4;
-    height: 15px;
+.v-therapy-view .vis-timeline .vis-item.when-needed-line {
+    border: 2px dotted #c9c4c4;
+    height: 4px;
+    background-color: initial;
+    z-index: 11;
 }
 
-.v-therapy-view .therapy-timeline .timeline-event.infusion-rate-label {
-    position: absolute;
-    top: -1px;
-    left: 10px;
+.v-therapy-view .vis-timeline .vis-item.infusion-rate-label {
     padding-left: 1px;
     padding-right: 1px;
-    z-index: 60;
+    z-index: 10;
     background-color: #BDE3F8;
+    margin-left: 25px;
+    margin-top: 5px;
 }
 
-.v-therapy-view .therapy-timeline .timeline-event.workday-interval {
-    height: 200px;
-    width: 100%;
-    margin-top: -5px;
-    background-color: #ffffff;
-    z-index: 20;
+.v-therapy-view .vis-timeline .vis-item.timeline-admin-info-label {
+    padding-left: 1px;
+    padding-right: 1px;
+    z-index: 15;
+    background-color: #BDE3F8;
+    margin-top: 3px;
+    cursor: pointer;
+    border: 1px solid black;
 }
 
 .v-therapy-view .therapy-timeline .icon_pills {
@@ -974,108 +2495,96 @@
     background-size: 100%;
     width: 16px;
     height: 16px;
-    float: right;
+    display: inline-block;
 }
 
 /*chap-links timeline*/
-.v-therapy-view .therapy-timeline .timeline-content {
-    margin: 0;
-    background-color: #ececec;
-}
-
-.v-therapy-view .therapy-timeline div.timeline-axis {
-    background-color: #ffffff;
-    display: none;
-}
-
-.v-therapy-view .therapy-timeline .timeline-event-content {
-    overflow: visible;
-    margin: 0;
-}
-
-.v-therapy-view .therapy-timeline .timeline-event {
-    border: none;
-    background: none;
-    font-weight: normal;
-    z-index: 70;
-}
-
-.v-therapy-view .therapy-timeline .timeline-event.timeline-event-line {
-    display: none;
-}
-
-.v-therapy-view .therapy-timeline .timeline-event.timeline-event-dot {
-    border-width: 0;
-    border-radius: 0;
-}
-
-.v-therapy-view .therapy-timeline div.timeline-event-box {
-    border-width: 0;
-}
-
-.v-therapy-view .therapy-timeline-container .timeline-axis-grid {
-    z-index: 40;
-}
-
-.v-therapy-view .therapy-timeline-container .timeline-axis-grid-major {
-    z-index: 50;
-    border-color: #999898;
+.v-therapy-view .vis-timeline .vis-time-axis .vis-grid.vis-major {
     border-width: 2px;
 }
 
-.v-therapy-view .therapy-timeline .timeline-axis-text-major {
+.v-therapy-view .vis-timeline .vis-panel .vis-shadow {
     display: none;
 }
 
-.v-therapy-view .therapy-timeline .timeline-frame {
-    border: 0;
+.v-therapy-view .therapy-timeline-container .vis-timeline,
+.v-therapy-view .therapy-timeline .vis-timeline {
+    border: none;
 }
 
-.v-therapy-view .therapy-timeline-container .axis-container .timeline-content {
-    border: 0;
-    margin-left: -1px;
-}
-
-.v-therapy-view .therapy-timeline-container .axis-container .timeline-frame {
-    border: 0;
+.v-therapy-view .therapy-timeline-container .axis-container .vis-timeline {
     border-left: 1px solid #bebebe;
 }
 
-.v-therapy-view .therapy-timeline .timeline-frame {
-    border: 0;
+.v-therapy-view .therapy-timeline-container .axis-container .vis-timeline .vis-panel.vis-top {
+    border: none;
+}
+
+.v-therapy-view .therapy-timeline-container .axis-container .vis-timeline .vis-panel.vis-center {
+    background: #FFFFFF;
 }
 
 .v-therapy-view .therapy-timeline-container .timelines-container {
     border-top: 1px solid #bebebe;
 }
 
+.v-therapy-view .therapy-timeline-container .timelines-container {
+    position: relative;
+}
+
 .v-therapy-view .therapy-timeline-container .timelines-container .tm-panel {
     border-bottom: 1px solid #bebebe;
 }
 
+.v-therapy-view .pharmacists-review .therapy-column .list-container .panel-header,
 .v-therapy-view .therapy-timeline-container .panel-header {
     min-height: 27px !important;
     background-color: #f2f2f2;
 }
 
-.v-therapy-view .therapy-timeline div.timeline-currenttime {
-    z-index: 30;
+.v-therapy-view .therapy-timeline .vis-labelset .vis-label .vis-inner {
+    padding: 0;
 }
 
-.v-therapy-view .therapy-timeline div.timeline-groups-text {
-    padding: 0 5px 0 0;
-    margin: -1px 0 -1px -7px;
-}
-
-/*.v-therapy-view .therapy-timeline div.timeline-groups-text .layers-container {*/
-    /*cursor: default;*/
-/*}*/
-
-.v-therapy-view .therapy-timeline div.timeline-groups-text .aborted {
+.v-therapy-view .therapy-grid .therapy-container.aborted,
+.v-therapy-view .therapy-grid .therapy-container.suspended,
+.v-therapy-view .therapy-grid .therapy-container.ended,
+.v-therapy-view .therapy-grid .therapy-container.inactive,
+.v-therapy-view .therapy-timeline .therapy-container.aborted,
+.v-therapy-view .therapy-timeline .therapy-container.suspended,
+.v-therapy-view .therapy-timeline .therapy-container.ended,
+.v-therapy-view .therapy-timeline .therapy-container.inactive,
+.v-therapy-view .pharmacists-review .therapy-container.aborted,
+.v-therapy-view .pharmacists-review .therapy-container.suspended,
+.v-therapy-view .pharmacists-review .therapy-container.ended,
+.v-therapy-view .pharmacists-review .therapy-container.inactive {
     background-color: rgb(223, 223, 223);
-    margin: -4px 0 -6px 0;
-    padding: 4px 0 0 0;
-    border-right: 2px solid rgb(223, 223, 223);
+}
+
+.v-therapy-view .therapy-container .btn-flat {
+    background-color: transparent;
+}
+
+.v-therapy-view .therapy-container .btn-flat:disabled,
+.v-therapy-view .therapy-container .btn-flat[disabled] {
+    background-color: transparent !important;
+}
+
+.v-therapy-view .therapy-container .btn-flat:hover,
+.v-therapy-view .therapy-container .btn-flat:focus {
+    background-color: #e6e6e6;
+}
+
+.v-therapy-view .therapy-container .btn-flat:active {
+    background-color: #D1EAF8;
+}
+
+.v-therapy-view .therapy-timeline .therapy-container .btn-flat.menu-icon {
+    background-position: right center;
+}
+
+.v-therapy-view .therapy-timeline .therapy-container .btn-flat.menu-icon:hover {
+    background-color: transparent;
 }
 
 .v-therapy-view .therapy-timeline .timeline-taks-menu {
@@ -1084,18 +2593,96 @@
     float: left;
 }
 
-.v-therapy-view .administration-card-bottom-border {
-    padding-bottom: 8px;
+.v-therapy-view .icon-switch-to-oral,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-switch-to-oral,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-switch-to-oral {
+    background-image: url('${context.path}/resources/images/icons/switch_24.png');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .icon-switch-to-oral-late {
+    background-image: url('${context.path}/resources/images/icons/switch_red_24.png');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .perfusion-syringe-icon {
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .perfusion-syringe-icon.start {
+    background-image: url('${context.path}/resources/images/icons/catheter_yellow_24.png');
+}
+
+.v-therapy-view .perfusion-syringe-icon.complete {
+    background-image: url('${context.path}/resources/images/icons/catheter_orange_24.png');
+}
+
+.v-therapy-view .perfusion-syringe-icon.dispense {
+    background-image: url('${context.path}/resources/images/icons/catheter_green_24.png');
+}
+
+.v-therapy-view .therapy-container .btn-flat.perfusion-syringe-icon:disabled {
+    background-color: transparent;
+}
+
+.v-therapy-view .icon-doctor-review-reminder {
+    background-image: url('${context.path}/resources/images/icons/antimicrobic_24.png');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .icon-doctor-review-reminder-late {
+    background-image: url('${context.path}/resources/images/icons/antimicrobic_red_24.png');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .icon-reprompt,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-reprompt,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-reprompt {
+    background-image: url('${context.path}/resources/images/icons/reprompt_24.png');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .icon-supply-reminder,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-supply-reminder,
+.v-therapy-view .dropdown-menu > .dropdown-submenu .icon-supply-reminder {
+    background-image: url('${context.path}/resources/images/icons/supply_24.png');
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .icon-supply-reminder {
+    background: url('${context.path}/resources/images/icons/supply_24.png') no-repeat center;
+}
+
+.v-therapy-view .icon-nurse-supply,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-nurse-supply {
+    background: url('${context.path}/resources/images/icons/nurse_24.png') no-repeat center;
+}
+
+.v-therapy-view .icon-add-prescription,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-add-prescription {
+    background: url('${context.path}/resources/images/icons/viewByType_filter_24.png') no-repeat center;
+}
+
+.v-therapy-view .icon-self-administered,
+.v-therapy-view .dropdown-menu > li > a:hover > .icon-self-administered {
+    background: url('${context.path}/resources/images/icons/peopleSingle_24.png') no-repeat center;
 }
 
 /* THERAPY DESCRIPTION */
-
 .v-therapy-view .TherapyDescription {
     line-height: 18px;
 }
 
-.v-therapy-view .TextLabel, .v-therapy-view .TextHeading1 {
-    color: #1A71BD;
+.v-therapy-view .TextHeading1 {
+    font-size: 16px;
+    line-height: 22px;
 }
 
 .v-therapy-view .TherapyDescription .Delimiter span {
@@ -1104,7 +2691,6 @@
 
 .v-therapy-view .TherapyDescription .Delimiter:after {
     content: '\2013 \0020';
-    /*content: '\2022 \0020';*/
     visibility: visible;
     font-size: 15px;
     color: #544642;
@@ -1112,6 +2698,15 @@
 
 .v-therapy-view .TherapyDescription .Quantity {
     white-space: nowrap;
+}
+
+.v-therapy-view .basket-container .therapy-container {
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+}
+
+.v-therapy-view .delete-container {
+    margin: 7px;
 }
 
 .v-therapy-view .TherapyDescription .TherapyInterval {
@@ -1126,16 +2721,1537 @@
     padding: 0;
 }
 
-.medications-tree .dynatree-ico-cf span.dynatree-icon,
-.medications-tree .dynatree-ico-ef span.dynatree-icon {
-    background-position: 0 0;
-}
-
-.medications-tree .dynatree-ico-cf .dynatree-title,
-.medications-tree .dynatree-ico-ef .dynatree-title {
-    color: #A1A0A0;
-}
-
-.v-therapy-view .max-administrations-warning {
+.v-therapy-view .titration-administration-container .dose-application-row-container .notification-container,
+.v-therapy-view .ingredient-rule-warning {
     color: #b22222;
 }
+.v-therapy-view .administrations-warning {
+    align-self: stretch;
+    color: #b22222;
+    background-color: #FFFF80;
+}
+
+.v-therapy-view .ingredient-rule-warning {
+    margin-top: 10px;
+}
+
+.v-therapy-view .reset-administration-fields-button {
+    background-image: url('${context.path}/resources/images/icons/update_16.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+/*********************/
+/* PHARMACIST'S REVIEW */
+/*********************/
+
+/*
+ *  Start of styling for common input components - flat view
+ */
+.v-therapy-view .perfusion-syringe-container input,
+.v-therapy-view .therapy-administration-container input,
+.v-therapy-view .dose-pane .dosage-calculation-unit-combo input,
+.v-therapy-view .change-reason-dialog input,
+.v-therapy-view .dosing-pattern-pane input,
+.v-therapy-view .pharmacist-review-container textarea,
+.v-therapy-view .pharmacist-review-container input,
+.v-therapy-view .oxygen-starting-device-dialog input,
+.v-therapy-view .oxygen-starting-device-dialog textarea {
+    border-radius: 0;
+    border: none;
+    outline: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+.v-therapy-view .perfusion-syringe-container input,
+.v-therapy-view .perfusion-syringe-container input:focus,
+.v-therapy-view .therapy-administration-container input:focus,
+.v-therapy-view .dose-pane .dosage-calculation-unit-combo input:focus,
+.v-therapy-view .change-reason-dialog input,
+.v-therapy-view .change-reason-dialog input:focus,
+.v-therapy-view .dosing-pattern-pane input:focus,
+.v-therapy-view .pharmacist-review-container textarea:focus,
+.v-therapy-view .pharmacist-review-container input:focus {
+    outline: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+.v-therapy-view .pharmacist-review-container .input-append button {
+    outline: 0;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    border: none;
+    background-color: white;
+    background-image: none;
+}
+
+/* SelectBox restyling*/
+.v-therapy-view .pharmacist-review-container .tm-selectbox .dropdown-toggle.selectpicker {
+    background-color: #ffffff;
+    webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    -moz-background-clip: border;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    border: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    padding: 0px;
+}
+
+.v-therapy-view .tm-resizingtextarea {
+    position: relative !important;
+}
+
+/* end of styling for input components - flat view */
+.v-therapy-view .tm-resizingtextarea pre {
+    padding: 4px 6px !important; /* matching the padding on .textarea */
+    word-break: normal;
+    word-wrap: break-word;
+    visibility: hidden;
+    background: transparent;
+}
+
+.v-therapy-view .tm-resizingtextarea textarea {
+    position: absolute !important;
+    overflow: hidden;
+    resize: none;
+    width: 100%;
+    height: 100%;
+}
+
+.v-therapy-view .vertically-titled-component > .TextData {
+    min-height: 21px !important; /* prevents collapsing into itself */
+    padding-bottom: 3px;
+}
+
+.v-therapy-view .vertically-titled-component .tm-radiobutton {
+    min-height: 30px !important; /* height of input */
+}
+
+.v-therapy-view .vertically-titled-component .tm-radiobutton .TextData {
+    min-height: 0 !important;
+    padding: 0;
+}
+
+.v-therapy-view .vertically-titled-component .radiobutton-group-container {
+    background-color: #FFFFFF;
+}
+
+.v-therapy-view .vertically-titled-component > input {
+    width: auto;
+}
+
+.v-therapy-view .pharmacists-review .vertically-titled-component .TextLabel,
+.v-therapy-view .pharmacists-review .vertically-titled-component .TextData,
+.v-therapy-view .pharmacists-review .vertically-titled-component .tm-component.tm-radiobutton {
+    padding: 0px 5px;
+}
+
+.v-therapy-view .pharmacist-review .supply-days-container {
+    background-color: #FFFFFF;
+}
+
+.v-therapy-view .pharmacists-review .therapy-column {
+    border-right: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacists-review .therapy-column .list-container .panel-header,
+.v-therapy-view .pharmacists-review .therapy-column .list-container .therapy-container {
+    border-bottom: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacists-review .therapy-column .list-container .therapy-container.item-active > tm-container {
+    opacity: 0.5;
+}
+
+.v-therapy-view .pharmacists-review .therapy-column .list-container .therapy-container.item-checked .add-to-icon,
+.v-therapy-view .pharmacists-review .therapy-column .list-container .therapy-container.item-active .add-to-icon {
+    cursor: default;
+}
+
+.v-therapy-view .pharmacists-review .therapy-column .list-container .therapy-container.item-checked .add-to-icon {
+    background-image: url('${context.path}/resources/images/icons/status_finished_24.png');
+}
+
+.v-therapy-view .pharmacists-review .column-title {
+    border-bottom: 1px solid #D3D3D3;
+    background-color: #F6F6F6;
+    min-height: 30px;
+    padding: 5px 5px 5px 10px;
+}
+
+.v-therapy-view .pharmacists-review .column-title .weight-label {
+    background-color: #FFCC00;
+}
+
+.v-therapy-view .pharmacists-review .therapy-column .column-title .weight-label {
+    background-color: #FFCC00;
+}
+
+.v-therapy-view .pharmacists-review .therapy-column .list-container .therapy-container .add-to-icon {
+    background-image: url('${context.path}/resources/images/icons/addTo_24.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.v-therapy-view .pharmacists-review .therapy-column .list-container .therapy-container .more-actions-icon {
+    background: url('${context.path}/resources/images/icons/more_16.png') no-repeat center;
+    width: 16px;
+    height: 16px;
+}
+
+.v-therapy-view .pharmacists-review .reports-column .list-container {
+    padding: 10px;
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container > .header-container {
+    margin-bottom: 10px;
+}
+
+.v-therapy-view .pharmacist-review-pane .pharmacist-review-container .header-container,
+.v-therapy-view .pharmacists-review .daily-reviews-container .header-container {
+    background-color: #F6F6F6;
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container.item-active > .header-container {
+    background-color: #D1EAF8;
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container .content {
+    min-height: 25px;
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container > .header-container {
+    min-height: 30px !important; /* IE fix, for some reason there's a element style and it's value is auto */
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container > .header-container .status-icon {
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 7px 0px 7px 10px;
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container > .header-container .PortletHeading1 {
+    padding-left: 10px;
+}
+
+.v-therapy-view .pharmacist-review-container .header-container .status-icon.inprogress,
+.v-therapy-view .pharmacists-review .daily-reviews-container > .header-container .status-icon.inprogress {
+    background-image: url('${context.path}/resources/images/icons/finishPartial_status_16.png');
+    width: 16px;
+    height: 16px;
+}
+
+.v-therapy-view .pharmacist-review-container .header-container .status-icon.done,
+.v-therapy-view .pharmacists-review .daily-reviews-container > .header-container .status-icon.done {
+    background-image: url('${context.path}/resources/images/icons/finish_status_16.png');
+    width: 16px;
+    height: 16px;
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container .placeholder-container {
+    padding: 10px;
+}
+
+.v-therapy-view .pharmacist-review .daily-reviews-container .placeholder-container .btn:focus {
+    outline: none;
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container .placeholder-container > .TextDataLight {
+    padding-left: 20px;
+    line-height: 21px; /* match the link button to center them */
+}
+
+.v-therapy-view .pharmacist-review-pane .pharmacist-review-container {
+    border-bottom: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacist-review-pane .pharmacist-review-container .toolbar-container {
+    padding-right: 10px;
+}
+
+.v-therapy-view .tag-icon-container {
+    margin: 1px 1px 3px 1px;
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container .placeholder-container,
+.v-therapy-view .pharmacists-review .pharmacist-review-container {
+    border: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacists-review .daily-reviews-container .placeholder-container,
+.v-therapy-view .pharmacists-review .daily-reviews-container .pharmacist-review-container {
+    margin-bottom: 10px;
+}
+
+.v-therapy-view .pharmacist-review-container .view-card {
+    background-color: #FFFFFF;
+    margin-bottom: -1px; /* compensate for the outer container border and inner outlines */
+}
+
+.v-therapy-view .pharmacist-review-container .edit-card {
+    background-color: #F6F6F6;
+    margin-bottom: -1px; /* compensate for the outer container border and inner outlines */
+}
+
+.v-therapy-view .pharmacist-review-container .header-container .layer.v-bottom.status-icon {
+    bottom: 5px;
+}
+
+.v-therapy-view .pharmacist-review-container .header-container .document-icon {
+    background-image: url('${context.path}/resources/images/icons/document_48.png');
+    background-position: 0px -5px;
+    background-repeat: no-repeat;
+    height: 48px;
+    width: 48px;
+    margin-right: 10px !important;
+}
+
+.v-therapy-view .pharmacist-review-container .header-container .title-container,
+.v-therapy-view .pharmacist-review-container .header-container .reminder-container {
+    margin-top: 2px;
+    margin-left: 10px;
+}
+
+.v-therapy-view .pharmacist-review-container .tm-simple-card-container {
+    outline: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacist-review-container .more-actions-icon {
+    background: url('${context.path}/resources/images/icons/more_16.png') no-repeat center;
+    width: 16px;
+    height: 16px;
+}
+
+.v-therapy-view .pharmacist-review-container.read-only .header-container .more-actions-icon {
+    visibility: hidden;
+}
+
+.v-therapy-view .therapy-container.aborted .status-line {
+    background-color: rgb(190, 30, 45);
+}
+
+.v-therapy-view .therapy-container.suspended .status-line {
+    background-color: rgb(255, 245, 64);
+}
+
+.v-therapy-view .therapy-container.changed .status-line {
+    background-color: rgb(255, 164, 19);
+}
+
+.v-therapy-view .vis-group.additional-warning {
+    background-color: rgba(237, 29, 37, 0.1);
+}
+
+.v-therapy-view .therapy-container.additional-warning {
+    background-color: rgba(237, 29, 37, 0.1);
+    border-bottom: 1px solid #bfbfbf;
+}
+
+.v-therapy-view .therapy-container.additional-warning .status-line {
+    background-color: rgb(237, 29, 37);
+}
+
+.v-therapy-view .therapy-container .change-reason {
+    padding-top: 10px;
+    padding-bottom: 2px;
+}
+
+.v-therapy-view .therapy-container .history-title {
+    padding-top: 2px;
+    font-weight: 500;
+    margin-top: 10px;
+    border-top: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .therapy-container .old-data {
+    text-decoration: line-through;
+    font-weight: 300;
+}
+
+.v-therapy-view .therapy-container .new-data {
+    font-weight: 500;
+}
+
+.v-therapy-view .therapy-container .TherapyDescription {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.v-therapy-view .pharmacist-review-container .therapy-list-container .therapy-container {
+    outline: 1px solid #D3D3D3;
+    background-color: #FFFFFF;
+}
+
+.v-therapy-view .pharmacist-review-container .basic-data-row .vertically-titled-component {
+    outline: 1px solid #D3D3D3;
+    margin-right: 1px;
+    margin-bottom: 1px;
+}
+
+.v-therapy-view .pharmacists-review .vertically-titled-component .TextLabel {
+    line-height: 16px;
+    font-size: 11px;
+}
+
+.v-therapy-view .pharmacist-review-container .suppy-row {
+    outline: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacist-review-container .suppy-row .supply-days-container .TextData {
+    padding: 0px 5px;
+    min-height: auto !important;
+}
+
+.v-therapy-view .pharmacist-review-container .basic-data-row {
+    border-top: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacist-review-container .no-problem-container {
+    padding: 15px;
+    border-top: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacist-review-container .edit-card > .vertically-titled-component,
+.v-therapy-view .pharmacist-review-container .view-card > .vertically-titled-component {
+    outline: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacist-review-container .problem-desc-container {
+    outline: 1px solid #D3D3D3;
+    margin-bottom: 1px;
+}
+
+.v-therapy-view .pharmacist-review-container .problem-desc-container .right-column {
+    border-left: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .pharmacist-review-container .problem-desc-container .right-column .vertically-titled-component {
+    margin-bottom: -1px;
+    border-bottom: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .icon_supply_days {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #b22222;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 16px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.v-therapy-view .icon_bnf_red {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #b22222;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 16px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.v-therapy-view .icon_bnf_empty {
+    font-size: 10px;
+    font-weight: bold;
+    color: #000000;
+    background: #ffffff;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 16px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.v-therapy-view .icon_bnf_orange {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background: rgb(255, 164, 19);
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 16px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.v-therapy-view .icon_bnf_green {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #1CDF56;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    line-height: 16px;
+    min-width: 16px;
+    text-align: center;
+}
+
+/*********************/
+/* MEDICAL RECONSILIATION */
+/*********************/
+.v-therapy-view .reconciliation-container .ordering-container,
+.v-therapy-view .reconciliation-container .left-column {
+    border-right: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .reconciliation-container .ordering-container .title-header,
+.v-therapy-view .reconciliation-container .basket-container .title-header {
+    min-height: 30px;
+    padding: 0px 10px;
+    background-color: #f6f6f6;
+    border-bottom: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .reconciliation-container .therapy-container.item-dismissed,
+.v-therapy-view .reconciliation-container .therapy-container.item-selected {
+    background-color: #c6cce1;
+}
+
+.v-therapy-view .reconciliation-container .therapy-container.item-selected .toolbar-container > * {
+    cursor: default !important;
+}
+
+.v-therapy-view .reconciliation-container .basket-container .tm-component.tm-list .item {
+    padding: 0px;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .title-header {
+    background-color: #f6f6f6;
+    border-bottom: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .therapy-group-panel .therapy-container .menu-icon {
+    background-position-x: center;
+}
+
+.v-therapy-view .tm-panel.therapy-group-panel .panel-header {
+    border-bottom: 1px solid #d6d6d6;
+    background-color: #f6f6f6;
+}
+
+.v-therapy-view .therapy-group-panel .therapy-container {
+    border-bottom: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .therapy-group-panel .therapy-container .toolbar-container {
+    padding: 5px;
+}
+
+.v-therapy-view .task-reminder-container {
+    padding: 5px;
+}
+
+.v-therapy-view .tm-panel.template-therapy-group-panel.collapsible .panel-header {
+    min-height: 29px !important;
+    height: 29px !important;
+    background-position: 20px 50% !important;
+    padding-left: 35px !important;
+}
+
+.v-therapy-view .icon-note {
+    background-image: url('${context.path}/resources/images/icons/note_24.png');
+}
+
+.v-therapy-view .dosing-frequency-pane .btn-group + .btn-group,
+.v-therapy-view .dosing-frequency-pane .btn-group + .frequency-card-container {
+    margin-left: 15px;
+}
+
+.v-therapy-view .dosing-frequency-pane .mode-button-group {
+    margin-right: 15px;
+}
+
+.v-therapy-view .dosing-frequency-pane .frequency-card-container .btn-group + .tm-textfield {
+    margin-left: 5px;
+}
+
+.v-therapy-view .dosing-frequency-pane .days-button + .preconditions-button {
+    margin-left: 5px;
+}
+
+.v-therapy-view .dosing-frequency-pane .dosing-pattern-pane {
+    margin: 8px 0 5px 0;
+    position: relative;
+    background: #08A6E3;
+}
+
+.v-therapy-view .dosing-frequency-pane .dosing-pattern-pane input {
+    -webkit-text-fill-color: #FFFFFF; /* mobile webkit override disabled attribute default style */
+    -webkit-opacity: 1; /* mobile webkit override disabled attribute default style */
+    background: #08A6E3;
+    color: #FFFFFF;
+    text-align: center;
+    padding: 0px;
+}
+
+.v-therapy-view .dosing-pattern-pane .dosing-pattern-pane input::selection {
+    background: #d6d6d6;
+}
+
+.v-therapy-view .dosing-frequency-pane .dosing-pattern-pane:after, .dosing-pattern-pane:before {
+    bottom: 100%;
+    left: 50%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.v-therapy-view .dosing-frequency-pane .dosing-pattern-pane:after {
+    border-color: rgba(136, 183, 213, 0);
+    border-bottom-color: #08A6E3;
+    border-width: 5px;
+    margin-left: -5px;
+}
+
+.v-therapy-view .dosing-frequency-pane .dosing-pattern-pane:before {
+    border-color: rgba(136, 183, 213, 0);
+    border-bottom-color: #08A6E3;
+    border-width: 8px;
+    margin-left: -8px;
+}
+
+.v-therapy-view .infusion-rate-type-pane > *
+{
+    margin-right: 5px;
+}
+
+.v-therapy-view .infusion-rate-type-pane> *:last-child
+{
+    margin-right: 10px;
+}
+
+.v-therapy-view .change-reason-dialog .action-reason-field,
+.v-therapy-view .change-reason-dialog .action-comment-field {
+    border: 1px solid #D3D3D3;
+    margin-top: 10px;
+}
+
+.v-therapy-view .change-reason-dialog .action-comment-field {
+    padding-left: 8px;
+    line-height: 22px;
+    width: 100%;
+}
+
+/* Summary view */
+.v-therapy-view .rec-summary-view .summary-row {
+    border-bottom: 1px solid transparent;
+}
+
+.v-therapy-view .rec-summary-view .summary-col {
+    box-sizing: border-box;
+}
+
+.v-therapy-view .rec-summary-view .summary-row > .summary-col {
+    border-right: 1px solid transparent;
+}
+
+.v-therapy-view .rec-summary-view .summary-row [class~='summary-col']:last-child {
+    border-right: none;
+}
+
+.v-therapy-view .rec-summary-view .therapy-container {
+    outline: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .rec-summary-view .header-row {
+    background-color: #F6F6F6;
+}
+
+.v-therapy-view .rec-summary-view .header-row.column-title {
+    border-bottom: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .rec-summary-view .header-row .column-title {
+    min-height: 30px !important;
+    padding: 0px 10px;
+    border-right: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .rec-summary-view .header-row .empty-title {
+    min-height: 30px !important;
+    padding: 0px 10px;
+    background-color: #ffffff;
+}
+
+.v-therapy-view .rec-summary-view .header-row .empty-title.right-border {
+    border-right: 1px solid #D3D3D3;
+}
+
+.v-therapy-view .suspend-admission-dialog .button-container {
+    margin: 10px 20px;
+}
+
+.v-therapy-view .align-center {
+    text-align: center;
+}
+
+.v-therapy-view .align-left {
+    text-align: left;
+}
+
+.v-therapy-view .align-right {
+    text-align: right;
+}
+
+.v-therapy-view .rec-summary-view .header-row [class~='summary-col']:last-child .column-title {
+    border-right: none;
+}
+
+/*.v-therapy-view .rec-summary-view .header-row .column-title .PortletHeading1 {*/
+/*text-align: center;*/
+/*}*/
+
+.v-therapy-view .dosing-frequency-pane .dosing-pattern-pane.left-sided:after, .dosing-pattern-pane.left-sided:before {
+    left: 20% !important;
+}
+
+.v-therapy-view .dosing-pattern-pane .asap-btn {
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background: #08A6E3;
+    border: 1px solid #ffffff;
+    color: #ffffff;
+    text-shadow: none !important;
+}
+
+.v-therapy-view .dosing-pattern-pane .asap-btn:active {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    background: #ffffff;
+    color: #08A6E3;
+}
+
+.v-therapy-view .dosing-pattern-pane .time-field-container .arrow-container {
+    position: absolute;
+    top: 23px;
+    margin-left: 20px;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #ffffff;
+}
+
+/* Missing animation from a newer version of Animate.css */
+@-webkit-keyframes slideInLeft {
+    0% {
+        -webkit-transform: translate3d(-100%, 0, 0);
+        transform: translate3d(-100%, 0, 0);
+        visibility: visible;
+    }
+
+    100% {
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes slideInLeft {
+    0% {
+        -webkit-transform: translate3d(-100%, 0, 0);
+        transform: translate3d(-100%, 0, 0);
+        visibility: visible;
+    }
+
+    100% {
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.slideInLeft {
+    -webkit-animation-name: slideInLeft;
+    animation-name: slideInLeft;
+}
+
+/* Simple warnings container and loading animation */
+
+.v-therapy-view .medication-details-container .medication-info-loader {
+    margin-top: 25px;
+    font-size: 6px;
+}
+
+.v-therapy-view .warnings-container .loading-warnings-container {
+    padding: 3px;
+}
+
+.v-therapy-view .loader,
+.v-therapy-view .loader:before,
+.v-therapy-view .loader:after {
+    background: rgb(100, 100, 100);
+    /*background: #B3B3B3;*/
+    -webkit-animation: therapyWarningsLoad 1s infinite ease-in-out;
+    animation: therapyWarningsLoad 1s infinite ease-in-out;
+    width: 1em !important;
+    height: 2em !important;
+    top: 2px;
+}
+
+@-webkit-keyframes therapyWarningsLoad {
+    0%,
+    80%,
+    100% {
+        box-shadow: 0 0 rgb(100, 100, 100);
+        height: 1em;
+    }
+    40% {
+        box-shadow: 0 -2em rgb(100, 100, 100);
+        height: 2em;
+    }
+}
+
+@keyframes therapyWarningsLoad {
+    0%,
+    80%,
+    100% {
+        box-shadow: 0 0 #B3B3B3;
+        height: 1em;
+    }
+    40% {
+        box-shadow: 0 -2em #B3B3B3;
+        height: 2em;
+    }
+}
+
+.v-therapy-view .loader:before,
+.v-therapy-view .loader:after {
+    position: absolute;
+    top: 0;
+    content: '';
+}
+
+.v-therapy-view .loader:before {
+    left: -1.5em;
+}
+
+.v-therapy-view .loader {
+    text-indent: -9999em;
+    margin-right: 11px;
+    margin-left: 6px;
+    margin-top: 5px;
+    position: relative;
+    font-size: 4px;
+    -webkit-animation-delay: -0.16s;
+    animation-delay: -0.16s;
+    overflow: visible !important;
+}
+
+.v-therapy-view .therapy-administration-container .witness-loader {
+    margin-right: 15px;
+}
+
+.v-therapy-view .authorLoader {
+    margin-top: 0px;
+    font-size: 4px;
+}
+
+.v-therapy-view .loader:after {
+    left: 1.5em;
+    -webkit-animation-delay: -0.32s;
+    animation-delay: -0.32s;
+}
+
+.v-therapy-view .warnings-message-container {
+    border-bottom: 1px solid rgb(228, 228, 228);
+}
+
+.v-therapy-view .drug-container {
+    border-bottom: 3px solid #EBEBEB;
+    padding: 5px;
+}
+
+.v-therapy-view .drug-container .TextDataLight {
+    color: #dcdcdc;
+}
+
+.v-therapy-view .perfusion-syringe-container {
+    padding: 10px;
+}
+
+.v-therapy-view .perfusion-syringe-container .syringe-count-field {
+    border: 0;
+    text-align: center;
+    border-bottom: 1px solid #EBEBEB;
+}
+
+.v-therapy-view .perfusion-syringe-container .tm-datetimepicker.tm-datepicker input {
+    min-width: 150px !important;
+}
+
+.v-therapy-view .perfusion-syringe-container .tm-datetimepicker.tm-timepicker input {
+    min-width: 70px !important;
+}
+
+.v-therapy-view .perfusion-syringe-container .warning-text,
+.v-therapy-view .titration-administration-container .measurement-result-row-container {
+    color: red;
+}
+
+.v-therapy-view .perfusion-syringe-container .start-component {
+    margin-bottom: 5px;
+}
+
+.v-therapy-view .perfusion-syringe-container .urgency-checkbox,
+.v-therapy-view .perfusion-syringe-container .print-system-checkbox {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+.v-therapy-view .perfusion-syringe-container .row-number-row-wrapper {
+    margin-bottom: 5px;
+}
+
+.v-therapy-view .perfusion-syringe-container .TextData.lowercase {
+    margin-right: 5px;
+}
+
+/*
+* Therapy documentation sub-view
+*/
+
+.app-views .modal.tm-angularjs-modal .external-prescriptions-dialog-content .modal-body {
+    padding: 0 !important;
+}
+
+.v-therapy-view .documentation-view-container .index-column,
+.v-therapy-view .external-prescriptions-dialog-content .index-column {
+    border-right: 1px solid #BEBEBE;
+}
+
+.v-therapy-view .documentation-view-container .list-column,
+.v-therapy-view .external-prescriptions-dialog-content .list-column {
+    background-color: #EFF0F2;
+}
+
+.v-therapy-view .documentation-view-container .index-column .description,
+.v-therapy-view .documentation-view-container .index-column .header-row,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .description,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .header-row {
+    border-bottom: 1px solid #BEBEBE;
+    min-height: 50px;
+}
+
+.v-therapy-view .documentation-view-container .index-column .header-row,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .header-row {
+    background: #FFFFFF;
+    cursor: pointer;
+    min-height: 30px;
+}
+
+.v-therapy-view .documentation-view-container .index-column .header-row.active,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .header-row.active {
+    background: #EFF0F2;
+}
+
+.v-therapy-view .documentation-view-container .index-column .header-row.active > .btn-link,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .header-row.active > .btn-link {
+    color: #999
+}
+
+.v-therapy-view .documentation-view-container .index-column .item,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .item {
+    cursor: pointer;
+}
+
+.v-therapy-view .documentation-view-container .index-column .item:hover,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .item:hover {
+    background: #eeeeee;
+}
+
+.v-therapy-view .documentation-view-container .index-column .item.active,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .item.active {
+    background: #e1eff9;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header {
+    min-height: 70px;
+}
+
+.v-therapy-view .documentation-view-container .list-column .therapy-document-container.unauthorized .status-line,
+.v-therapy-view .documentation-view-container .list-column .therapy-document-header.unauthorized .status-line,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .therapy-document-header.unauthorized .status-line,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .therapy-document-header.unauthorized .status-line {
+    background-color: #FDA61E;
+}
+
+.v-therapy-view .documentation-view-container .single-document-column.unauthorized {
+    border-left: 5px solid #FDA61E;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header,
+.v-therapy-view .documentation-view-container .therapy-document-header .description,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header .description {
+    min-width: 0px; /* prevent flex overflow */
+    overflow: hidden;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header .document-icon,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header .document-icon {
+    margin: 5px 0px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header .document-icon.eer_prescription,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header .document-icon.external_eer_prescription {
+    background-image: url('${context.path}/resources/images/icons/document_rx_74.png');
+    background-repeat: no-repeat;
+    height: 48px;
+    width: 48px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header .document-icon.t2{
+    background-image: url('${context.path}/resources/images/icons/documentT2_48.png');
+    background-repeat: no-repeat;
+    height: 48px;
+    width: 48px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header .document-icon.t3{
+    background-image: url('${context.path}/resources/images/icons/documentT3_48.png');
+    background-repeat: no-repeat;
+    height: 48px;
+    width: 48px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header .document-icon.eer_prescription .status-icon,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header .document-icon.external_eer_prescription .status-icon {
+    background-image: url('${context.path}/resources/images/icons/finish_status_16.png');
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header.unauthorized .document-icon.eer_prescription .status-icon,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header.unauthorized .document-icon.external_eer_prescription .status-icon {
+    background-image: url('${context.path}/resources/images/icons/inprogressYellow_status_16.png');
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header .description > .TextHeading3,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header .description > .TextHeading3 {
+    min-height: 19px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header .description > .TextData,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header .description > .TextData {
+    min-height: 20px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-header .description,
+.v-therapy-view .documentation-view-container .header .menu,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-header .description,
+.v-therapy-view .external-prescriptions-dialog-content .header .menu {
+    padding: 10px;
+}
+
+.v-therapy-view .documentation-view-container .header .menu .menu-item-subscript-data,
+.v-therapy-view .external-prescriptions-dialog-content .header .menu .menu-item-subscript-data {
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+.v-therapy-view .documentation-view-container .list-column,
+.v-therapy-view .external-prescriptions-dialog-content .list-column {
+    padding: 10px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container {
+    background-color: #FFFFFF;
+    border: 1px solid #BEBEBE;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.25);
+}
+
+.v-therapy-view .documentation-view-container .single-document-column .therapy-document-container,
+.v-therapy-view .external-prescriptions-dialog-content .single-document-column .therapy-document-container {
+    border: 0;
+    box-shadow: none;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .header,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .header {
+    background-color: #F6F6F6;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .content,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .content {
+    padding: 0px 10px 35px 65px;
+    overflow: hidden;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .mental-health-border {
+    border-top: 1px solid #BEBEBE;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .mental-health-templates {
+    padding-top: 10px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .mental-health-template,
+.v-therapy-view .documentation-view-container .therapy-document-container .mental-health-medication {
+    padding-bottom: 5px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .cumulative-dose-maximum,
+.v-therapy-view .documentation-view-container .therapy-document-container .mental-health-medications {
+    padding: 10px 0 5px 0;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .content > .section,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .content > .section {
+    border-bottom: 1px solid #BEBEBE;
+    padding-top: 10px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .content > .section:last-child,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .content > .section:last-child {
+    border-bottom: none;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .content .section .title,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .content .section .title {
+    padding-bottom: 10px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .content .prescription-therapy,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .content .prescription-therapy {
+    padding-bottom: 15px;
+}
+
+.v-therapy-view .documentation-view-container .index-column .show-more-container,
+.v-therapy-view .external-prescriptions-dialog-content .index-column .show-more-container {
+    min-height: 70px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .refresh-document-icon-24,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .refresh-document-icon-24 {
+    background: url('${context.path}/resources/images/icons/refreshFromER_24.png') no-repeat;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .checked-icon,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .checked-icon {
+    background: url('${context.path}/resources/images/icons/checkbox_Checked_16.png') no-repeat;
+    width: 16px;
+    height: 16px;
+    margin-left: 5px;
+    display: inline-block;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .content .floating-icon-left,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .content .floating-icon-left {
+    position: absolute;
+    left: -21px;
+    width: 16px;
+    height: 16px;
+    top: 1px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .renewable-prescription-icon,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .renewable-prescription-icon {
+    background: url('${context.path}/resources/images/icons/renewable_16.png') no-repeat;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .prescription-status-icon.prescribed,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .prescription-status-icon.prescribed {
+    background: url('${context.path}/resources/images/icons/rx_yellow_16.png') no-repeat;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .prescription-status-icon.partially_prescribed,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .prescription-status-icon.partially_prescribed {
+    background: url('${context.path}/resources/images/icons/rx_orange_16.png') no-repeat;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .prescription-status-icon.partially_used,
+.v-therapy-view .documentation-view-container .therapy-document-container .prescription-status-icon.cancelled,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .prescription-status-icon.partially_used,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .prescription-status-icon.cancelled {
+    background: url('${context.path}/resources/images/icons/rx_gray_16.png') no-repeat;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .prescription-status-icon.used,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .prescription-status-icon.used,
+.v-therapy-view .documentation-view-container .therapy-document-container .prescription-status-icon.in_preparation,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .prescription-status-icon.in_preparation,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .prescription-status-icon.in_dispense,
+.v-therapy-view .documentation-view-container .therapy-document-container .prescription-status-icon.in_dispense {
+    background: url('${context.path}/resources/images/icons/rx_green_16.png') no-repeat;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .btn.refresh-document-icon-24,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .btn.refresh-document-icon-24 {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .more-actions-submenu,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .more-actions-submenu {
+    margin-left: 30px;
+}
+
+.v-therapy-view .documentation-view-container .therapy-document-container .icon-more-dropdown,
+.v-therapy-view .external-prescriptions-dialog-content .therapy-document-container .icon-more-dropdown {
+    background-image: url('${context.path}/resources/images/icons/more_16.png') !important;
+    background-position: center center;
+    padding: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+    min-height: 16px;
+    min-width: 16px;
+    background-color: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+.v-therapy-view .dropdown.angular {
+    position: absolute;
+}
+
+.v-therapy-view .dropdown.angular .dropdown-menu {
+    min-width: initial;
+}
+
+.v-therapy-view .pharmacist-review-icon {
+    padding: 5px 10px 0px 0px;
+}
+
+.v-therapy-view .grid-therapy-toolbar .append-task-reminder-container {
+    padding: 5px;
+}
+
+.v-therapy-view .grid-therapy-toolbar .action-buttons {
+    padding: 20px 5px 5px 5px;
+}
+
+.v-therapy-view .bnf-tooltip {
+    padding: 5px 10px 5px 10px;
+}
+
+.v-therapy-view .therapy-reference-weight {
+    padding: 8px;
+}
+
+.v-therapy-view .btn-group-flat.header {
+    margin: 0px 0px 0px 5px;
+}
+
+.v-therapy-view .therapy-overview-header .west-container {
+    padding: 5px;
+}
+
+.v-therapy-view .therapy-overview-header .center-grid-container {
+    padding: 5px;
+}
+
+.v-therapy-view .therapy-overview-header .east-grid-container {
+    padding: 0px 5px 0px 0px;
+}
+
+.v-therapy-view .therapy-overview-header .btn-flat.icon-sort {
+    margin: 0px 0px 0px 0px;
+}
+
+.v-therapy-view .therapy-overview-header .groups-select-box {
+    margin: 0px 0px 0px 6px;
+}
+
+.v-therapy-view .therapy-overview-header .splitbutton-flat.print,
+.v-therapy-view .therapy-overview-header .splitbutton-flat.filter {
+    margin: 5px;
+}
+
+.v-therapy-view .reschedule-tasks-container {
+    margin: 10px;
+}
+
+.v-therapy-view .show-external-prescriptions-container .field-divider {
+    margin: 5px;
+}
+
+.v-therapy-view .titration-administration-container .therapy-container {
+    padding: 3px 5px 3px 0px;
+}
+
+.v-therapy-view .titration-administration-container .therapy-legend-row {
+    padding-left: 60px;
+}
+
+.v-therapy-view .titration-administration-container .therapy-description-container {
+    border-right: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .titration-administration-container .measurement-description-container {
+    border-right: 1px solid #d6d6d6;
+    padding: 3px 5px 3px 5px;
+}
+
+.v-therapy-view .titration-administration-container .titrationDescription {
+    line-height: 18px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.v-therapy-view .titration-administration-container .circle {
+    background: #cc3300;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.v-therapy-view .titration-administration-container .square {
+    background: #339900;
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+}
+
+.v-therapy-view .titration-administration-container .therapy-dose-history-row-container .circle {
+    background: #FFA413;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.v-therapy-view .titration-administration-container .therapy-dose-history-row-container,
+.v-therapy-view .titration-administration-container .measurement-result-row-container {
+    border-bottom: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .titration-administration-container .primary-row .wrapper-marker-line {
+    background: rgb(255, 164, 19);
+}
+
+.v-therapy-view .titration-administration-container .dose-application-row-container .wrapper-marker-line,
+.v-therapy-view .titration-administration-container .rate-application-row-container .wrapper-marker-line {
+    margin-right: 55px;
+}
+.v-therapy-view .titration-administration-container .rate-application-row-container .rate-field {
+    max-width: 50px;
+}
+
+.v-therapy-view .titration-administration-container .rate-application-row-container .rate-field-container {
+    justify-content: flex-start;
+    padding-bottom: 5px;
+}
+
+.v-therapy-view .titration-administration-container .dose-application-row-container .use-dose-all-checkbox
+{
+    margin-right: 5px;
+}
+
+.v-therapy-view .titration-administration-container .dose-application-row-container .mark-given-checkbox {
+    min-height: 30px !important;
+}
+
+.v-therapy-view .titration-administration-container .dose-application-row-container .dose-time-select {
+    min-width: 150px !important;
+}
+
+.v-therapy-view .titration-administration-container .measurement-result-row-container .navigation {
+    cursor: pointer;
+}
+
+.v-therapy-view .titration-administration-container .measurement-result-row-container .icon-container {
+    margin: 2px 4px 2px 3px;
+}
+
+.v-therapy-view .titration-administration-container .administration-warning-container {
+    min-height: 36px !important;
+    margin: 5px;
+}
+
+.v-therapy-view .titration-administration-container .rate-application-row-container .TextData.ml-label {
+    padding: 10px 7px 0px 5px;
+}
+
+.v-therapy-view .titration-administration-container .rate-application-row-container .planned-time-container,
+.v-therapy-view .titration-administration-container .rate-application-row-container .rate-pane-container,
+.v-therapy-view .titration-administration-container .dose-application-row-container .planned-time-container,
+.v-therapy-view .titration-administration-container .dose-application-row-container .dose-pane-container {
+    min-width: 380px !important;
+}
+
+.v-therapy-view .titration-administration-container .rate-application-row-container .application-conditions-row,
+.v-therapy-view .titration-administration-container .dose-application-row-container .application-conditions-row {
+    margin-top: 5px;
+}
+
+.v-therapy-view .titration-administration-container .dose-application-row-container .dosage-calculation-button
+{
+    margin-left: 5px;
+}
+
+.v-therapy-view .additional-warnings-container .additional-warnings-header {
+    background-color: #f4f4f4;
+    padding: 20px;
+}
+
+.v-therapy-view .additional-warnings-container .warnings-container {
+    padding: 10px;
+}
+
+.v-therapy-view .additional-warnings-container .abort-action-container {
+    padding: 8px;
+}
+
+.v-therapy-view .additional-warnings-container .additional-warning
+{
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.v-therapy-view .oxygen-starting-device-dialog .TherapyDescription {
+    border-bottom: 1px solid #e6e6e6;
+    padding: 10px;
+}
+
+.v-therapy-view .oxygen-starting-device-dialog .oxygen-route-row-container,
+.v-therapy-view .oxygen-starting-device-dialog .change-time-container,
+.v-therapy-view .oxygen-starting-device-dialog .comment-container {
+    margin: 0px 10px;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.v-therapy-view .oxygen-starting-device-dialog .comment-container {
+    border-bottom: 0;
+}
+
+.v-therapy-view .oxygen-starting-device-dialog .oxygen-route-container {
+    min-height: 48px !important;
+}
+
+.v-therapy-view .therapy-details-content {
+    min-width: 460px !important;
+    max-width: 570px;
+    max-height: 500px;
+}
+
+.v-therapy-view .therapy-details-content .TextDataBold,
+.v-therapy-view .therapy-details-content .legend-description,
+.v-therapy-view .audit-trail-container .change-row-container .TextData,
+.v-therapy-view .therapy-details-content .TextData {
+    line-height: 20px;
+}
+
+.v-therapy-view .therapy-details-content .header-container {
+    border-bottom: 1px solid #dcdcdc;
+    padding-top: 5px
+}
+
+.v-therapy-view .therapy-details-content .icon-container {
+    margin: 5px 10px 0 10px;
+    width: 48px !important;
+    height: 48px !important;
+}
+
+.v-therapy-view .therapy-details-content .therapy-details-container {
+    padding: 0 10px 10px 0;
+
+}
+
+.v-therapy-view .therapy-details-content .content-container {
+    margin-left: 70px;
+    padding: 10px 0px 10px 0;
+}
+
+.v-therapy-view .therapy-details-content .therapy-description-column {
+    padding: 0 20px 0 0;
+    width: 290px !important;
+}
+
+.v-therapy-view .legend-details-container .row-label,
+.v-therapy-view .therapy-details-content .row-label {
+    width: 180px !important;
+}
+
+.v-therapy-view .therapy-details-content .content-container-row {
+    padding: 0 10px 0 0;
+}
+
+.v-therapy-view .therapy-details-content .warnings-icon-row {
+    padding: 5px 10px 5px 0;
+}
+
+.v-therapy-view .therapy-details-content .link-row-container {
+    margin-top: 5px;
+    padding: 5px 10px 5px 0;
+    border-top: 1px solid #dcdcdc;
+}
+
+.v-therapy-view .therapy-details-content .legend-content-container {
+    padding: 10px 10px 0 0;
+    border-top: 1px solid #dcdcdc;
+}
+
+.v-therapy-view .therapy-details-content .row-icon {
+    margin: 0 5px 0 0;
+}
+
+.v-therapy-view .therapy-details-content .protocol {
+    margin-top: -7px;
+    margin-bottom: -5px;
+}
+
+.v-therapy-view .therapy-details-content .smpc-cls {
+    text-transform: lowercase;
+    margin-top: -5px;
+    margin-bottom: -5px;
+    margin-right: -5px;
+}
+
+.v-therapy-view .therapy-details-content .description-row-container {
+    padding-bottom: 10px;
+}
+
+.v-therapy-view .therapy-details-content .timed-dose-element-column {
+    padding-right: 10px;
+}
+
+.v-therapy-view .therapy-details-content .therapy-warnings-container,
+.v-therapy-view .therapy-details-content .therapy-description-row {
+    padding-top: 5px;
+}
+
+.v-therapy-view .therapy-details-content .therapy-description-row:first-child {
+    padding-top: 0px;
+}
+
+.v-therapy-view .administration-card-border {
+    border-top: 1px solid #dcdcdc;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.v-therapy-view .doctors-comment-container {
+    padding: 10px;
+}
+
+.v-therapy-view .doctors-comment-container .TherapyDescription {
+    border-bottom: 1px solid #e6e6e6;
+    margin-bottom: 10px;
+}
+

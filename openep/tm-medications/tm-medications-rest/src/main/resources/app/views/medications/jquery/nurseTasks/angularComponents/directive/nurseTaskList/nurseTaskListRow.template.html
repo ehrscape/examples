@@ -1,0 +1,63 @@
+<div data-tm-flex-layout="row" data-justify-content="flex-start" data-align-items="stretch">
+    <div data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch" data-tm-flex-item="1 1 auto">
+        <ng-switch class="row" data-tm-flex-layout="row" data-justify-content="flex-start" data-align-items="stretch"
+                   on="($first
+                    || task.administrationStatus != maskData.nurseTaskList.data[$index-1].administrationStatus
+                    || callTimeHourFormatFilter(task.plannedTime) !== callTimeHourFormatFilter(maskData.nurseTaskList.data[$index-1].plannedTime))">
+            <div ng-switch-when="true" style="margin-right: 10px;height: 35px;"
+                 class="row" data-tm-flex-layout="row" data-justify-content="flex-start" data-align-items="stretch">
+                <span class="TextHeading4 nurse-task-group-title">
+                    {{task.plannedTime | tmFriendlyDateFilter}} - {{task.plannedTime | tmTimeHourFormatFilter}}
+                </span>
+            </div>
+        </ng-switch>
+
+        <div class="row" data-tm-flex-layout="row" data-justify-content="flex-start" data-align-items="stretch"
+             data-tm-flex-item="1 0 auto"
+             data-ng-class="{'planned': task.administrationStatus === 'PLANNED',
+             'due': task.administrationStatus === 'DUE',
+             'late': task.administrationStatus === 'LATE'}">
+            <div class="column nurse-task-column-header" data-tm-flex-item="1 1 100px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-align-items="flex-start"
+                 data-ng-dblclick="openPatientTimelineView(task.patientDisplayDto.id)"
+                 style="min-width: 100px; max-width: 150px;">
+                <div class="column-content" class="column-content" data-tm-flex-item="1 1 0" data-tm-flex-layout="column"
+                     data-justify-content="flex-start" data-align-items="stretch" data-ng-class="{'urgent': request.urgent}">
+                    <div data-item-flex="1 1 auto" data-ng-class="request.urgent ? 'TextDataBold': 'TextData'">
+                        {{::task.plannedTime | tmDateTimeFilter:'tm.medium' }}
+                    </div>
+                </div>
+            </div>
+            <div class="column nurse-task-column-header" data-tm-flex-item="1 1 300px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-align-items="flex-start"
+                 title="{{::'open.patient' | tmDictionaryTermFilter}}"
+                 data-ng-click="openPatientTimelineView(task.patientDisplayDto.id)"
+                 style="min-width: 200px; max-width: 400px; cursor:pointer">
+                <tm-patient-banner dto="task.patientDisplayDto" class="column-content"
+                                data-tm-flex-item="1 1 0"></tm-patient-banner>
+            </div>
+            <div class="column nurse-task-column-header" data-tm-flex-item="1 1 300px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-ng-dblclick="openPatientTimelineView(task.patientDisplayDto.id)"
+                 data-align-items="flex-start" style="min-width: 300px;">
+                <room-and-bed class="column-content" data-tm-flex-item="1 1 0"></room-and-bed>
+            </div>
+            <div class="column nurse-task-column-header" data-tm-flex-item="1 1 300px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-align-items="flex-start"
+                 data-ng-dblclick="openPatientTimelineView(task.patientDisplayDto.id)"
+                 style="min-width: 300px;">
+                <div class="column-content" data-tm-flex-item="1 1 0" data-tm-flex-layout="row" data-justify-content="flex-start"
+                     data-ng-dblclick="openPatientTimelineView(task.patientDisplayDto.id)"
+                     data-align-items="flex-start">
+                    <tm-therapy-description data-dto="task.therapyDayDto" data-tm-flex-item="1 1 0"></tm-therapy-description>
+                </div>
+            </div>
+            <div class="column nurse-task-column-header" data-tm-flex-item="1 1 200px" data-tm-flex-layout="row" data-justify-content="flex-start"
+                 data-ng-dblclick="openPatientTimelineView(task.patientDisplayDto.id)"
+                 data-align-items="flex-start" style="min-width: 300px;">
+                <application-precondition class="column-content" data-tm-flex-item="1 1 0"></application-precondition>
+            </div>
+        </div>
+    </div>
+</div>
+
+

@@ -23,22 +23,31 @@ Class.define('app.views.medications.ordering.WarningsContainer', 'tm.jquery.Cont
   /** configs */
   view: null,
   getPatientMedsForWarningsFunction: null,
+  medicationRuleUtils: null,
   /** privates: components */
   header: null,
+  warningsCounterContainer: null,
+  severityFilterButton: null,
   list: null,
   overriddenWarnings: null,
-  //{
-  //  warning: null, //MedicationsWarningDto
-  //  overrideReason: null, //String
-  //}
+
+  severityLowButton: null,
+  severitySignificantButton: null,
+  severityHighButton: null,
+
+  _loadingWarningsContainer: null,
+  _loadingWarnings: false,
+  _loadingMedicationRule: false,
+  _destroying: false,
 
   /** constructor */
   Constructor: function(config)
   {
     this.callSuper(config);
-    var appFactory = this.view.getAppFactory();
+    this.medicationRuleUtils = this.getConfigValue("medicationRuleUtils",
+        new tm.views.medications.MedicationRuleUtils({view: this.view}));
     this.overriddenWarnings = [];
-    this.setLayout(appFactory.createDefaultVFlexboxLayout("start", "stretch"));
+    this.setLayout(tm.jquery.VFlexboxLayout.create("flex-start", "stretch"));
     this._buildComponents();
     this._buildGui();
   },
@@ -47,100 +56,142 @@ Class.define('app.views.medications.ordering.WarningsContainer', 'tm.jquery.Cont
   _buildComponents: function()
   {
     var self = this;
+    var enums = app.views.medications.TherapyEnums;
+    var appFactory = this.view.getAppFactory();
+
+    this.warningsCounterContainer = new tm.jquery.Container({
+      cls: "warnings-counter",
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "stretch"),
+      tooltip: tm.views.medications.warning.WarningsHelpers.createWarningsLegendTooltip(this.view),
+      html: tm.views.medications.warning.WarningsHelpers.getSeverityWarningsCounterDisplayValue(null)
+    });
+
+    this.severityFilterButton = appFactory.createMultiSelectBoxSplitButton({
+      cls: "severity-filter-button",
+      showSelectedItemsText: false,
+      popupMenuHorizontalAlignment: "right",
+      alignSelf: "center"
+    });
+
+    this.severityHighButton = new tm.jquery.CheckBoxMenuItem({
+      cls: "severity-filter-menu-item",
+      iconCls: "severity icon-high",
+      text: tm.views.medications.warning.WarningsHelpers.getWarningSeverityString(this.view, enums.warningSeverityEnum.HIGH),
+      checked: true,
+      handler: null,
+      data: enums.warningSeverityEnum.HIGH
+    });
+
+    this.severitySignificantButton = new tm.jquery.CheckBoxMenuItem({
+      cls: "severity-filter-menu-item",
+      iconCls: "severity icon-significant",
+      text: tm.views.medications.warning.WarningsHelpers.getWarningSeverityString(this.view, enums.warningSeverityEnum.SIGNIFICANT),
+      checked: false,
+      handler: null,
+      data: enums.warningSeverityEnum.SIGNIFICANT
+    });
+
+    this.severityLowButton = new tm.jquery.CheckBoxMenuItem({
+      cls: "severity-filter-menu-item",
+      iconCls: "severity icon-low",
+      text: tm.views.medications.warning.WarningsHelpers.getWarningSeverityString(this.view, enums.warningSeverityEnum.LOW),
+      checked: false,
+      handler: null,
+      data: enums.warningSeverityEnum.LOW
+    });
+
+    this.severityFilterButton.addCheckBoxMenuItem(this.severityHighButton);
+    this.severityFilterButton.addCheckBoxMenuItem(this.severitySignificantButton);
+    this.severityFilterButton.addCheckBoxMenuItem(this.severityLowButton);
+
+    this.severityFilterButton.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function(component, componentEvent, elementEvent)
+    {
+      self._handleSeverityFilterValueChanged(componentEvent.eventData.changes.menuItems[0]);
+      self.refreshWarnings();
+    });
+    var warningsHeaderContentContainer = new tm.jquery.Container({
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "center", 10),
+      scrollable: "visible"
+    });
+
+    warningsHeaderContentContainer.add(this.warningsCounterContainer);
+    warningsHeaderContentContainer.add(this.severityFilterButton);
+
     this.header = new app.views.medications.ordering.MedicationsTitleHeader({
       title: this.view.getDictionary('warnings'),
-      view: this.view});
+      view: this.view,
+      scrollable: "visible",
+      additionalDataContainer: warningsHeaderContentContainer
+    });
 
     this.list = new tm.jquery.List({
-      flex: 1,
+      cls: "warnings-list",
+      flex: tm.jquery.flexbox.item.Flex.create(1, 0, "auto"),
       autoLoad: false,
       dataSource: [],
       itemTpl: function(index, item)
       {
-        return self._buildRow(item);
+        return new app.views.medications.ordering.WarningsContainer.WarningRow({
+          view: self.view,
+          cellvalue: item,
+          findOverriddenWarningFunction: function(cellvalue)
+          {
+            return self._findOverriddenWarning(cellvalue)
+          },
+          handleOverrideReasonEnteredFunction: function(commentField, cellvalue)
+          {
+            return self._handleOverrideReasonEntered(commentField, cellvalue);
+          }
+        });
       },
       selectable: false
     });
+
+    this._loadingWarningsContainer = new tm.jquery.Container({
+      cls: 'loading-warnings-container',
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "flex-start"),
+      hidden: true
+    });
+
+    var loadingWarningsImg = new tm.jquery.Container({
+      cls: 'loader'
+    });
+
+    var loadingWarningsText = new tm.jquery.Container({
+      cls: 'TextData',
+      html: this.view.getDictionary('loading.warnings')
+    });
+
+    this._loadingWarningsContainer.add(loadingWarningsImg);
+    this._loadingWarningsContainer.add(loadingWarningsText);
   },
 
   _buildGui: function()
   {
     this.add(this.header);
+    this.add(this._loadingWarningsContainer);
     this.add(this.list);
   },
 
-  _buildRow: function(cellvalue)
+  _handleOverrideReasonEntered: function(commentField, cellvalue)
   {
     var self = this;
-    var enums = app.views.medications.TherapyEnums;
-    var rowContainer = new tm.jquery.Container({layout: new tm.jquery.HFlexboxLayout({gap: 0})});
-
-    var dataContainer = new tm.jquery.Container({
-      html: this._createSeverityIconContainer(cellvalue) + '<div>' + this._getFormattedWarningDescription(cellvalue) + '</div>',
-      flex: 1
-    });
-
-    rowContainer.add(dataContainer);
-    if (cellvalue.severity == enums.warningSeverityEnum.HIGH)
+    var overriddenWarning = self._findOverriddenWarning(cellvalue);
+    if (overriddenWarning)
     {
-      var checkBox = new tm.jquery.CheckBox({labelText: "", labelAlign: "right", enabled: true, nowrap: true});
-
-      //repaint checboxes from old overridden warnings
-      var oldOverriddenWarning = self._findOverriddenWarning(cellvalue);
-      if (oldOverriddenWarning)
+      if(commentField.getValue() == "")
       {
-        checkBox.setChecked(true);
+        commentField.setValue(overriddenWarning.overrideReason);
       }
-
-      //override warning or edit override reason
-      checkBox.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function(component)
+      else
       {
-        checkBox.setChecked(true);
-        var overriddenWarning = self._findOverriddenWarning(cellvalue);
-        var warningOverrideReasonDialog = self.view.getAppFactory().createDataEntryDialog(
-            self.view.getDictionary('reason'),
-            null,
-            new app.views.medications.ordering.WarningOverrideReasonPane({
-              view: self.view,
-              overrideReason: overriddenWarning != null ? overriddenWarning.overrideReason : null
-            }),
-            function(resultData)
-            {
-              if (resultData)
-              {
-                //var overriddenWarning = self._findOverriddenWarning(cellvalue);
-                if (overriddenWarning)
-                {
-                  overriddenWarning.overrideReason = resultData.overrideReason;
-                }
-                else
-                {
-                  self.overriddenWarnings.push({warning: cellvalue, overrideReason: resultData.overrideReason});
-                }
-              }
-            },
-            300, 190
-        );
-        warningOverrideReasonDialog.show();
-      });
-      rowContainer.add(checkBox);
+        overriddenWarning.overrideReason = commentField.getValue();
+      }
     }
-
-    return rowContainer;
-  },
-
-  _getFormattedWarningDescription: function(warning)
-  {
-    var formattedWarning = warning.description;
-    if (warning.primaryMedication)
+    else
     {
-      formattedWarning = formattedWarning.replace(warning.primaryMedication.name, '<strong>' + warning.primaryMedication.name + '</strong>');
+      self.overriddenWarnings.push({warning: cellvalue, overrideReason: commentField.getValue()});
     }
-    if (warning.secondaryMedication)
-    {
-      formattedWarning = formattedWarning.replace(warning.secondaryMedication.name, '<strong>' + warning.secondaryMedication.name + '</strong>');
-    }
-    return formattedWarning;
   },
 
   _findOverriddenWarning: function(cellvalue)
@@ -156,72 +207,227 @@ Class.define('app.views.medications.ordering.WarningsContainer', 'tm.jquery.Cont
     return null;
   },
 
-  _buildWarningsDisplay: function(warnings)
-  {
-    var self = this;
-    var warningsDisplay = [];
-
-    $.each(warnings, function(index0, value0)
-    {
-      var html = self._createSeverityIconContainer(value0);
-      html += value0.description;
-      warningsDisplay[index0] = ({id: index0, order: value0, html: html});
-    });
-
-    return warningsDisplay;
-  },
-
-  _createSeverityIconContainer: function(warning)
+  _handleSeverityFilterValueChanged: function(changedMenuItem)
   {
     var enums = app.views.medications.TherapyEnums;
-    var severityHtml = "";
-    if (warning.severity == enums.warningSeverityEnum.HIGH)
+
+    if (changedMenuItem.data == enums.warningSeverityEnum.HIGH)
     {
-      severityHtml += "<div class='severity high-icon'><span>" + enums.warningSeverityEnum.HIGH + "</span></div>";
+      this.severityFilterButton.setSelections([this.severityHighButton], true);
     }
-    else if (warning.severity == enums.warningSeverityEnum.SIGNIFICANT)
+    else if (changedMenuItem.data == enums.warningSeverityEnum.SIGNIFICANT)
     {
-      severityHtml += "<div class='severity significant-icon'><span>" + enums.warningSeverityEnum.SIGNIFICANT + "</span></div>";
+      this.severityFilterButton.setSelections([this.severityHighButton, this.severitySignificantButton], true);
     }
-    return severityHtml;
+    else if (changedMenuItem.data == enums.warningSeverityEnum.LOW)
+    {
+      this.severityFilterButton.setSelections([this.severityHighButton, this.severitySignificantButton, this.severityLowButton], true);
+    }
   },
 
-  _createDetailIconId: function(detailId)
+  _getSeverityFilterValues: function()
   {
-    return this.view.getViewId() + "_detail_icon_" + detailId;
+    var selections = [];
+    for (var i = 0; i < this.severityFilterButton.getSelections().length; i++)
+    {
+      var selection = this.severityFilterButton.getSelections().get(i);
+      selections.push(selection.data);
+    }
+    return selections;
+  },
+
+  _handleLoadingContainerVisibility: function()
+  {
+    if (!this.isDataLoading())
+    {
+      this.isRendered() ? this._loadingWarningsContainer.hide() : this._loadingWarningsContainer.setHidden(true);
+    }
+    else
+    {
+      this.isRendered() ? this._loadingWarningsContainer.show() : this._loadingWarningsContainer.setHidden(false);
+    }
   },
 
   /** public methods */
   refreshWarnings: function()
   {
     var self = this;
-    var warningsUrl =
-        self.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_FIND_WARNINGS;
+    this._loadingWarnings = true;
+    this._handleLoadingContainerVisibility();
+    tm.views.medications.warning.WarningsHelpers.loadMedicationWarnings(
+        this.view,
+        this.getPatientMedsForWarningsFunction(),
+        this._getSeverityFilterValues(),
+        function(warningsDto)
+        {
+          if (!self._destroying)
+          {
+            var enums = app.views.medications.TherapyEnums;
+            self._refreshOverriddenWarnings(warningsDto.warnings);
 
-    var patientData = this.view.getPatientData();
-    if (typeof patientData == typeof (void 0)) {
-      patientData = {};
-    }
-    var referenceWeight = this.view.getReferenceWeight();
-    var heightInCm = patientData.heightInCm ? patientData.heightInCm : 0;
+            self.warningsCounterContainer.setHtml(
+                tm.views.medications.warning.WarningsHelpers.getSeverityWarningsCounterDisplayValue(warningsDto));
 
-    var bsaInM2 = tm.views.medications.MedicationUtils.calculateBodySurfaceArea(heightInCm, referenceWeight);
+            var newList = warningsDto.warnings.slice();
+            var bnfWarnings = self.getAdditionalWarnings(enums.additionalWarningType.BNF);
+            if (!bnfWarnings.isEmpty())
+            {
+              newList.unshift(bnfWarnings[0]);
+            }
 
-    var params = {
-      patientAgeInDays: patientData.ageInDays,
-      patientWeightInKg: referenceWeight ? referenceWeight : 0,
-      patientAllergies: JSON.stringify(patientData.allergyIds),
-      gabInWeeks: patientData.gabInWeeks ? patientData.gabInWeeks : 0,
-      bsaInM2: bsaInM2 ? bsaInM2 : 0,
-      isFemale: patientData.gender == "FEMALE",
-      diseaseTypeCodes: JSON.stringify(patientData.diseaseTypeCodes),
-      patientMedications: JSON.stringify(self.getPatientMedsForWarningsFunction())};
+            var paracetamolWarnings = self.getAdditionalWarnings(enums.additionalWarningType.PARACETAMOL);
+            if (!paracetamolWarnings.isEmpty())
+            {
+              newList = paracetamolWarnings.concat(newList);
+            }
 
-    this.view.loadPostViewData(warningsUrl, params, null, function(warnings)
+            self._loadingWarnings = false;
+            self._handleLoadingContainerVisibility();
+            self.list.setListData(newList);
+          }
+        },
+        {taskName: 'REFRESH_MEDICATIONS' }
+    );
+  },
+
+  refreshParacetamolLimitWarning: function(therapies, basketTherapies, includeBasketTherapies)
+  {
+    var self = this;
+    this.removeParacetamolWarning();
+    this._loadingMedicationRule = true;
+
+    var allTherapies = therapies;
+
+    if (therapies && basketTherapies && includeBasketTherapies)
     {
-      self._refreshOverriddenWarnings(warnings);
-      self.list.setListData(warnings);
+      allTherapies = allTherapies.concat(basketTherapies);
+    }
+
+    self.medicationRuleUtils.getParacetamolRuleForTherapies(
+        this.view,
+        allTherapies,
+        this.view.getPatientData(),
+        this.view.getReferenceWeight()).then(
+        function validationSuccessHandler(medicationRuleResult)
+        {
+          if (!self._destroying)
+          {
+            self._loadingMedicationRule = false;
+            self._handleLoadingContainerVisibility();
+            self._refreshParacetamolDailyLimitWarning(medicationRuleResult);
+          }
+        });
+  },
+
+  addBnfWarning: function (percentage, medicationIds)
+  {
+    var description = '<strong> Cumulative </strong>' + " dose is " + '<strong>' + percentage + "% " + '</strong>'
+        + "of antipsychotic" + '<strong>' + " BNF maximum" + '</strong>';
+
+    var medications = [];
+    medicationIds.forEach(function (item)
+    {
+      medications.push({id: item});
     });
+
+    var warning =
+    {
+      description: description,
+      severity: app.views.medications.TherapyEnums.warningSeverityEnum.HIGH,
+      type: "BNF",
+      bnf: true,
+      medications: medications
+    };
+
+    this.removeAdditionalWarning(app.views.medications.TherapyEnums.additionalWarningType.BNF);
+    var newList = this.list.getListData().slice();
+    newList.unshift(warning);
+    this.list.setListData(newList);
+  },
+
+  _refreshParacetamolDailyLimitWarning: function(ingredientRule) // MedicationIngredientRule.java
+  {
+    this.removeParacetamolWarning();
+    if (!tm.jquery.Utils.isEmpty(ingredientRule) && ingredientRule.quantityOk === false && tm.jquery.Utils.isEmpty(ingredientRule.errorMessage))
+    {
+      var enums = app.views.medications.TherapyEnums;
+
+      var medicationIds = [];
+      var description = "";
+
+      if (!tm.jquery.Utils.isEmpty(ingredientRule.medications))
+      {
+        ingredientRule.medications.forEach(function(medication)
+        {
+          medicationIds.push({id: medication.id});
+          description += medication.name + " - ";
+        });
+      }
+
+      var percentage = ingredientRule.underageRulePercentage >= ingredientRule.adultRulePercentage
+          ? ingredientRule.underageRulePercentage
+          : ingredientRule.adultRulePercentage;
+
+      description += tm.jquery.Utils.formatMessage(
+          this.view.getDictionary("paracetamol.max.daily.limit.percentage"),
+          [percentage]);
+
+      var warning =
+      {
+        description: description,
+        severity: app.views.medications.TherapyEnums.warningSeverityEnum.HIGH,
+        type: enums.additionalWarningType.PARACETAMOL,
+        medications: medicationIds
+      };
+
+      var newList = this.list.getListData().slice();
+      newList.unshift(warning);
+      this.list.setListData(newList);
+    }
+  },
+
+  removeParacetamolWarning: function()
+  {
+    var enums = app.views.medications.TherapyEnums;
+    var newDataList = [];
+
+    this.list.getListData().forEach(function(warning)
+    {
+      if (warning.type != enums.additionalWarningType.PARACETAMOL)
+      {
+        newDataList.push(warning);
+      }
+    });
+    this.list.setListData(newDataList);
+  },
+
+  getAdditionalWarnings: function (additionalWarningTypeEnum)
+  {
+    var additionalWarnings = [];
+    if (!tm.jquery.Utils.isEmpty(additionalWarningTypeEnum))
+    {
+      this.list.getListData().forEach(function(warning)
+      {
+        if (warning.type === additionalWarningTypeEnum)
+        {
+          additionalWarnings.push(warning);
+        }
+      });
+    }
+    return additionalWarnings;
+  },
+
+  removeAdditionalWarning: function (additionalWarningType)
+  {
+    var newDataList = [];
+    this.list.getListData().forEach(function (warning)
+    {
+      if (warning.type != additionalWarningType)
+      {
+        newDataList.push(warning);
+      }
+    });
+    this.list.setListData(newDataList);
   },
 
   //removes old overridden warnings if no longer needed
@@ -246,12 +452,167 @@ Class.define('app.views.medications.ordering.WarningsContainer', 'tm.jquery.Cont
 
   clear: function()
   {
-    this.list.setDataSource([]);
+    this.list.clearListData();
+    this._refreshOverriddenWarnings([]);
+    this.warningsCounterContainer.setHtml(
+        tm.views.medications.warning.WarningsHelpers.getSeverityWarningsCounterDisplayValue(
+            {"highSeverityWarningsCount":0,"significantSeverityWarningsCount":0,"lowSeverityWarningsCount":0,"noSeverityWarningsCount":0,"warnings":[]}
+        ));
   },
 
   getOverriddenWarnings: function()
   {
     return this.overriddenWarnings;
+  },
+
+  assertAllCriticalWarningsOverridden: function()
+  {
+    var enums = app.views.medications.TherapyEnums;
+
+    var allCriticalWarningsOverridden = true;
+    for (var i = 0; i < this.list.getDataSource().length; i++)
+    {
+      var singleWarningsRow = this.list.getItemTemplateByRowIndex(i);
+      if (singleWarningsRow.getWarningSeverity()  == enums.warningSeverityEnum.HIGH)
+      {
+        if (tm.jquery.Utils.isEmpty(singleWarningsRow.getCommentFieldValue()) ||
+            singleWarningsRow.getCommentFieldValue().trim() == "")
+        {
+          var singleWarningsRowCls = singleWarningsRow.getCls();
+          singleWarningsRow.setCls(singleWarningsRowCls + " form-field-validationError");
+          allCriticalWarningsOverridden = false;
+        }
+      }
+    }
+    return allCriticalWarningsOverridden;
+  },
+
+  isDataLoading: function()
+  {
+    return this._loadingWarnings || this._loadingMedicationRule;
+  },
+
+  destroy: function()
+  {
+    this._destroying = true;
+    this.callSuper();
   }
+});
+
+Class.define('app.views.medications.ordering.WarningsContainer.WarningRow', 'tm.jquery.Container', {
+  cls: "warnings-container-warning-row",
+  /** configs */
+  view: null,
+  cellvalue: null,
+  findOverriddenWarningFunction: null,
+  handleOverrideReasonEnteredFunction: null,
+
+  /** privates: components */
+  commentField: null,
+
+  Constructor: function(config)
+  {
+
+    this.callSuper(config);
+    this.setLayout(tm.jquery.HFlexboxLayout.create("flex-start", "flex-start", 0));
+    this._buildGui();
+  },
+
+  _buildGui: function()             // [ MedicationsWarningDto.java ]
+  {
+    var self = this;
+    var enums = app.views.medications.TherapyEnums;
+
+    var warningRowContainer = new tm.jquery.Container({
+      cls: 'warning-row-container',
+      layout: tm.jquery.VFlexboxLayout.create("flex-start", "flex-start"),
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto")
+    });
+
+    var warningContainer = new tm.jquery.Container({
+      cls: "TextData",
+      layout: tm.jquery.VFlexboxLayout.create("flex-start", "flex-start"),
+      html: tm.views.medications.warning.WarningsHelpers.getFormattedWarningDescription(this.view, this.cellvalue),
+      scrollable: 'visible',
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto")
+    });
+
+    var leftIconsContainer = new tm.jquery.Container({
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "flex-start")
+    });
+    var rightIconsContainer = new tm.jquery.Container({
+      layout: tm.jquery.HFlexboxLayout.create("flex-end", "flex-end"),
+      margin: '0 0 0 10'
+    });
+    this.add(leftIconsContainer);
+
+    var severityIconContainer = tm.views.medications.warning.WarningsHelpers.createTypeAndSeverityIconContainer(
+        this.view,
+        this.cellvalue.type,
+        this.cellvalue.severity
+    );
+    var monographContainer = tm.views.medications.warning.WarningsHelpers.createMonographContainer(this.view, this.cellvalue);
+    if (severityIconContainer)
+    {
+      warningContainer.setPadding('0 0 0 5');
+      leftIconsContainer.add(severityIconContainer);
+    }
+    warningRowContainer.add(warningContainer);
+    this.add(warningRowContainer);
+
+    if (this.cellvalue.severity == enums.warningSeverityEnum.HIGH)
+    {
+      var commentContainer = new tm.jquery.Container({
+        cls: "comment-container",
+        layout: tm.jquery.HFlexboxLayout.create("flex-start", "flex-start"),
+        margin: "0 0 0 5",
+        width: '100%'
+      });
+      var commentLabel = new tm.views.medications.MedicationUtils.crateLabel(
+          "comment-label TextDataBold",
+          this.view.getDictionary("override.reason")
+      );
+      this.commentField = new tm.jquery.TextField({
+        flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto"),
+        cls: "field-flat"
+      });
+      this.commentField.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function(component)
+      {
+        if(self.commentField.getValue() != "")
+        {
+          var singleWarningsRowCls = self.getCls();
+          self.setCls(singleWarningsRowCls.replace(" form-field-validationError", ""));
+        }
+        self.handleOverrideReasonEnteredFunction(self.commentField, self.cellvalue);
+      });
+
+      commentContainer.add(commentLabel);
+      commentContainer.add(this.commentField);
+      warningRowContainer.add(commentContainer);
+
+      //repaint rows from old overridden warnings
+      var oldOverriddenWarning = this.findOverriddenWarningFunction(this.cellvalue);
+      if (oldOverriddenWarning)
+      {
+        this.commentField.setValue(oldOverriddenWarning.overrideReason);
+      }
+    }
+
+    if (monographContainer)
+    {
+      rightIconsContainer.add(monographContainer);
+    }
+    this.add(rightIconsContainer);
+  },
+
+  getCommentFieldValue: function()
+  {
+    return this.commentField.getValue();
+  },
+  getWarningSeverity: function()
+  {
+    return this.cellvalue.severity;
+  }
+
 });
 

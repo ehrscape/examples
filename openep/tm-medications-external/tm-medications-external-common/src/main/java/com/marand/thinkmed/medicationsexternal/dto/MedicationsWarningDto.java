@@ -22,21 +22,27 @@ package com.marand.thinkmed.medicationsexternal.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.marand.maf.core.data.object.DataObject;
-import com.marand.maf.core.data.object.NamedIdentityDto;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
+import com.marand.thinkmed.api.externals.data.object.NamedExternalDto;
+import com.marand.thinkmed.medicationsexternal.WarningSeverity;
+import com.marand.thinkmed.medicationsexternal.WarningType;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Bostjan Vester
  */
-public class MedicationsWarningDto extends DataObject
+public class MedicationsWarningDto extends DataTransferObject
 {
   private List<MedicationsWarningDto> detailedWarnings;
   private String description;
-  private Severity severity;
+  private WarningSeverity severity;
+  private WarningType type;
   private String longDescription;
-  private NamedIdentityDto primaryMedication;
-  private NamedIdentityDto secondaryMedication;
+  private String monographHtml;
+  //private NamedIdentityDto primaryMedication;
+  //private NamedIdentityDto secondaryMedication;
+
+  private List<NamedExternalDto> medications = new ArrayList<>();
 
   public String getDescription()
   {
@@ -58,14 +64,24 @@ public class MedicationsWarningDto extends DataObject
     this.detailedWarnings = detailedWarnings;
   }
 
-  public Severity getSeverity()
+  public WarningSeverity getSeverity()
   {
     return severity;
   }
 
-  public void setSeverity(final Severity severity)
+  public void setSeverity(final WarningSeverity severity)
   {
     this.severity = severity;
+  }
+
+  public WarningType getType()
+  {
+    return type;
+  }
+
+  public void setType(final WarningType type)
+  {
+    this.type = type;
   }
 
   public String getLongDescription()
@@ -78,24 +94,24 @@ public class MedicationsWarningDto extends DataObject
     this.longDescription = longDescription;
   }
 
-  public NamedIdentityDto getPrimaryMedication()
+  public List<NamedExternalDto> getMedications()
   {
-    return primaryMedication;
+    return medications;
   }
 
-  public void setPrimaryMedication(final NamedIdentityDto primaryMedication)
+  public void setMedications(final List<NamedExternalDto> medications)
   {
-    this.primaryMedication = primaryMedication;
+    this.medications = medications;
   }
 
-  public NamedIdentityDto getSecondaryMedication()
+  public String getMonographHtml()
   {
-    return secondaryMedication;
+    return monographHtml;
   }
 
-  public void setSecondaryMedication(final NamedIdentityDto secondaryMedication)
+  public void setMonographHtml(final String monographHtml)
   {
-    this.secondaryMedication = secondaryMedication;
+    this.monographHtml = monographHtml;
   }
 
   @Override
@@ -104,24 +120,20 @@ public class MedicationsWarningDto extends DataObject
     tsb
         .append("description", description)
         .append("severity", severity)
+        .append("type", type)
         .append("detailedWarnings", detailedWarnings)
         .append("longDescription", longDescription)
-        .append("primaryMedication", primaryMedication)
-        .append("secondaryMedication", secondaryMedication)
-        ;
+        .append("medications", medications)
+    //.append("monographHtml", monographHtml)
+    ;
   }
 
   public void addDetail(final MedicationsWarningDto warning)
   {
     if (detailedWarnings == null)
     {
-      detailedWarnings = new ArrayList<MedicationsWarningDto>();
+      detailedWarnings = new ArrayList<>();
     }
     detailedWarnings.add(warning);
-  }
-
-  public enum Severity
-  {
-    LOW, MEDIUM, SIGNIFICANT, HIGH
   }
 }

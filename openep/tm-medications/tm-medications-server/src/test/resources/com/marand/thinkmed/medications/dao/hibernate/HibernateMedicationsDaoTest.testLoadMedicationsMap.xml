@@ -1,0 +1,39 @@
+<!DOCTYPE dataset SYSTEM "dbunit_dataset.dtd"><!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<dataset>
+
+    <MEDICATION ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" DESCRIPTION="Lekadol description" MEDICATION_LEVEL="VTM" ORDERABLE="1" VTM_ID="1"/>
+    <MEDICATION_VERSION ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" NAME="Lekadol" SHORT_NAME="Lek" SUGGEST_SWITCH_TO_ORAL="0" REVIEW_REMINDER="0" MENTAL_HEALTH_DRUG="0" MEDICATION_GENERIC_ID="1" DOSE_FORM_ID="1" ATC_CLASSIFICATION_ID="1111" BASIC_UNIT_ID="1" MEDICATION_ID="1" ACTIVE="1" BLACK_TRIANGLE_MEDICATION="1" CLINICAL_TRIAL_MEDICATION="0" OUTPATIENT_MEDICATION="1" INPATIENT_MEDICATION="1" ROUNDING_FACTOR="0.5"/>
+    <MEDICATION_GENERIC ID="1" VERSION="0" CODE="1" NAME="Paracetamol" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <MEDICATION_TYPE ID="1" VERSION="0" MEDICATION_ID="1" TYPE="MEDICATION"/>
+    <MEDICATION_INGREDIENT ID="1" VERSION="0" CODE="Pa" NAME="Paracetamol" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" RULE="PARACETAMOL_MAX_DAILY_DOSE"/>
+    <MEDICATION_INGREDIENT_LINK ID="1" VERSION="0" INGREDIENT_ID="1" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" MEDICATION_ID="1" STRENGTH_NUMERATOR="2" STRENGTH_NUMERATOR_UNIT="mg" DESCRIPTIVE="0"/>
+    <MEDICATION_ROUTE ID="1" VERSION="0" CODE="O" NAME="Oral" SHORT_NAME="Oral" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <MEDICATION_ROUTE_LINK ID="1" VERSION="0" MEDICATION_ID="1" ROUTE_ID="1" DEFAULT_ROUTE="1" BNF_MAXIMUM="500" BNF_MAXIMUM_UNIT_TYPE="DAY" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <DOSE_FORM ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" NAME="Pill"/>
+    <MEDICATION_EXTERNAL ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" EXTERNAL_SYSTEM="FDB" EXTERNAL_ID="111" MEDICATION_ID="1"/>
+    <MEDICATION_EXTERNAL ID="2" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" EXTERNAL_SYSTEM="WINPIS" EXTERNAL_ID="222" MEDICATION_ID="1"/>
+    <MEDICATION_BASIC_UNIT ID="1" VERSION="0" NAME="tablet" CODE="TBL"/>
+    <ATC_CLASSIFICATION ID="1" VERSION="0" NAME="ATC 1" CODE="C1" TOP_PARENT_ID="1" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" DEPTH="1" LEAF="1"/>
+    <ATC_CLASSIFICATION ID="1111" VERSION="0" NAME="ATC 1111" CODE="C1111" TOP_PARENT_ID="1" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" DEPTH="1" LEAF="1"/>
+    <MEDICATION_FORMULARY ID="1" VERSION="0" CARE_PROVIDER_ID="CP1" MEDICATION_ID="1"/>
+    <MEDICATION_FORMULARY ID="2" VERSION="0" CARE_PROVIDER_ID="CP2" MEDICATION_ID="1"/>
+
+</dataset>

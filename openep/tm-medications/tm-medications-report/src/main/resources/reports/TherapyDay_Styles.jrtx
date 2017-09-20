@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE jasperTemplate PUBLIC "-//JasperReports//DTD Template//EN" "http://jasperreports.sourceforge.net/dtds/jaspertemplate.dtd">
+
+<jasperTemplate>
+	<style name="0_baseFont" vAlign="Top" fontName="Arial" pdfEncoding ="Cp1250" fontSize="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false"/>
+	<style name="label" isDefault="true" style="0_baseFont">
+		<box topPadding="1" leftPadding="2" bottomPadding="1" rightPadding="2"/>
+	</style>
+	<style name="smallLabel" style="label" forecolor="#666666" fontSize="6"/>
+	<style name="smallLabelCenter" style="smallLabel" hAlign="Center" vAlign="Middle"/>
+	<style name="data" style="label" hAlign="Left" isBold="true"/>
+	<style name="dataNormal" style="data" isBold="false"/>
+	<style name="dataNumberNormal" style="dataNormal" hAlign="Right" vAlign="Bottom"/>
+	<style name="dataCenter" style="data" hAlign="Center"/>
+	<style name="dataBorder" style="data">
+		<box>
+			<topPen lineWidth="0.25" lineColor="#666666"/>
+			<leftPen lineWidth="0.25" lineColor="#666666"/>
+			<bottomPen lineWidth="0.25" lineColor="#666666"/>
+			<rightPen lineWidth="0.25" lineColor="#666666"/>
+		</box>
+	</style>
+	<style name="dataCenterBorder" style="dataCenter">
+		<box>
+			<topPen lineWidth="0.25" lineColor="#666666"/>
+			<leftPen lineWidth="0.25" lineColor="#666666"/>
+			<bottomPen lineWidth="0.25" lineColor="#666666"/>
+			<rightPen lineWidth="0.25" lineColor="#666666"/>
+		</box>
+	</style>
+	<style name="tableHeaderData" style="data"/>
+	<style name="tableHeaderDataNumber" style="tableHeaderData" hAlign="Right" vAlign="Bottom"/>
+	<style name="tableHeaderCell" style="label">
+		<box>
+			<pen lineColor="#666666"/>
+			<topPen lineWidth="0.25" lineColor="#666666"/>
+			<leftPen lineWidth="0.25" lineColor="#666666"/>
+			<bottomPen lineWidth="0.25" lineColor="#666666"/>
+			<rightPen lineWidth="0.25" lineColor="#666666"/>
+		</box>
+	</style>
+	<style name="reportDescription" style="label" vAlign="Middle" fontSize="16" isBold="true"/>
+	<style name="group" style="0_baseFont" forecolor="#7F7F7F" vAlign="Middle" fontName="Arial Black" fontSize="8"/>
+	<style name="lineOutside" style="label">
+		<pen lineWidth="0.5" lineColor="#333333"/>
+		<box>
+			<pen lineWidth="0.25"/>
+			<topPen lineWidth="0.25" lineColor="#333333"/>
+			<leftPen lineWidth="0.25" lineColor="#333333"/>
+			<bottomPen lineWidth="0.25" lineColor="#333333"/>
+			<rightPen lineWidth="0.25" lineColor="#333333"/>
+		</box>
+	</style>
+	<style name="lineInside" style="lineOutside">
+		<pen lineWidth="0.25" lineColor="#666666"/>
+	</style>
+	<style name="nonactiveMedicationBackground" mode="Opaque" backcolor="#E5E5E5"/>
+</jasperTemplate>

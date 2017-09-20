@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TherapyDay_Legend" pageWidth="786" pageHeight="539" orientation="Landscape" columnWidth="786" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="com.marand.ispek.common.Dictionary" whenResourceMissingType="Key" uuid="8d713aa8-1f3a-4536-a167-162361f93792">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<template><![CDATA[$P{initData}.getStylesDir() + "TherapyDay_Styles.jrtx"]]></template>
+	<parameter name="initData" class="com.marand.ispek.print.jasperreports.IspekJasperReportInitData" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.ispek.print.jasperreports.SampleIspekJRDataSourceFactory.createInitData()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="labelFieldDelimiter" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[": "]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<detail>
+		<band height="30" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="60" y="0" width="120" height="30" isPrintWhenDetailOverflows="true" uuid="dd032ce1-1728-4d67-a62e-c41373edce16"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getLegend(1, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="180" y="0" width="120" height="30" isPrintWhenDetailOverflows="true" uuid="ce8cff65-62a1-4738-a849-3b18cf7ac053"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getLegend(2, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="300" y="0" width="120" height="30" isPrintWhenDetailOverflows="true" uuid="a10cbc42-26a3-404e-9f4b-259fe6f4eda6"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getLegend(3, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="420" y="0" width="120" height="30" isPrintWhenDetailOverflows="true" uuid="de976543-28fb-4d64-92f2-347e5530cf80"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getLegend(4, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="540" y="0" width="120" height="30" isPrintWhenDetailOverflows="true" uuid="9f5bd2de-87b6-4568-943d-7610371e1c12"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getLegend(5, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="660" y="0" width="120" height="30" isPrintWhenDetailOverflows="true" uuid="849068f6-da40-4071-891b-be583b0bec4d"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA[com.marand.thinkmed.medications.dto.report.TherapyDayReportUtils.getLegend(6, $P{REPORT_LOCALE})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="smallLabel" x="0" y="0" width="60" height="18" uuid="1df4d95e-fda4-4fcd-adb3-da289d397f9c"/>
+				<box topPadding="1" leftPadding="2" bottomPadding="0" rightPadding="2"/>
+				<textElement markup="html"/>
+				<textFieldExpression><![CDATA["Key"]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

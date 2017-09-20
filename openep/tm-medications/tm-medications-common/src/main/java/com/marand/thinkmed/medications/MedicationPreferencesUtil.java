@@ -19,13 +19,13 @@
 
 package com.marand.thinkmed.medications;
 
-import java.util.concurrent.ConcurrentMap;
+import javax.annotation.Nullable;
 
 import com.marand.maf.core.data.object.HourMinuteDto;
 import com.marand.maf.core.prefs.MafPrefsStorageType;
-import com.marand.maf.core.prefs.Preference;
 import com.marand.maf.core.prefs.Preferences;
-import com.marand.thinkmed.api.core.data.Named;
+import com.marand.thinkmed.medications.dto.AdministrationPatientTaskLimitsDto;
+import com.marand.thinkmed.medications.dto.AdministrationTaskLimitsDto;
 import com.marand.thinkmed.medications.dto.AdministrationTimingDto;
 import com.marand.thinkmed.medications.dto.RoundsIntervalDto;
 
@@ -38,52 +38,68 @@ public class MedicationPreferencesUtil
 {
   private static final String ROUNDS_START_PREFIX = "ROUNDS_START_";
   private static final String ADMINISTRATION_INTERVALS = "ADMINISTRATION_INTERVALS_";
-  private static final String SESSION_PREFIX = "SESSION_";
-  private static final String OE_PREFIX = "OE_";
+  private static final String ADMINISTRATION_TASK_LIMIT_PREFIX = "ADMINISTRATION_TASK_LIMIT_";
+  private static final String ADMINISTRATION_PATIENT_TASK_LIMIT_PREFIX = "ADMINISTRATION_PATIENT_TASK_LIMIT";
+  private static final String CARE_PROVIDER_PREFIX = "CARE_PROVIDER_";
   private static final RoundsIntervalDto ROUNDS_INTERVAL_DEFAULT = getDefaultRoundsIntervalDto();
   private static final AdministrationTimingDto ADMINISTRATION_TIMING_DEFAULT = getDefaultAdministrationTimingDto();
+  private static final AdministrationTaskLimitsDto ADMINISTRATION_TASK_LIMITS_DEFAULT =
+      getDefaultAdministrationTaskLimitsDto();
+  private static final AdministrationPatientTaskLimitsDto ADMINISTRATION_PATIENT_TASK_LIMITS_DEFAULT =
+      getDefaultAdministrationPatientTaskLimitsDto();
 
   private MedicationPreferencesUtil()
   {
   }
 
-  public static RoundsIntervalDto getRoundsInterval(
-      final Long sessionId,
-      final Named organizationalEntity)
+  public static RoundsIntervalDto getRoundsInterval(@Nullable final String careProviderId)
   {
-    final String sessionKey = ROUNDS_START_PREFIX + SESSION_PREFIX + sessionId;
-    final RoundsIntervalDto sessionRounds = getRoundsIntervalPreference(sessionKey, null).getValue();
-    if (sessionRounds != null)
+    if (careProviderId != null)
     {
-      return sessionRounds;
+      final String key = ROUNDS_START_PREFIX + CARE_PROVIDER_PREFIX + careProviderId;
+      return getRoundsIntervalPreference(key, ROUNDS_INTERVAL_DEFAULT).getValue();
     }
-    final String oeKey = ROUNDS_START_PREFIX + OE_PREFIX + organizationalEntity.name();
-    return getRoundsIntervalPreference(oeKey, ROUNDS_INTERVAL_DEFAULT).getValue();
+    return ROUNDS_INTERVAL_DEFAULT;
   }
 
-  public static AdministrationTimingDto getAdministrationTiming(
-      final Long sessionId,
-      final Named organizationalEntity)
+  public static AdministrationTimingDto getAdministrationTiming(@Nullable final String careProviderId)
   {
-    final String sessionKey = ADMINISTRATION_INTERVALS + SESSION_PREFIX + sessionId;
-    final AdministrationTimingDto sessionTiming = getTimingPreference(sessionKey, null).getValue();
-    if (sessionTiming != null)
+    if (careProviderId != null)
     {
-      return sessionTiming;
+      final String key = ADMINISTRATION_INTERVALS + CARE_PROVIDER_PREFIX + careProviderId;
+      return getTimingPreference(key, ADMINISTRATION_TIMING_DEFAULT).getValue();
     }
-    final String oeKey = ADMINISTRATION_INTERVALS + OE_PREFIX + organizationalEntity.name();
-    return getTimingPreference(oeKey, ADMINISTRATION_TIMING_DEFAULT).getValue();
+    return ADMINISTRATION_TIMING_DEFAULT;
+  }
+
+  public static AdministrationTaskLimitsDto getAdministrationTaskLimitsPreference(@Nullable final String careProviderId)
+  {
+    if (careProviderId != null)
+    {
+      final String key = ADMINISTRATION_TASK_LIMIT_PREFIX + CARE_PROVIDER_PREFIX + careProviderId;
+      final AdministrationTaskLimitsPreference newPreference =
+          new AdministrationTaskLimitsPreference(
+              key, MafPrefsStorageType.SYSTEM, false, ADMINISTRATION_TASK_LIMITS_DEFAULT);
+      return Preferences.dynamicPreference(key, newPreference).getValue();
+    }
+    return ADMINISTRATION_TASK_LIMITS_DEFAULT;
+  }
+
+  public static AdministrationPatientTaskLimitsDto getAdministrationPatientTaskLimitsPreference()
+  {
+    final String key = ADMINISTRATION_PATIENT_TASK_LIMIT_PREFIX;
+    final AdministrationPatientTaskLimitsPreference newPreference =
+        new AdministrationPatientTaskLimitsPreference(
+            key, MafPrefsStorageType.SYSTEM, false, ADMINISTRATION_PATIENT_TASK_LIMITS_DEFAULT);
+    return Preferences.dynamicPreference(key, newPreference).getValue();
   }
 
   private static RoundsIntervalPreference getRoundsIntervalPreference(
       final String key,
       final RoundsIntervalDto defaultValue)
   {
-    final RoundsIntervalPreference newPreference = new RoundsIntervalPreference(
-        key,
-        MafPrefsStorageType.SYSTEM,
-        false,
-        defaultValue);
+    final RoundsIntervalPreference newPreference =
+        new RoundsIntervalPreference(key, MafPrefsStorageType.SYSTEM, false, defaultValue);
     return Preferences.dynamicPreference(key, newPreference);
   }
 
@@ -91,31 +107,22 @@ public class MedicationPreferencesUtil
       final String key,
       final AdministrationTimingDto defaultValue)
   {
-    final MedicationAdministrationTimingPreference newPreference = new MedicationAdministrationTimingPreference(
-        key,
-        MafPrefsStorageType.SYSTEM,
-        false,
-        defaultValue);
+    final MedicationAdministrationTimingPreference newPreference =
+        new MedicationAdministrationTimingPreference(key, MafPrefsStorageType.SYSTEM, false, defaultValue);
     return Preferences.dynamicPreference(key, newPreference);
-  }
-
-  private static <P extends Preference> P getPreference(final ConcurrentMap<String, P> preferences, final String key, final P newPreference)
-  {
-    final P existingPreference = preferences.putIfAbsent(key, newPreference);
-    return existingPreference != null ? existingPreference : newPreference;
   }
 
   public static RoundsIntervalDto getDefaultRoundsIntervalDto()
   {
     final RoundsIntervalDto roundsDto = new RoundsIntervalDto();
-    roundsDto.setStartHour(8);
+    roundsDto.setStartHour(7);
     roundsDto.setStartMinute(0);
     roundsDto.setEndHour(17);
     roundsDto.setEndMinute(0);
     return roundsDto;
   }
 
-  public static AdministrationTimingDto getDefaultAdministrationTimingDto()
+  private static AdministrationTimingDto getDefaultAdministrationTimingDto()
   {
     final AdministrationTimingDto timingDto = new AdministrationTimingDto();
     timingDto.getTimestampsList().add(getMorningTiming());
@@ -129,6 +136,23 @@ public class MedicationPreferencesUtil
     timingDto.getTimestampsList().add(get12HTiming());
     timingDto.getTimestampsList().add(getEveningTiming());
     return timingDto;
+  }
+
+  private static AdministrationTaskLimitsDto getDefaultAdministrationTaskLimitsDto()
+  {
+    final AdministrationTaskLimitsDto limitsDto = new AdministrationTaskLimitsDto();
+    limitsDto.setDueTaskOffset(60);
+    limitsDto.setFutureTaskOffset(60 * 4);
+    return limitsDto;
+  }
+
+  private static AdministrationPatientTaskLimitsDto getDefaultAdministrationPatientTaskLimitsDto()
+  {
+    final AdministrationPatientTaskLimitsDto limitsDto = new AdministrationPatientTaskLimitsDto();
+    limitsDto.setDueTaskOffset(4 * 60);
+    limitsDto.setFutureTaskOffset(6 * 60);
+    limitsDto.setMaxNumberOfTasks(50);
+    return limitsDto;
   }
 
   private static AdministrationTimestampsDto getMorningTiming()

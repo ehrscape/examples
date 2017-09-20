@@ -24,8 +24,16 @@ package com.marand.thinkmed.medications.html;
  */
 public interface HtmlMedicationsActions
 {
-  String PRINT_TODAY_THERAPY_REPORT = "printTodayTherapyReport";
-  String PRINT_EMPTY_THERAPY_REPORT = "printEmptyTherapyReport";
+  String PRINT_SURGERY_THERAPY_REPORT = "printSurgeryTherapyReport";
   String SAVE_CONTEXT = "SAVE_CONTEXT";
   String OPEN_MEDICATION_DOCUMENT = "openMedicationDocument";
+  String OPEN_PATIENT = "openPatient";
+  String OUTPATIENT_PRESCRIPTION = "outpatientPrescription";
+  String CANCEL_PRESCRIPTION = "cancelPrescription";
+  String UPDATE_OUTPATIENT_PRESCRIPTION = "updateOutpatientPrescription";
+  String GET_EXTERNAL_OUTPATIENT_PRESCRIPTIONS = "getExternalOutpatientPrescription";
+  String PRINT_PERFUSION_SYRINGE_LABEL = "perfusionSyringeLabelPrint";
+  String DELETE_OUTPATIENT_PRESCRIPTION = "deleteOutpatientPrescription";
+  String AUTHORIZE_OUTPATIENT_PRESCRIPTION = "authorizeOutpatientPrescription";
+  String AUTHENTICATE_ADMINISTRATION_WITNESS = "authenticateAdministrationWitness";
 }

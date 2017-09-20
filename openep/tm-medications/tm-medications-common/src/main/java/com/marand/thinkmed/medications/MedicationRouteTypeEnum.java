@@ -24,5 +24,5 @@ package com.marand.thinkmed.medications;
  */
 public enum MedicationRouteTypeEnum
 {
-  IV
+  IV, IM, INHAL, ORAL
 }

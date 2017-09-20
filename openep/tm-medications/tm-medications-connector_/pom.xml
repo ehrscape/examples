@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>tm-medications</artifactId>
+        <groupId>com.marand.thinkmed</groupId>
+        <version>2.4.1.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>tm-medications-connector_</artifactId>
+    <name>Think!Med Medications Connector (Aggregator POM)</name>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>tm-medications-connector</module>
+        <module>tm-medications-connector-impl</module>
+    </modules>
+
+</project>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="medicationsConnector" class="com.marand.thinkmed.medications.connector.impl.rest.RestMedicationsConnector">
+        <property name="host" value="${medications.connector.host}"/>
+        <property name="port" value="${medications.connector.port}"/>
+        <property name="username" value="${medications.connector.username}"/>
+        <property name="password" value="${medications.connector.password}"/>
+        <property name="restUri" value="${medications.connector.restUri}"/>
+    </bean>
+
+</beans>

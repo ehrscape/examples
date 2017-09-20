@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!--
+<!DOCTYPE dataset SYSTEM "dbunit_dataset.dtd"><!--
   ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
   ~
   ~ This file is part of Think!Med Clinical Medication Management.
@@ -18,15 +17,10 @@
   ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<dataset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="../../../../../../../../../../../ispek-unitils/unitils/dataset_xsd/dataset.xsd">
+<dataset>
 
-    <DOSE_FORM ID="1" VERSION="0" CODE="1" NAME="Pill" DOSE_FORM_TYPE="TBL" MEDICATION_ORDER_FORM_TYPE="SIMPLE"
-            EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
-    <DOSE_FORM ID="2" VERSION="0" CODE="2" NAME="Suppository" DOSE_FORM_TYPE="SUPPOSITORY"
-            MEDICATION_ORDER_FORM_TYPE="SIMPLE" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
-    <DOSE_FORM ID="3" VERSION="0" CODE="3" NAME="Syrup" DOSE_FORM_TYPE="[null]" MEDICATION_ORDER_FORM_TYPE="SIMPLE"
-            EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
-    <DOSE_FORM ID="4" VERSION="0" CODE="4" NAME="SyrupOld" DOSE_FORM_TYPE="[null]" MEDICATION_ORDER_FORM_TYPE="SIMPLE"
-            EFFECTIVE_START="-∞" EFFECTIVE_END="2011-01-10 00:00:00.000"/>
+    <DOSE_FORM ID="1" VERSION="0" CODE="1" NAME="Pill" DOSE_FORM_TYPE="TBL" MEDICATION_ORDER_FORM_TYPE="SIMPLE" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <DOSE_FORM ID="2" VERSION="0" CODE="2" NAME="Suppository" DOSE_FORM_TYPE="SUPPOSITORY" MEDICATION_ORDER_FORM_TYPE="SIMPLE" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <DOSE_FORM ID="3" VERSION="0" CODE="3" NAME="Syrup" MEDICATION_ORDER_FORM_TYPE="SIMPLE" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞"/>
+    <DOSE_FORM ID="4" VERSION="0" CODE="4" NAME="SyrupOld" MEDICATION_ORDER_FORM_TYPE="SIMPLE" EFFECTIVE_START="-∞" EFFECTIVE_END="2011-01-10 00:00:00.000"/>
 </dataset>

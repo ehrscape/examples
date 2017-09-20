@@ -1,32 +1,69 @@
-/*
- * Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
- *
- * This file is part of Think!Med Clinical Medication Management.
- *
- * Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package com.marand.thinkmed.api.demographics.data;
 
 import com.marand.thinkmed.api.core.GrammaticalGender;
+import org.apache.commons.lang3.StringUtils;
 
 /**
- * @author Bostjan Vester
+ * @author Primoz Prislan
+ * @see <a href="http://www.ivz.si/javne_datoteke/datoteke/726-20-Metodoloskacnavodila-SPPczacletoc2004cv4c(bo).doc"/>
+ *              ZDRAVSTVENI INFORMACIJSKI SISTEM BOLNIŠNIČNIH OBRAVNAV -Metodološka navodila</a>
  */
-public interface Gender
+public enum Gender
 {
-  GrammaticalGender getGrammaticalGender();
-  String getLongEntryKey();
-  String getShortEntryKey();
+  MALE(1, GrammaticalGender.MALE),
+  FEMALE(2, GrammaticalGender.FEMALE),
+  INDEFINABLE(3, GrammaticalGender.UNDEFINED),
+  NOT_KNOWN(9, GrammaticalGender.UNDEFINED), ;
+
+  private final int isoCode;
+  private final GrammaticalGender grammatical;
+
+  Gender(final int isoCode, final GrammaticalGender grammatical)
+  {
+    this.isoCode = isoCode;
+    this.grammatical = grammatical;
+  }
+
+  public int getIsoCode()
+  {
+    return isoCode;
+  }
+
+  public static Gender getInstanceFromIsoCode(final String code)
+  {
+    for (final Gender g : values())
+    {
+      if (StringUtils.equals(g.toString(), code))
+      {
+        return g;
+      }
+    }
+    throw new IllegalArgumentException("Unknown gender caption: " + code);
+  }
+
+  @Override
+  public String toString()
+  {
+    return String.valueOf(isoCode);
+  }
+
+  public GrammaticalGender getGrammaticalGender()
+  {
+    return grammatical;
+  }
+
+  public String getLongEntryKey()
+  {
+    return getBaseEntryKey();
+  }
+
+  public String getShortEntryKey()
+  {
+    return getBaseEntryKey() + ".short";
+  }
+
+  private String getBaseEntryKey()
+  {
+    return Gender.class.getSimpleName() + "." + name();
+  }
 }

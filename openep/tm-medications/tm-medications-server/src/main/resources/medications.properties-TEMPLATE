@@ -18,15 +18,19 @@ ehrgate.url=http://thinkehr.marand.si:10778
 
 
 #################################################
+# Medications
+#################################################
+medications.search.start.must.match=false
+medications.pharmacist.review.refer.back.preset=true
+
+#################################################
 # FDB
 #################################################
-fdb.url=jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=10.99.8.95)(PORT=3825)))(CONNECT_DATA=(SERVICE_NAME=se11)))
-fdb.user=Ispek_fdbo
-fdb.password=ifo
-fdb.driver=oracle.jdbc.driver.OracleDriver
-fdb.showDebugInfo=false
-fdb.poolSize=30
-fdb.loadLimit=200
+fdb.host=fdbe-mddfrest.amaze.com
+fdb.port=80
+fdb.username=trialuser
+fdb.password=trial
+fdb.restUri=http://fdbe-mddfrest.amaze.com/mddfrest/screening/reports
 
 
 #################################################
@@ -36,3 +40,8 @@ db.url=jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST
 db.user=tm_app_med_sl
 db.password=tm_app_med_sl
 db.schema=tm_app_med_sl
+
+#################################################
+# Environment locale
+#################################################
+environment.defined.locale=sl SI

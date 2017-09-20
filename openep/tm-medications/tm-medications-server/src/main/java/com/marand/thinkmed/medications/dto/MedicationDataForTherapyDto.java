@@ -19,17 +19,17 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.DataObject;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
-public class MedicationDataForTherapyDto extends DataObject
+public class MedicationDataForTherapyDto extends DataTransferObject
 {
   private String genericName;
-  private String atcCode;
-  private String atcName;
+  private String atcGroupCode;
+  private String atcGroupName;
   private String customGroupName;
   private Integer customGroupSortOrder;
   private boolean isAntibiotic;
@@ -44,24 +44,24 @@ public class MedicationDataForTherapyDto extends DataObject
     this.genericName = genericName;
   }
 
-  public String getAtcCode()
+  public String getAtcGroupCode()
   {
-    return atcCode;
+    return atcGroupCode;
   }
 
-  public void setAtcCode(final String atcCode)
+  public void setAtcGroupCode(final String atcGroupCode)
   {
-    this.atcCode = atcCode;
+    this.atcGroupCode = atcGroupCode;
   }
 
-  public String getAtcName()
+  public String getAtcGroupName()
   {
-    return atcName;
+    return atcGroupName;
   }
 
-  public void setAtcName(final String atcName)
+  public void setAtcGroupName(final String atcGroupName)
   {
-    this.atcName = atcName;
+    this.atcGroupName = atcGroupName;
   }
 
   public String getCustomGroupName()
@@ -99,8 +99,8 @@ public class MedicationDataForTherapyDto extends DataObject
   {
     tsb
         .append("genericName", genericName)
-        .append("atcCode", atcCode)
-        .append("atcName", atcName)
+        .append("atcGroupCode", atcGroupCode)
+        .append("atcGroupName", atcGroupName)
         .append("customGroupName", customGroupName)
         .append("customGroupSortOrder", customGroupSortOrder)
         .append("isAntibiotic", isAntibiotic)

@@ -19,229 +19,183 @@
 
 package com.marand.thinkmed.medications.business;
 
+import java.text.Collator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.marand.ispek.ehr.common.EhrLinkType;
+import com.marand.ispek.ehr.common.tdo.IspekComposition;
 import com.marand.maf.core.Pair;
-import com.marand.maf.core.data.object.HourMinuteDto;
-import com.marand.openehr.medications.tdo.MedicationAdministrationComposition;
+import com.marand.openehr.medications.tdo.MedicationActionAction;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction.OrderActivity;
 import com.marand.openehr.medications.tdo.MedicationOrderComposition;
 import com.marand.openehr.medications.tdo.MedicationReferenceWeightComposition;
-import com.marand.openehr.util.OpenEhrLinkType;
-import com.marand.thinkmed.api.core.data.NamedIdentity;
-import com.marand.thinkmed.api.organization.data.KnownClinic;
 import com.marand.thinkmed.medications.MedicationActionEnum;
-import com.marand.thinkmed.medications.TherapySortTypeEnum;
-import com.marand.thinkmed.medications.dto.AdministrationTimingDto;
 import com.marand.thinkmed.medications.dto.ComplexTherapyDto;
 import com.marand.thinkmed.medications.dto.DocumentationTherapiesDto;
-import com.marand.thinkmed.medications.dto.MedicationSearchDto;
+import com.marand.thinkmed.medications.dto.MedicationDataForTherapyDto;
 import com.marand.thinkmed.medications.dto.RoundsIntervalDto;
-import com.marand.thinkmed.medications.dto.TherapyCardInfoDto;
+import com.marand.thinkmed.medications.dto.TherapyChangeReasonDto;
 import com.marand.thinkmed.medications.dto.TherapyDto;
-import com.marand.thinkmed.medications.dto.TherapyFlowRowDto;
-import com.marand.thinkmed.medications.dto.TherapyReloadAfterActionDto;
-import com.marand.thinkmed.medications.dto.administration.AdministrationDto;
-import com.marand.thinkmed.medications.dto.administration.TherapyTaskDto;
-import com.marand.thinkmed.medications.dto.administration.TherapyTimelineRowDto;
+import com.marand.thinkmed.medications.dto.TherapyTemplatesDto;
+import com.marand.thinkmed.medications.dto.discharge.MedicationOnDischargeGroupDto;
+import com.marand.thinkmed.medications.dto.mentalHealth.MentalHealthTherapyDto;
+import com.marand.thinkmed.medications.dto.report.TherapySurgeryReportElementDto;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationForWarningsSearchDto;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.openehr.jaxb.rm.Link;
-
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction;
 
 /**
  * @author Mitja Lapajne
  */
 public interface MedicationsBo
 {
-  MedicationOrderComposition saveNewMedicationOrder(
-      long patientId,
-      List<TherapyDto> therapiesList,
-      Long centralCaseId,
-      Long careProviderId,
-      long userId,
-      NamedIdentity prescriber,
-      RoundsIntervalDto roundsInterval,
-      DateTime when,
-      Locale locale);
+  Map<Long, MedicationDataForTherapyDto> getMedicationDataForTherapies(
+      List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionsList,
+      @Nullable String careProviderId);
 
-  List<TherapyFlowRowDto> getTherapyFlow(
-      long patientId,
-      long centralCaseId,
-      Double patientHeight,
-      DateTime startDate,
-      int dayCount,
-      Integer todayIndex,
-      RoundsIntervalDto roundsInterval,
-      TherapySortTypeEnum therapySortTypeEnum,
-      KnownClinic department,
-      DateTime currentTime,
-      Locale locale);
+  boolean isTherapyModifiedFromLastReview(
+      @Nonnull MedicationInstructionInstruction instruction,
+      @Nonnull List<MedicationActionAction> actionsList,
+      @Nonnull DateTime compositionCreatedTime);
 
-  TherapyReloadAfterActionDto reloadSingleTherapyAfterAction(
-      long patientId,
-      String compositionUid,
-      String ehrOrderName,
-      RoundsIntervalDto roundsInterval,
-      DateTime when);
+  boolean isTherapySuspended(MedicationOrderComposition composition, MedicationInstructionInstruction instruction);
 
-  <M extends TherapyDto> Pair<MedicationOrderComposition, MedicationInstructionInstruction> modifyTherapy(
-      long patientId,
-      M therapy,
-      Long centralCaseId,
-      Long careProviderId,
-      RoundsIntervalDto roundsInterval,
-      long userId,
-      NamedIdentity prescriber,
-      DateTime when,
-      boolean alwaysOverrideTherapy,
-      Locale locale);
+  TherapyChangeReasonDto getTherapySuspendReason(
+      @Nonnull MedicationOrderComposition composition,
+      @Nonnull MedicationInstructionInstruction instruction);
 
-  void abortTherapy(
-      long patientId,
-      String compositionUid,
-      String ehrOrderName,
-      long userId,
-      DateTime when);
-
-  void abortTherapy(
-      long patientId,
-      MedicationOrderComposition composition,
-      MedicationInstructionInstruction instruction,
-      long userId,
-      DateTime when);
-
-  String reviewTherapy(long patientId, String compositionUid, String ehrOrderName, long userId, DateTime when);
-
-  String suspendTherapy(long patientId, String compositionUid, String ehrOrderName, long userId, DateTime when);
-
-  String suspendTherapy(
-      long patientId,
-      MedicationOrderComposition composition,
-      MedicationInstructionInstruction instruction,
-      long userId,
-      DateTime when);
-
-  boolean isTherapySuspended(
+  boolean isTherapyCancelledOrAborted(
       MedicationOrderComposition composition, MedicationInstructionInstruction instruction);
 
-  void reissueTherapy(
-      long patientId,
-      String compositionUid,
-      String ehrOrderName,
-      RoundsIntervalDto roundsInterval,
-      long userId, DateTime when);
+  String getTherapyFormattedDisplay(String patientId, String therapyId, DateTime when, Locale locale);
 
-  String getTherapyFormattedDisplay(long patientId, String therapyId, DateTime when, Locale locale);
+  TherapyDto getTherapy(
+      String patientId, String compositionId, String ehrOrderName, DateTime when, Locale locale);
 
   TherapyDto convertInstructionToTherapyDto(
-      MedicationOrderComposition composition,
-      MedicationInstructionInstruction instruction,
+      @Nonnull IspekComposition composition,
+      @Nonnull MedicationInstructionInstruction instruction,
+      DateTime currentTime);
+
+  TherapyDto convertInstructionToTherapyDtoWithDisplayValues(
+      @Nonnull IspekComposition composition,
+      @Nonnull MedicationInstructionInstruction instruction,
       Double referenceWeight,
       Double patientHeight,
       DateTime currentTime,
       boolean isToday,
       Locale locale);
 
-  List<MedicationForWarningsSearchDto> getTherapiesForWarningsSearch(long patientId, DateTime when);
+  void fillDisplayValues(@Nonnull TherapyDto therapy, Double referenceWeight, Double patientHeight, boolean isToday, Locale locale);
+
+  double calculateBodySurfaceArea(final double heightInCm, final double weightInKg);
+
+  List<MedicationForWarningsSearchDto> getTherapiesForWarningsSearch(String patientId, DateTime when);
 
   List<TherapyDto> getTherapies(
-      final long patientId,
-      @Nullable final Long centralCaseId,
+      final String patientId,
+      @Nullable final String centralCaseId,
       final Double referenceWeight,
       @Nullable final Locale locale,
       final DateTime when);
 
   List<TherapyDto> getTherapies(
-      long patientId,
+      String patientId,
       @Nullable Interval searchInterval,
       Double referenceWeight,
       Double patientHeight,
       @Nullable Locale locale,
       final DateTime when);
 
-  List<TherapyDto> getPatientTherapiesForReport(
-      long patientId,
+  List<MedicationOnDischargeGroupDto> getMedicationOnDischargeGroups(
+      String patientId,
+      DateTime lastHospitalizationStart,
+      Interval searchInterval,
+      Double referenceWeight,
       Double patientHeight,
-      DateTime searchStart,
-      RoundsIntervalDto roundsIntervalDto,
-      DateTime currentTime);
+      @Nullable Locale locale,
+      DateTime when);
 
-  List<HourMinuteDto> getPossibleAdministrations(AdministrationTimingDto administrationTiming, String frequency);
+  List<MentalHealthTherapyDto> getMentalHealthTherapies(
+      String patientId,
+      Interval searchInterval,
+      DateTime when,
+      Locale locale);
+
+  List<TherapyDto> getLinkTherapyCandidates(
+      @Nonnull String patientId,
+      @Nonnull Double referenceWeight,
+      Double patientHeight,
+      @Nonnull DateTime when,
+      @Nonnull Locale locale);
+
+  List<TherapySurgeryReportElementDto> getTherapySurgeryReportElements(
+      @Nonnull String patientId,
+      Double patientHeight,
+      @Nonnull DateTime searchStart,
+      @Nonnull RoundsIntervalDto roundsIntervalDto,
+      @Nonnull Locale locale,
+      @Nonnull DateTime when);
+
+  List<MedicationForWarningsSearchDto> extractWarningsSearchDtos(@Nonnull List<MedicationOrderComposition> compositions);
 
   int getTherapyConsecutiveDay(DateTime therapyStart, DateTime therapyDay, DateTime currentTime, Integer pastDaysOfTherapy);
 
-  TherapyCardInfoDto getTherapyCardInfoData(
-      long patientId,
-      Double patientHeight,
-      String compositionId,
-      String ehrOrderName,
-      Locale locale,
-      Interval similarTherapiesInterval,
-      DateTime when);
+  String getOriginalTherapyId(String patientId, String compositionUid);
 
-  Pair<MedicationOrderComposition, MedicationInstructionInstruction> getOriginalTherapy(
-      Long patientId, String compositionUid, String ehrOrderName);
+  String getOriginalTherapyId(@Nonnull MedicationOrderComposition composition);
+
+  boolean isMentalHealthMedication(long medicationId);
 
   boolean isTherapyActive(List<String> daysOfWeek, Integer dosingDaysFrequency, Interval therapyInterval, DateTime when);
 
   boolean isMedicationTherapyCompleted(
       MedicationOrderComposition composition, MedicationInstructionInstruction instruction);
 
-  DateTime getTherapyStart(long patientId, String compositionUid, String ehrOrderName);
+  MedicationActionAction getInstructionAction(
+      MedicationOrderComposition composition,
+      MedicationInstructionInstruction instruction,
+      MedicationActionEnum searchActionEnum,
+      @Nullable Interval searchInterval);
 
-  Pair<MedicationOrderComposition, MedicationInstructionInstruction> getInstructionFromLink(long patientId, Link link);
+  DateTime getOriginalTherapyStart(@Nonnull String patientId, @Nonnull MedicationOrderComposition composition);
 
-  Long getMainMedicationId(final TherapyDto therapy);
+  Pair<MedicationOrderComposition, MedicationInstructionInstruction> getInstructionFromLink(
+      @Nonnull String patientId,
+      @Nonnull MedicationInstructionInstruction instruction,
+      @Nonnull EhrLinkType linkType,
+      boolean getLatestVersion);
 
-  MedicationReferenceWeightComposition buildReferenceWeightComposition(double weight, DateTime when, long composerId);
+  Pair<MedicationOrderComposition, MedicationInstructionInstruction> getInstructionFromLink(
+      String patientId,
+      Link link,
+      boolean getLatestVersion);
 
-  void saveConsecutiveDays(Long patientId, String compositionUid, String ehrOrderName, Long userId, Integer consecutiveDays);
+  Long getMainMedicationId(OrderActivity orderActivity);
 
-  void fillInfusionFormulaFromRate(ComplexTherapyDto therapy, Double referenceWeight, Double patientHeight, DateTime when);
+  MedicationReferenceWeightComposition buildReferenceWeightComposition(double weight, DateTime when);
 
-  void fillInfusionRateFromFormula(ComplexTherapyDto therapy, Double referenceWeight, Double patientHeight, DateTime when);
+  void fillInfusionFormulaFromRate(ComplexTherapyDto therapy, Double referenceWeight, Double patientHeight);
 
-  List<TherapyTimelineRowDto> buildTherapyTimeline(
-      long patientId,
-      long centralCaseId,
-      List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructions,
-      Map<String, List<MedicationAdministrationComposition>> administrations,
-      @Nullable List<TherapyTaskDto> tasks,
-      Interval tasksInterval,
-      RoundsIntervalDto roundsInterval,
-      TherapySortTypeEnum therapySortTypeEnum,
-      KnownClinic department,
-      DateTime when,
-      Locale locale);
+  void fillInfusionRateFromFormula(ComplexTherapyDto therapy, Double referenceWeight, Double patientHeight);
 
-  String confirmTherapyAdministration(
-      String therapyCompositionUid,
-      String ehrOrderName,
-      Long patientId,
-      Long userId,
-      Long centralCaseId,
-      Long careProviderId,
-      AdministrationDto administrationDto,
-      boolean administrationSuccessful,
-      DateTime when,
-      Locale locale);
+  boolean isTherapySuspended(final List<MedicationActionAction> actionsList);
 
-  String confirmMedicationAdministration(
-      Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyInstructionPair,
-      Long patientId,
-      Long userId,
-      Long centralCaseId,
-      Long careProviderId,
-      AdministrationDto administrationDto,
-      MedicationActionEnum medicationActionEnum,
-      DateTime when);
+  void sortTherapiesByMedicationTimingStart(
+      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> therapies,
+      final boolean descending);
 
-  void deleteAdministration(long patientId, String administrationId, String comment);
+  void deleteAdministration(String patientId, String administrationId, String comment);
+
+  void sortTherapyTemplates(final TherapyTemplatesDto templates);
+
+  int compareTherapiesForSort(final TherapyDto firstTherapy, final TherapyDto secondTherapy, final Collator collator);
 
   boolean areInstructionsLinkedByUpdate(
       Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair,
@@ -250,17 +204,24 @@ public interface MedicationsBo
   boolean doesInstructionHaveLinkToCompareInstruction(
       MedicationInstructionInstruction instruction,
       Pair<MedicationOrderComposition, MedicationInstructionInstruction> compareInstructionPair,
-      OpenEhrLinkType linkType);
+      EhrLinkType linkType);
+
+  List<Long> getMedicationIds(@Nonnull OrderActivity orderActivity);
+
+  List<Long> getMedicationIds(@Nonnull MedicationActionAction medicationAction);
 
   DocumentationTherapiesDto findTherapyGroupsForDocumentation(
-      Long patientId,
-      Long centralCseId,
+      String patientId,
+      String centralCseId,
       Interval centralCaseEffective,
       List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionPairs,
-      final KnownClinic department,
       boolean isOutpatient,
       DateTime when,
       Locale locale);
 
-  List<MedicationSearchDto> filterMedicationsTree(List<MedicationSearchDto> medications, String searchString);
+  DateTime findPreviousTaskForTherapy(
+      String patientId,
+      String compositionUid,
+      String ehrOrderName,
+      DateTime when);
 }

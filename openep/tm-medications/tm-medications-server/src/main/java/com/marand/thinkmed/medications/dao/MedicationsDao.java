@@ -19,26 +19,31 @@
 
 package com.marand.thinkmed.medications.dao;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import com.marand.maf.core.Pair;
-import com.marand.thinkmed.api.organization.data.KnownClinic;
+import com.marand.thinkmed.medications.ActionReasonType;
 import com.marand.thinkmed.medications.MedicationLevelEnum;
 import com.marand.thinkmed.medications.MedicationsExternalValueType;
+import com.marand.thinkmed.medications.TherapyTemplateModeEnum;
+import com.marand.thinkmed.medications.dto.CodedNameDto;
 import com.marand.thinkmed.medications.dto.DoseFormDto;
 import com.marand.thinkmed.medications.dto.MedicationDataDto;
-import com.marand.thinkmed.medications.dto.MedicationDataForTherapyDto;
 import com.marand.thinkmed.medications.dto.MedicationDto;
-import com.marand.thinkmed.medications.dto.MedicationIngredientDto;
+import com.marand.thinkmed.medications.dto.MedicationHolderDto;
 import com.marand.thinkmed.medications.dto.MedicationRouteDto;
-import com.marand.thinkmed.medications.dto.MedicationSearchDto;
-import com.marand.thinkmed.medications.dto.MedicationSimpleDto;
 import com.marand.thinkmed.medications.dto.TherapyTemplateDto;
 import com.marand.thinkmed.medications.dto.TherapyTemplatesDto;
+import com.marand.thinkmed.medications.dto.mentalHealth.MentalHealthTemplateDto;
+import com.marand.thinkmed.medications.dto.mentalHealth.MentalHealthTemplateMemberDto;
+import com.marand.thinkmed.medications.dto.supply.MedicationSupplyCandidateDto;
+import com.marand.thinkmed.medications.rule.MedicationRuleEnum;
+import com.marand.thinkmed.medicationsexternal.dto.MedicationsWarningDto;
 import org.joda.time.DateTime;
 
 /**
@@ -46,60 +51,84 @@ import org.joda.time.DateTime;
  */
 public interface MedicationsDao
 {
-  List<MedicationSimpleDto> findMedications(DateTime when);
+  Map<Long, MedicationHolderDto> loadMedicationsMap(DateTime when);
 
-  List<MedicationSearchDto> loadMedicationsTree(final DateTime when);
+  MedicationDataDto getMedicationData(long medicationId, String careProviderId, @Nonnull DateTime when);
 
-  MedicationDataDto getMedicationData(long medicationId, DateTime when);
+  Map<Long, MedicationDataDto> getMedicationDataMap(
+      @Nonnull Set<Long> medicationIds,
+      String careProvideIds,
+      @Nonnull DateTime when);
 
-  MedicationIngredientDto getMedicationDefiningIngredient(long medicationId, DateTime when);
+  Set<Long> getMedicationIdsWithIngredientRule(MedicationRuleEnum medicationRuleEnum, DateTime when);
+
+  List<Long> getMedicationIdsWithIngredientId(long ingredientId, DateTime when);
+
+  List<MedicationRouteDto> getMedicationRoutes(long medicationId, DateTime when);
 
   String getMedicationExternalId(String externalSystem, long medicationId, DateTime when);
 
-  List<String> getIcd9Codes(String icd10Code);
+  Set<Long> findSimilarMedicationsIds(long medicationId, @Nonnull Collection<Long> routeIds, @Nonnull DateTime when);
 
-  Map<Long, MedicationDataForTherapyDto> getMedicationDataForTherapies(
-      final Set<Long> medicationIds,
-      @Nullable final KnownClinic department,
+  boolean isProductBasedMedication(long medicationId);
+
+  List<MedicationSupplyCandidateDto> getMedicationSupplyCandidates(
+      final long medicationId,
+      final long routeId,
       final DateTime when);
 
-  List<MedicationDto> findSimilarMedications(long medicationId, String routeCode,  DateTime when);
-
-  List<MedicationDto> getMedicationProducts(long medicationId, String routeCode,  DateTime when);
+  List<MedicationDto> getMedicationChildProducts(
+      long medicationId,
+      @Nonnull Collection<Long> routeIds,
+      @Nonnull DateTime when);
 
   MedicationDto getMedicationById(Long medicationId, DateTime when);
+
+  Map<Long, MedicationDto> getMedicationsMap(Set<Long> medicationIds, DateTime when);
 
   DoseFormDto getDoseFormByCode(String doseFormDto, DateTime when);
 
   Map<String, String> getMedicationExternalValues(
       String externalSystem, MedicationsExternalValueType valueType, Set<String> valuesSet);
 
-  List<MedicationRouteDto> getRoutes(final DateTime when);
+  List<MedicationRouteDto> getRoutes(DateTime when);
 
   List<DoseFormDto> getDoseForms(DateTime when);
 
   List<String> getMedicationBasicUnits();
 
-  Map<Long, Pair<String, Integer>> getCustomGroupNameSortOrderMap(
-      final String knownOrganizationalEntityName,
-      Set<Long> medicationsCodes);
+  Map<Long, Pair<String, Integer>> getCustomGroupNameSortOrderMap(String careProviderId, Set<Long> medicationsCodes);
 
-  List<String> getCustomGroupNames(final String knownOrganizationalEntityName);
+  List<String> getCustomGroupNames(String careProviderId);
 
   TherapyTemplatesDto getTherapyTemplates(
-      final Long userId,
-      @Nullable final Long departmentId,
-      @Nullable final Long patientId,
-      @Nullable Double referenceWeight,
-      @Nullable Double height,
-      DateTime when,
+      @Nonnull String patientId,
+      @Nonnull String userId,
+      @Nonnull TherapyTemplateModeEnum templateMode,
+      String careProviderId,
+      Double referenceWeight,
+      Double patientHeight,
       Locale locale);
 
-  long saveTherapyTemplate(TherapyTemplateDto therapyTemplate);
+  long saveTherapyTemplate(TherapyTemplateDto therapyTemplate, TherapyTemplateModeEnum templateMode, final String userId);
 
   void deleteTherapyTemplate(long templateId);
 
   Map<Long, MedicationLevelEnum> getMedicationsLevels(Set<Long> longs);
 
-  Map<Long, Long> getMedicationIdsFromExternalIds(String externalSystem, Set<String> medicationExternalIds, DateTime when);
+  String getPatientLastLinkName(long patientId);
+
+  void savePatientLastLinkName(long patientId, String lastLinkName);
+
+  Map<ActionReasonType, List<CodedNameDto>> getActionReasons(@Nonnull DateTime when, ActionReasonType type);
+
+  List<MentalHealthTemplateDto> getMentalHealthTemplates();
+
+  List<MentalHealthTemplateMemberDto> getMentalHealthTemplateMembers(@Nonnull Collection<Long> mentalHealthTemplateIds);
+
+  Map<Long, MedicationRouteDto> loadRoutesMap(DateTime when);
+
+  Collection<MedicationsWarningDto> getCustomWarningsForMedication(@Nonnull Set<Long> medicationIds, @Nonnull DateTime when);
+
+  Long getMedicationIdForBarcode(@Nonnull String barcode);
 }

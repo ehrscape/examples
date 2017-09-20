@@ -19,6 +19,9 @@
 
 package com.marand.thinkmed.medications.dao.hibernate;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -26,130 +29,142 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.springtestdbunit.TransactionDbUnitTestExecutionListener;
+import com.github.springtestdbunit.annotation.DatabaseSetup;
+import com.github.springtestdbunit.annotation.DbUnitConfiguration;
 import com.marand.maf.core.Pair;
-import com.marand.thinkmed.api.organization.data.KnownClinic;
+import com.marand.maf.core.SpringProxiedJUnit4ClassRunner;
+import com.marand.thinkmed.api.externals.data.object.NamedExternalDto;
 import com.marand.thinkmed.medications.DoseFormType;
+import com.marand.thinkmed.medications.MedicationLevelEnum;
 import com.marand.thinkmed.medications.MedicationOrderFormType;
 import com.marand.thinkmed.medications.MedicationRouteTypeEnum;
+import com.marand.thinkmed.medications.MedicationTypeEnum;
 import com.marand.thinkmed.medications.MedicationsExternalValueType;
+import com.marand.thinkmed.medications.TherapyTemplateModeEnum;
 import com.marand.thinkmed.medications.TherapyTemplateTypeEnum;
+import com.marand.thinkmed.medications.TitrationType;
+import com.marand.thinkmed.medications.dao.MedicationsDao;
+import com.marand.thinkmed.medications.dto.BnfMaximumUnitType;
 import com.marand.thinkmed.medications.dto.DoseFormDto;
 import com.marand.thinkmed.medications.dto.MedicationDataDto;
-import com.marand.thinkmed.medications.dto.MedicationDataForTherapyDto;
 import com.marand.thinkmed.medications.dto.MedicationDto;
+import com.marand.thinkmed.medications.dto.MedicationHolderDto;
 import com.marand.thinkmed.medications.dto.MedicationIngredientDto;
 import com.marand.thinkmed.medications.dto.MedicationRouteDto;
-import com.marand.thinkmed.medications.dto.MedicationSearchDto;
-import com.marand.thinkmed.medications.dto.MedicationSimpleDto;
 import com.marand.thinkmed.medications.dto.TherapyTemplateDto;
 import com.marand.thinkmed.medications.dto.TherapyTemplatesDto;
-import com.marand.thinkmed.medications.test.MedicationsTestUtils;
+import com.marand.thinkmed.medications.rule.MedicationRuleEnum;
+import com.marand.thinkmed.medicationsexternal.WarningSeverity;
+import com.marand.thinkmed.medicationsexternal.dto.MedicationsWarningDto;
 import org.joda.time.DateTime;
-import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.unitils.UnitilsJUnit4TestClassRunner;
-import org.unitils.database.annotations.Transactional;
-import org.unitils.database.util.TransactionMode;
-import org.unitils.dbunit.annotation.DataSet;
-import org.unitils.spring.annotation.SpringApplicationContext;
-import org.unitils.spring.annotation.SpringBeanByName;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Mitja Lapajne
  */
-@RunWith(UnitilsJUnit4TestClassRunner.class)
-@Transactional(TransactionMode.ROLLBACK)
-@SpringApplicationContext(
-    {
-        "/com/marand/maf_test/unitils/tc-unitils.xml",
-        "/ac-hibernate-audit.xml",
-        "/ac-default-user-details.xml",
-        "/ac-catalog.xml",
-        "com/marand/thinkmed/medications/ac-hibernate-packages.xml",
-        "com/marand/thinkmed/medications/dao/hibernate/HibernateMedicationsDaoTest-context.xml"
-    }
-)
-@DataSet
+@RunWith(SpringProxiedJUnit4ClassRunner.class)
+@ContextConfiguration({"/com/marand/thinkmed/medications/dao/hibernate/HibernateMedicationsDaoTest-context.xml"})
+@DbUnitConfiguration(databaseConnection = {"dbUnitDatabaseConnection"})
+@TestExecutionListeners({DependencyInjectionTestExecutionListener.class, TransactionDbUnitTestExecutionListener.class})
+@DatabaseSetup("HibernateMedicationsDaoTest.xml")
+@Transactional
 public class HibernateMedicationsDaoTest
 {
-  @SpringBeanByName
-  private HibernateMedicationsDao medicationsDao;
+  @Autowired
+  private MedicationsDao medicationsDao;
 
-  @BeforeClass
-  public static void setUp()
+  @Test
+  public void testGetMedicationDataPill()
   {
-    KnownClinic.Utils.setValuesProvider(new MedicationsTestUtils.TestClinicProvider());
+    final MedicationDataDto medicationData = medicationsDao.getMedicationData(1L, "CP1", new DateTime(2013, 1, 1, 10, 15));
+
+    final MedicationRouteDto route = medicationData.getRoutes().get(0);
+    assertNotNull(route.getBnfMaximumDto());
+    assertEquals(500, (int)route.getBnfMaximumDto().getQuantity());
+    assertEquals(BnfMaximumUnitType.DAY, route.getBnfMaximumDto().getQuantityUnit());
+    assertEquals("Oral", route.getName());
+    assertEquals(route, medicationData.getDefaultRoute());
+
+    assertNull(medicationData.getDescriptiveIngredient());
+    assertFalse(medicationData.isAntibiotic());
+    assertFalse(medicationData.getControlledDrug());
+    assertEquals(TitrationType.BLOOD_SUGAR, medicationData.getTitration());
+    assertNull(medicationData.getMedicationPackaging());
+    assertEquals(0.5, medicationData.getRoundingFactor(), 0.001);
+
+    final MedicationIngredientDto ingredient = medicationData.getMedicationIngredients().iterator().next();
+    assertEquals("Paracetamol", ingredient.getIngredientName());
+    assertEquals(new Double(2.0), ingredient.getStrengthNumerator());
+    assertEquals("mg", ingredient.getStrengthNumeratorUnit());
+    assertNull(ingredient.getStrengthDenominator());
+    assertNull(ingredient.getStrengthDenominatorUnit());
+    assertTrue(medicationData.isBlackTriangleMedication());
+    assertFalse(medicationData.isClinicalTrialMedication());
+    assertFalse(medicationData.isInpatientMedication());
+    assertTrue(medicationData.isOutpatientMedication());
+    assertTrue(medicationData.isFormulary());
   }
 
   @Test
-  public void testFindMedications()
+  public void testGetMedicationDataInfusion()
   {
-    final List<MedicationSimpleDto> resultList = medicationsDao.findMedications(new DateTime(2013, 1, 1, 10, 15));
-    assertEquals(2L, (long)resultList.size());
+    final MedicationDataDto medicationData = medicationsDao.getMedicationData(2L, "CP1", new DateTime(2013, 1, 1, 10, 15));
+    final MedicationRouteDto route1 = medicationData.getRoutes().get(0);
+    assertNull(route1.getBnfMaximumDto());
+    assertEquals("IV", route1.getName());
+    assertEquals(route1, medicationData.getDefaultRoute());
 
-    assertEquals(1L, resultList.get(0).getId());
-    assertEquals("Lekadol", resultList.get(0).getName());
-    assertEquals("Paracetamol", resultList.get(0).getGenericName());
-    assertTrue(resultList.get(0).isActive());
+    final MedicationRouteDto route2 = medicationData.getRoutes().get(1);
+    assertEquals("SC", route2.getName());
+    assertNotNull(route2.getBnfMaximumDto());
+    assertEquals(200, (int)route2.getBnfMaximumDto().getQuantity());
+    assertEquals(BnfMaximumUnitType.WEEK, route2.getBnfMaximumDto().getQuantityUnit());
+    assertTrue(medicationData.isAntibiotic());
+    assertTrue(medicationData.getControlledDrug());
+    assertNull(medicationData.getTitration());
+    assertEquals("Packaging 20", medicationData.getMedicationPackaging());
+    assertNull(medicationData.getRoundingFactor());
+    assertFalse(medicationData.isBlackTriangleMedication());
+    assertTrue(medicationData.isClinicalTrialMedication());
+    assertFalse(medicationData.isInpatientMedication());
+    assertTrue(medicationData.isOutpatientMedication());
+    assertTrue(medicationData.isFormulary());
 
-    assertEquals(2L, resultList.get(1).getId());
-    assertEquals("Nalgesin 20 mg", resultList.get(1).getName());
-    assertEquals("Nalgus + Sinus", resultList.get(1).getGenericName());
-    assertFalse(resultList.get(1).isActive());
-  }
-
-  @Test
-  public void testGetMedicationData()
-  {
-    final MedicationDataDto medicationData1 = medicationsDao.getMedicationData(1L, new DateTime(2013, 1, 1, 10, 15));
-    assertEquals("Oral", medicationData1.getRoutes().iterator().next().getName());
-    assertEquals("Oral", medicationData1.getDefaultRoute().getName());
-    Assert.assertNull(medicationData1.getDescriptiveIngredient());
-    Assert.assertFalse(medicationData1.isAntibiotic());
-
-    final MedicationIngredientDto ingredient1 = medicationData1.getMedicationIngredients().iterator().next();
-    assertEquals("Paracetamol", ingredient1.getIngredient().getName());
-    assertEquals(new Double(2.0), ingredient1.getStrengthNumerator());
-    assertEquals("mg", ingredient1.getStrengthNumeratorUnit());
-    Assert.assertNull(ingredient1.getStrengthDenominator());
-    Assert.assertNull(ingredient1.getStrengthDenominatorUnit());
-
-    final MedicationDataDto medicationData2 = medicationsDao.getMedicationData(2L, new DateTime(2013, 1, 1, 10, 15));
-    final Iterator<MedicationRouteDto> routeIterator = medicationData2.getRoutes().iterator();
-    assertEquals("IV", routeIterator.next().getName());
-    assertEquals("SC", routeIterator.next().getName());
-    assertEquals("IV", medicationData2.getDefaultRoute().getName());
-    Assert.assertTrue(medicationData2.isAntibiotic());
-
-    final MedicationIngredientDto descriptiveIngredient = medicationData2.getDescriptiveIngredient();
-    assertEquals("Nalgesin", descriptiveIngredient.getIngredient().getName());
+    final MedicationIngredientDto descriptiveIngredient = medicationData.getDescriptiveIngredient();
+    assertEquals("Nalgesin", descriptiveIngredient.getIngredientName());
     assertEquals(new Double(20.0), descriptiveIngredient.getStrengthNumerator());
     assertEquals("mg", descriptiveIngredient.getStrengthNumeratorUnit());
-    Assert.assertNull(descriptiveIngredient.getStrengthDenominator());
-    Assert.assertNull(descriptiveIngredient.getStrengthDenominatorUnit());
+    assertNull(descriptiveIngredient.getStrengthDenominator());
+    assertNull(descriptiveIngredient.getStrengthDenominatorUnit());
 
-    final Iterator<MedicationIngredientDto> ingredientIterator = medicationData2.getMedicationIngredients().iterator();
+    final Iterator<MedicationIngredientDto> ingredientIterator = medicationData.getMedicationIngredients().iterator();
+
+    final MedicationIngredientDto ingredient1 = ingredientIterator.next();
+    assertEquals("Nalgus", ingredient1.getIngredientName());
+    assertEquals(new Double(2.0), ingredient1.getStrengthNumerator());
+    assertEquals("mg", ingredient1.getStrengthNumeratorUnit());
+    assertNull(ingredient1.getStrengthDenominator());
+    assertNull(ingredient1.getStrengthDenominatorUnit());
 
     final MedicationIngredientDto ingredient2 = ingredientIterator.next();
-    assertEquals("Nalgus", ingredient2.getIngredient().getName());
-    assertEquals(new Double(2.0), ingredient2.getStrengthNumerator());
+    assertEquals("Sinus", ingredient2.getIngredientName());
+    assertEquals(new Double(10.0), ingredient2.getStrengthNumerator());
     assertEquals("mg", ingredient2.getStrengthNumeratorUnit());
-    Assert.assertNull(ingredient2.getStrengthDenominator());
-    Assert.assertNull(ingredient2.getStrengthDenominatorUnit());
-
-    final MedicationIngredientDto ingredient3 = ingredientIterator.next();
-    assertEquals("Sinus", ingredient3.getIngredient().getName());
-    assertEquals(new Double(10.0), ingredient3.getStrengthNumerator());
-    assertEquals("mg", ingredient3.getStrengthNumeratorUnit());
-    assertEquals(new Double(3.0), ingredient3.getStrengthDenominator());
-    assertEquals("ml", ingredient3.getStrengthDenominatorUnit());
+    assertEquals(new Double(3.0), ingredient2.getStrengthDenominator());
+    assertEquals("mL", ingredient2.getStrengthDenominatorUnit());
   }
 
   @Test
@@ -163,33 +178,60 @@ public class HibernateMedicationsDaoTest
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testFindSimilarMedications.xml")
-  public void testFindSimilarMedications1()
+  @DatabaseSetup("HibernateMedicationsDaoTest.testFindSimilarMedications.xml")
+  public void testFindSimilarMedications()
   {
-    final List<MedicationDto> medications =
-        medicationsDao.findSimilarMedications(1L, "11",new DateTime(2013, 1, 1, 10, 15));
+    final List<Long> routeIds = Collections.singletonList(11L);
 
-    assertEquals(6L, (long)medications.size());
+    final Set<Long> medicationIds = medicationsDao.findSimilarMedicationsIds(
+        1L,
+        routeIds,
+        new DateTime(2013, 1, 1, 10, 15));
+
+    assertEquals(4L, (long)medicationIds.size());
+    assertTrue(medicationIds.contains(1L));
+    assertTrue(medicationIds.contains(2L));
+    assertTrue(medicationIds.contains(4L));
+    assertTrue(medicationIds.contains(7L));
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testFindSimilarMedications.xml")
-  public void testFindSimilarMedications2()
+  @DatabaseSetup("HibernateMedicationsDaoTest.testFindSimilarMedications.xml")
+  public void testFindSimilarMedicationsMultipleRoutes()
   {
-    final List<MedicationDto> medications =
-        medicationsDao.findSimilarMedications(8L, "11", new DateTime(2013, 1, 1, 10, 15));
+    final List<Long> routeIds = new ArrayList<>();
+    routeIds.add(11L);
+    routeIds.add(12L);
+    routeIds.add(2L);
 
-    assertEquals(6L, (long)medications.size());
+    final Set<Long> medicationIds = medicationsDao.findSimilarMedicationsIds(
+        4L,
+        routeIds,
+        new DateTime(2013, 1, 1, 10, 15));
+
+    assertEquals(5L, (long)medicationIds.size());
+    assertTrue(medicationIds.contains(1L));
+    assertTrue(medicationIds.contains(2L));
+    assertTrue(medicationIds.contains(4L));
+    assertTrue(medicationIds.contains(5L));
+    assertTrue(medicationIds.contains(7L));
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testFindSimilarMedications.xml")
-  public void testFindSimilarMedications4()
+  @DatabaseSetup("HibernateMedicationsDaoTest.testFindSimilarMedications.xml")
+  public void testFindSimilarMedicationsMultipleRoutesNoSimilar()
   {
-    final List<MedicationDto> medications =
-        medicationsDao.findSimilarMedications(4L, "11", new DateTime(2013, 1, 1, 10, 15));
+    final List<Long> routeIds = new ArrayList<>();
+    routeIds.add(12L);
+    routeIds.add(13L);
 
-    assertEquals(6L, (long)medications.size());
+    final Set<Long> medicationIds = medicationsDao.findSimilarMedicationsIds(
+        3L,
+        routeIds,
+        new DateTime(2013, 1, 1, 10, 15));
+
+    assertEquals(1L, medicationIds.size());
+    assertTrue(medicationIds.contains(3L));
   }
 
   @Test
@@ -222,12 +264,12 @@ public class HibernateMedicationsDaoTest
   public void testGetMedicationExternalValuesForUnitsWithEmptySet()
   {
     final Map<String, String> unitsMap =
-        medicationsDao.getMedicationExternalValues("FDB", MedicationsExternalValueType.UNIT, new HashSet<String>());
+        medicationsDao.getMedicationExternalValues("FDB", MedicationsExternalValueType.UNIT, new HashSet<>());
     assertTrue(unitsMap.isEmpty());
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testGetDoseForms.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testGetDoseForms.xml")
   public void testGetDoseForms()
   {
     final List<DoseFormDto> doseForms = medicationsDao.getDoseForms(new DateTime(2013, 10, 28, 12, 0, 0));
@@ -245,12 +287,12 @@ public class HibernateMedicationsDaoTest
 
     assertEquals("3", doseForms.get(2).getCode());
     assertEquals("Syrup", doseForms.get(2).getName());
-    Assert.assertNull(doseForms.get(2).getDoseFormType());
+    assertNull(doseForms.get(2).getDoseFormType());
     assertEquals(MedicationOrderFormType.SIMPLE, doseForms.get(2).getMedicationOrderFormType());
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testGetRoutes.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testGetRoutes.xml")
   public void testGetRoutes()
   {
     final List<MedicationRouteDto> routes = medicationsDao.getRoutes(new DateTime(2013, 10, 28, 12, 0, 0));
@@ -270,18 +312,18 @@ public class HibernateMedicationsDaoTest
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testGetMedicationBasicUnits.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testGetMedicationBasicUnits.xml")
   public void testGetMedicationBasicUnits()
   {
     final List<String> units = medicationsDao.getMedicationBasicUnits();
     assertEquals(2L, (long)units.size());
 
     assertEquals("kg", units.get(0));
-    assertEquals("ml", units.get(1));
+    assertEquals("mL", units.get(1));
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testGetDoseFormByCode.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testGetDoseFormByCode.xml")
   public void testGetDoseFormByCode1()
   {
     final DoseFormDto doseForm = medicationsDao.getDoseFormByCode("1", new DateTime(2013, 11, 1, 0, 0, 0));
@@ -293,7 +335,7 @@ public class HibernateMedicationsDaoTest
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testGetDoseFormByCode.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testGetDoseFormByCode.xml")
   public void testGetDoseFormByCode2()
   {
     final DoseFormDto doseForm = medicationsDao.getDoseFormByCode("2", new DateTime(2013, 11, 1, 0, 0, 0));
@@ -305,48 +347,18 @@ public class HibernateMedicationsDaoTest
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testGetMedicationDataForTherapyFlow.xml")
-  public void testGetMedicationDataForTherapyFlowByCodes()
-  {
-    final Set<Long> medicationIds = new HashSet<>();
-    medicationIds.add(1L);
-    medicationIds.add(2L);
-
-    final Map<Long, MedicationDataForTherapyDto> resultsMap =
-        medicationsDao.getMedicationDataForTherapies(
-            medicationIds,
-            MedicationsTestUtils.TestingKnownClinicEnum.PEK,
-            new DateTime(2013, 11, 1, 0, 0, 0));
-    assertEquals(2L, (long)resultsMap.size());
-
-    final MedicationDataForTherapyDto result1 = resultsMap.get(1L);
-    assertEquals("C1", result1.getAtcCode());
-    assertEquals("ATC 1", result1.getAtcName());
-    assertEquals("Paracetamol PEK", result1.getCustomGroupName());
-    assertEquals("Paracetamol", result1.getGenericName());
-    assertTrue(result1.isAntibiotic());
-
-    final MedicationDataForTherapyDto result3 = resultsMap.get(2L);
-    assertEquals("C1", result3.getAtcCode());
-    assertEquals("ATC 1", result3.getAtcName());
-    assertNull(result3.getCustomGroupName());
-    assertNull(result3.getGenericName());
-    assertFalse(result3.isAntibiotic());
-  }
-
-  @Test
-  @DataSet("HibernateMedicationsDaoTest.testCustomGroups.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testCustomGroups.xml")
   public void testGetCustomGroupNameSortOrderMap()
   {
-    final List<String> groups = medicationsDao.getCustomGroupNames("KOOKIT");
+    final List<String> groups = medicationsDao.getCustomGroupNames("2");
 
     assertEquals(2L, (long)groups.size());
-    assertEquals("Paracetamol KOOKIT", groups.get(0));
-    assertEquals("Acet. kislina KOOKIT", groups.get(1));
+    assertEquals("Acet. kislina KOOKIT EIT", groups.get(0));
+    assertEquals("Paracetamol KOOKIT EIT", groups.get(1));
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testCustomGroups.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testCustomGroups.xml")
   public void testGetCustomGroupNames()
   {
     final Set<Long> medicationCodes = new HashSet<>();
@@ -356,32 +368,32 @@ public class HibernateMedicationsDaoTest
     medicationCodes.add(4L);
 
     final Map<Long, Pair<String, Integer>> resultMapPek =
-        medicationsDao.getCustomGroupNameSortOrderMap("PEK", medicationCodes);
+        medicationsDao.getCustomGroupNameSortOrderMap("1", medicationCodes);
 
     assertEquals(1L, (long)resultMapPek.size());
-    assertEquals("Paracetamol PEK", resultMapPek.get(1L).getFirst());
+    assertEquals("Paracetamol Kardio Hosp", resultMapPek.get(1L).getFirst());
     assertEquals(Integer.valueOf(2), resultMapPek.get(1L).getSecond());
 
     final Map<Long, Pair<String, Integer>> resultMapKookit =
-        medicationsDao.getCustomGroupNameSortOrderMap("KOOKIT", medicationCodes);
+        medicationsDao.getCustomGroupNameSortOrderMap("2", medicationCodes);
     assertEquals(4L, (long)resultMapKookit.size());
-    assertEquals("Paracetamol KOOKIT", resultMapKookit.get(1L).getFirst());
+    assertEquals("Paracetamol KOOKIT EIT", resultMapKookit.get(1L).getFirst());
     assertEquals(Integer.valueOf(1), resultMapKookit.get(1L).getSecond());
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testGetTherapyTemplates.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testGetTherapyTemplates.xml")
   public void testGetTherapyTemplates1()
   {
     final TherapyTemplatesDto templatesDto =
-        medicationsDao.getTherapyTemplates(2L, 1L, null, null, null, new DateTime(2013, 11, 1, 0, 0, 0), new Locale("en"));
+        medicationsDao.getTherapyTemplates("555", "2", TherapyTemplateModeEnum.INPATIENT, "1", null, null, new Locale("en"));
     assertEquals(2L, (long)templatesDto.getUserTemplates().size());
 
     final TherapyTemplateDto firstUserTemplate = templatesDto.getUserTemplates().get(0);
     assertEquals(TherapyTemplateTypeEnum.USER, firstUserTemplate.getType());
     assertEquals("AAA", firstUserTemplate.getName());
-    assertEquals(2L, (long)firstUserTemplate.getUserId());
-    assertNull(firstUserTemplate.getDepartmentId());
+    assertEquals("2", firstUserTemplate.getUserId());
+    assertNull(firstUserTemplate.getCareProviderId());
     assertEquals(2L, (long)firstUserTemplate.getTemplateElements().size());
     assertTrue(firstUserTemplate.getTemplateElements().get(0).isCompleted());
     assertFalse(firstUserTemplate.getTemplateElements().get(1).isCompleted());
@@ -389,8 +401,8 @@ public class HibernateMedicationsDaoTest
     final TherapyTemplateDto secondUserTemplate = templatesDto.getUserTemplates().get(1);
     assertEquals(TherapyTemplateTypeEnum.USER, secondUserTemplate.getType());
     assertEquals("BBB", secondUserTemplate.getName());
-    assertEquals(2L, (long)secondUserTemplate.getUserId());
-    assertNull(secondUserTemplate.getDepartmentId());
+    assertEquals("2", secondUserTemplate.getUserId());
+    assertNull(secondUserTemplate.getCareProviderId());
     assertEquals(1L, (long)secondUserTemplate.getTemplateElements().size());
     assertTrue(secondUserTemplate.getTemplateElements().get(0).isCompleted());
 
@@ -399,7 +411,7 @@ public class HibernateMedicationsDaoTest
     assertEquals(TherapyTemplateTypeEnum.ORGANIZATIONAL, organizationTemplate.getType());
     assertEquals("CCC", organizationTemplate.getName());
     assertNull(organizationTemplate.getUserId());
-    assertEquals(1L, (long)organizationTemplate.getDepartmentId());
+    assertEquals("1", organizationTemplate.getCareProviderId());
     assertEquals(1L, (long)organizationTemplate.getTemplateElements().size());
     assertTrue(organizationTemplate.getTemplateElements().get(0).isCompleted());
 
@@ -407,11 +419,11 @@ public class HibernateMedicationsDaoTest
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testGetTherapyTemplates.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testGetTherapyTemplates.xml")
   public void testGetTherapyTemplates2()
   {
     final TherapyTemplatesDto templatesDto =
-        medicationsDao.getTherapyTemplates(2L, null, 3L, null, null, new DateTime(2013, 11, 1, 0, 0, 0), new Locale("en"));
+        medicationsDao.getTherapyTemplates("3", "2", TherapyTemplateModeEnum.INPATIENT, null, null, null, new Locale("en"));
     assertEquals(2L, (long)templatesDto.getUserTemplates().size());
     assertEquals(0L, (long)templatesDto.getOrganizationTemplates().size());
     assertEquals(1L, (long)templatesDto.getPatientTemplates().size());
@@ -420,93 +432,192 @@ public class HibernateMedicationsDaoTest
     assertEquals(TherapyTemplateTypeEnum.PATIENT, patientTemplate.getType());
     assertEquals("DDD", patientTemplate.getName());
     assertNull(patientTemplate.getUserId());
-    assertEquals(3L, (long)patientTemplate.getPatientId());
+    assertEquals("3", patientTemplate.getPatientId());
     assertEquals(1L, (long)patientTemplate.getTemplateElements().size());
     assertTrue(patientTemplate.getTemplateElements().get(0).isCompleted());
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testMedicationsTree.xml")
-  public void testLoadMedicationsTree1()
-  {
-    final List<MedicationSearchDto> tree = medicationsDao.loadMedicationsTree(new DateTime(2013, 11, 1, 0, 0, 0));
-    assertEquals(1, tree.size());
-    assertEquals(1L, (long)tree.get(0).getKey());
-    assertNull(tree.get(0).getParentId());
-    assertEquals("Paracetamol", tree.get(0).getTitle());
-    assertTrue(tree.get(0).isUnselectable());
-    final List<MedicationSearchDto> children1 = tree.get(0).getSublevelMedications();
-    assertEquals(2, children1.size());
-
-    assertEquals(12L, (long)children1.get(0).getKey());
-    assertEquals(1L, (long)children1.get(0).getParentId());
-    assertEquals("Paracetamol 250mg supp", children1.get(0).getTitle());
-    assertFalse(children1.get(0).isUnselectable());
-    final List<MedicationSearchDto> children12 = children1.get(0).getSublevelMedications();
-    assertEquals(1, children12.size());
-
-    assertEquals(121L, (long)children12.get(0).getKey());
-    assertEquals(12L, (long)children12.get(0).getParentId());
-    assertFalse(children12.get(0).isUnselectable());
-    assertEquals("Lekadol 250mg supp", children12.get(0).getTitle());
-
-    assertEquals(11L, (long)children1.get(1).getKey());
-    assertEquals(1L, (long)children1.get(1).getParentId());
-    assertEquals("Paracetamol 500mg tablet", children1.get(1).getTitle());
-    assertFalse(children1.get(1).isUnselectable());
-    final List<MedicationSearchDto> children11 = children1.get(1).getSublevelMedications();
-    assertEquals(2, children11.size());
-
-    assertEquals(111L, (long)children11.get(0).getKey());
-    assertEquals(11L, (long)children11.get(0).getParentId());
-    assertFalse(children11.get(0).isUnselectable());
-    assertEquals("Lekadol 500mg tablet", children11.get(0).getTitle());
-
-    assertEquals(112L, (long)children11.get(1).getKey());
-    assertEquals(11L, (long)children11.get(1).getParentId());
-    assertTrue(children11.get(1).isUnselectable());
-    assertEquals("Daleron 500mg tablet", children11.get(1).getTitle());
-  }
-
-  @Test
-  @DataSet("HibernateMedicationsDaoTest.testMedicationsTree.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testMedicationsTree.xml")
   public void testGetMedicationProducts1()
   {
+    final List<Long> routeIds = Collections.singletonList(1L);
+
     final List<MedicationDto> medicationProducts =
-        medicationsDao.getMedicationProducts(1L, "1", new DateTime(2013, 11, 1, 0, 0, 0));
+        medicationsDao.getMedicationChildProducts(1L, routeIds, new DateTime(2013, 11, 1, 0, 0, 0));
     assertEquals(2, medicationProducts.size());
     assertEquals(112L, (long)medicationProducts.get(0).getId());
     assertEquals(111L, (long)medicationProducts.get(1).getId());
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testMedicationsTree.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testMedicationsTree.xml")
   public void testGetMedicationProducts2()
   {
+    final List<Long> routeIds = Collections.singletonList(2L);
+
     final List<MedicationDto> medicationProducts =
-        medicationsDao.getMedicationProducts(1L, "2", new DateTime(2013, 11, 1, 0, 0, 0));
+        medicationsDao.getMedicationChildProducts(1L, routeIds, new DateTime(2013, 11, 1, 0, 0, 0));
     assertEquals(1, medicationProducts.size());
     assertEquals(121L, (long)medicationProducts.get(0).getId());
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testMedicationsTree.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testMedicationsTree.xml")
   public void testGetMedicationProducts3()
   {
+    final List<Long> routeIds = Collections.singletonList(1L);
+
     final List<MedicationDto> medicationProducts =
-        medicationsDao.getMedicationProducts(11L, "1", new DateTime(2013, 11, 1, 0, 0, 0));
+        medicationsDao.getMedicationChildProducts(11L, routeIds, new DateTime(2013, 11, 1, 0, 0, 0));
     assertEquals(2, medicationProducts.size());
     assertEquals(112L, (long)medicationProducts.get(0).getId());
     assertEquals(111L, (long)medicationProducts.get(1).getId());
   }
 
   @Test
-  @DataSet("HibernateMedicationsDaoTest.testMedicationsTree.xml")
+  @DatabaseSetup("HibernateMedicationsDaoTest.testMedicationsTree.xml")
   public void testGetMedicationProducts4()
   {
+    final List<Long> routeIds = Collections.singletonList(2L);
+
     final List<MedicationDto> medicationProducts =
-        medicationsDao.getMedicationProducts(12L, "2", new DateTime(2013, 11, 1, 0, 0, 0));
+        medicationsDao.getMedicationChildProducts(12L, routeIds, new DateTime(2013, 11, 1, 0, 0, 0));
     assertEquals(1, medicationProducts.size());
     assertEquals(121L, (long)medicationProducts.get(0).getId());
+  }
+
+  @Test
+  public void getMedicationIdsWithIngredientRule()
+  {
+    final Set<Long> medicationIdsWithIngredientRule = medicationsDao.getMedicationIdsWithIngredientRule(
+        MedicationRuleEnum.PARACETAMOL_MAX_DAILY_DOSE,
+        new DateTime(2013, 11, 1, 0, 0, 0));
+
+    assertTrue(medicationIdsWithIngredientRule.contains(1L));
+  }
+
+  @Test
+  public void getMedicationIdsWithIngredientId()
+  {
+    final List<Long> medicationIdsWithIngredientId = medicationsDao.getMedicationIdsWithIngredientId(
+        2L,
+        new DateTime(2013, 11, 1, 0, 0, 0));
+
+    assertTrue(medicationIdsWithIngredientId.contains(2L));
+  }
+
+  @Test
+  @DatabaseSetup("HibernateMedicationsDaoTest.testLoadMedicationsMap.xml")
+  public void testGetMedicationDataMap()
+  {
+    final Map<Long, MedicationHolderDto> medicationsMap =
+        medicationsDao.loadMedicationsMap(new DateTime(2016, 6, 12, 0, 0, 0));
+
+    assertEquals(1, medicationsMap.size());
+    final MedicationHolderDto dto = medicationsMap.get(1L);
+    assertEquals(1L, (long)dto.getId());
+    assertEquals("Lekadol", dto.getName());
+    assertEquals("Lek", dto.getShortName());
+    assertEquals("Paracetamol", dto.getGenericName());
+    assertEquals(MedicationLevelEnum.VTM, dto.getMedicationLevel());
+    assertEquals(1L, (long)dto.getVtmId());
+    assertNull(dto.getVmpId());
+    assertNull(dto.getAmpId());
+    assertEquals(1L, dto.getDoseFormDto().getId());
+    assertEquals("Pill", dto.getDoseFormDto().getName());
+    assertEquals("C1", dto.getAtcGroupCode());
+    assertEquals("ATC 1", dto.getAtcGroupName());
+    assertEquals(1L, dto.getDefiningIngredient().getId());
+    assertEquals("Paracetamol", dto.getDefiningIngredient().getIngredientName());
+    assertEquals(Double.valueOf(2.0), dto.getDefiningIngredient().getStrengthNumerator());
+    assertEquals("mg", dto.getDefiningIngredient().getStrengthNumeratorUnit());
+    assertEquals(MedicationTypeEnum.MEDICATION, dto.getMedicationType());
+    assertEquals(MedicationRuleEnum.PARACETAMOL_MAX_DAILY_DOSE, dto.getMedicationRules().iterator().next());
+    assertTrue(dto.getFormularyCareProviders().contains("CP1"));
+    assertTrue(dto.getFormularyCareProviders().contains("CP2"));
+    assertTrue(dto.isActive());
+    assertFalse(dto.isAntibiotic());
+    assertTrue(dto.isFormulary());
+    assertTrue(dto.isInpatientMedication());
+    assertTrue(dto.isOutpatientMedication());
+    assertFalse(dto.isSuggestSwitchToOral());
+    assertFalse(dto.isMentalHealthDrug());
+    assertTrue(dto.isOrderable());
+    assertFalse(dto.isReviewReminder());
+  }
+
+  @Test
+  @DatabaseSetup("HibernateMedicationsDaoTest.testLoadMedicationWarnings.xml")
+  public void testGetMedicationWarningsEmptyMedicationList()
+  {
+    final Collection<MedicationsWarningDto> customWarningsForMedication = medicationsDao.getCustomWarningsForMedication(
+        Collections.emptySet(),
+        DateTime.now());
+
+    assertTrue(customWarningsForMedication.isEmpty());
+  }
+
+  @Test
+  @DatabaseSetup("HibernateMedicationsDaoTest.testLoadMedicationWarnings.xml")
+  public void testGetMedicationWarningsEmptyResult()
+  {
+    final Collection<MedicationsWarningDto> customWarningsForMedication = medicationsDao.getCustomWarningsForMedication(
+        Collections.singleton(3L),
+        DateTime.now());
+
+    assertTrue(customWarningsForMedication.isEmpty());
+  }
+
+  @Test
+  @DatabaseSetup("HibernateMedicationsDaoTest.testLoadMedicationWarnings.xml")
+  public void testGetMedicationWarnings()
+  {
+    final Set<Long> medicationIds = new HashSet<>();
+    medicationIds.add(1L);
+    medicationIds.add(2L);
+
+    final Collection<MedicationsWarningDto> customWarningsForMedication = medicationsDao.getCustomWarningsForMedication(
+        medicationIds,
+        DateTime.now());
+
+    assertTrue(customWarningsForMedication.stream().anyMatch(
+        w ->
+        {
+          final List<NamedExternalDto> medications = w.getMedications();
+          return medications.stream().anyMatch(m -> "1".equals(m.getId())) && w.getSeverity() == WarningSeverity.SIGNIFICANT;
+        }));
+
+    assertTrue(customWarningsForMedication.stream().anyMatch(
+        w ->
+        {
+          final List<NamedExternalDto> medications = w.getMedications();
+          return medications.stream().anyMatch(m -> "2".equals(m.getId())) && w.getSeverity() == WarningSeverity.LOW;
+        }));
+  }
+
+  @Test
+  public void getMedicationIdsWithIngredientId2()
+  {
+    final List<Long> medicationIdsWithIngredientId = medicationsDao.getMedicationIdsWithIngredientId(
+        10L,
+        new DateTime(2013, 11, 1, 0, 0, 0));
+
+    assertTrue(medicationIdsWithIngredientId.isEmpty());
+  }
+
+  @Test
+  public void testGetMedicationIdForBarcodeExist()
+  {
+    final Long medicationId = medicationsDao.getMedicationIdForBarcode("111");
+    assertEquals(Long.valueOf(1L), medicationId);
+  }
+
+
+  @Test
+  public void testGetMedicationIdForBarcodeNotExist()
+  {
+    final Long medicationId = medicationsDao.getMedicationIdForBarcode("222");
+    assertNull(medicationId);
   }
 }

@@ -18,6 +18,7 @@
  */
 
 Class.define('app.views.medications.ordering.UniversalDosePane', 'tm.jquery.Container', {
+  cls: "universal-dose-pane",
 
   /** configs */
   view: null,
@@ -50,8 +51,9 @@ Class.define('app.views.medications.ordering.UniversalDosePane', 'tm.jquery.Cont
   _buildComponents: function()
   {
     var self = this;
-    this.numeratorField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, '0 0 0 5');
+    this.numeratorField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, 'numerator-field');
     this.numeratorUnitCombo = new tm.jquery.TypeaheadField({
+      cls: "numerator-unit-combo",
       minLength: 1,
       mode: 'advanced',
       width: 140,
@@ -65,7 +67,7 @@ Class.define('app.views.medications.ordering.UniversalDosePane', 'tm.jquery.Cont
       }
     });
     this.fractionLine = new tm.jquery.Container({cls: 'TextData', html: '/', padding: this.LABEL_PADDING});
-    this.denominatorField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, '0 0 0 5');
+    this.denominatorField = tm.views.medications.MedicationUtils.createNumberField('n2', 68, 'denominator-field');
     this.denominatorField.on(tm.jquery.ComponentEvent.EVENT_TYPE_CHANGE, function()
     {
       if (self.denominatorChangeEvent)
@@ -76,11 +78,12 @@ Class.define('app.views.medications.ordering.UniversalDosePane', 'tm.jquery.Cont
 
     if (this.denominatorAlwaysVolume)
     {
-      this.denominatorUnitLabel = new tm.jquery.Container({cls: 'TextData', html: 'ml', padding: this.LABEL_PADDING});
+      this.denominatorUnitLabel = new tm.jquery.Container({cls: 'TextData', html: 'mL', padding: this.LABEL_PADDING});
     }
     else
     {
       this.denominatorUnitCombo = new tm.jquery.TypeaheadField({
+        cls: "denominator-unit-combo",
         minLength: 1,
         mode: 'advanced',
         margin: "0 1 0 0",

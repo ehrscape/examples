@@ -41,8 +41,8 @@ public class MedicationRouteImpl extends AbstractEffectiveCatalogEntity implemen
   private String shortName;
   private MedicationRouteTypeEnum type;
   private Integer sortOrder;
-  private Set<MedicationRouteRelation> parentRelations = new HashSet<MedicationRouteRelation>();
-  private Set<MedicationRouteRelation> childRelations = new HashSet<MedicationRouteRelation>();
+  private Set<MedicationRouteRelation> parentRelations = new HashSet<>();
+  private Set<MedicationRouteRelation> childRelations = new HashSet<>();
 
   @Override
   public String getShortName()
@@ -113,6 +113,7 @@ public class MedicationRouteImpl extends AbstractEffectiveCatalogEntity implemen
     super.appendToString(tsb);
     tsb.append("shortName", shortName)
         .append("type", type)
+        .append("sortOrder", sortOrder)
         .append("parentRelations", parentRelations)
         .append("childRelations", childRelations);
   }

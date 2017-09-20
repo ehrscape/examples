@@ -1,0 +1,12 @@
+<div class="syringe-overview" data-tm-flex-layout="row" data-justify-content="flex-end"
+     data-align-items="flex-start" style="max-width: 120px;">
+        <button data-ng-if="!isRequestAtDispenseState(request)" data-ng-click="advanceRequestTasks(request)"
+                class="btn shadowless" data-tm-flex-item="0 0 auto"
+                data-ng-class="{'orange': isRequestAtStartState(request), 'green': isRequestAtConfirmState(request)}">
+            {{(isRequestAtStartState(request) ? 'start' : 'confirm') |
+            tmDictionaryTermFilter}}
+        </button>
+        <div data-ng-if="isRequestAtDispenseState(request)" data-tm-flex-item="0 0 auto">
+            <div class="confirmed-icon"></div>
+        </div>
+</div>

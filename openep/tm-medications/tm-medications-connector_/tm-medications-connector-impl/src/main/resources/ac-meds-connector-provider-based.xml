@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="medicationsConnector"
+            class="com.marand.thinkmed.medications.connector.impl.provider.ProviderBasedMedicationsConnector">
+        <property name="patientDemographicsProvider" ref="patientDemographicsProvider"/>
+        <property name="encounterProvider" ref="encounterProvider"/>
+        <property name="allergiesProvider" ref="allergiesProvider"/>
+        <property name="diseasesProvider" ref="diseasesProvider"/>
+        <property name="weightProvider" ref="weightProvider"/>
+        <property name="heightProvider" ref="heightProvider"/>
+        <property name="bloodGlucoseProvider" ref="bloodGlucoseProvider"/>
+    </bean>
+
+    <bean id="patientDemographicsProvider"
+            class="com.marand.thinkmed.medications.connector.impl.provider.fhir.FhirPatientDemographicsProvider">
+        <property name="fhirClient" ref="fhirClient"/>
+        <property name="fhirPatientIdSystem" value="${fhir.patient.id.system}"/>
+    </bean>
+
+    <bean id="encounterProvider" class="com.marand.thinkmed.medications.connector.impl.provider.fhir.FhirEncounterProvider">
+        <property name="fhirPatientIdSystem" value="${fhir.patient.id.system}"/>
+        <property name="fhirEncounterIdSystem" value="${fhir.encounter.id.system}"/>
+        <property name="fhirWardIdSystem" value="${fhir.ward.id.system}"/>
+        <property name="fhirWardLocationPhysicalType" value="${fhir.ward.location.physical.type}"/>
+        <property name="fhirLocationLocationPhysicalType" value="${fhir.location.location.physical.type}"/>
+        <property name="fhirDoctorParticipantType" value="${fhir.doctor.participant.type}"/>
+        <property name="fhirClient" ref="fhirClient"/>
+    </bean>
+
+    <bean id="fhirClient" class="com.marand.thinkmed.medications.connector.impl.provider.fhir.FhirClientFactory"
+            factory-method="createFhirClient">
+        <constructor-arg value="${fhir.server}"/>
+        <constructor-arg value="${fhir.auth.ticket.header.name}" />
+    </bean>
+
+    <bean id="allergiesProvider" class="com.marand.thinkmed.medications.connector.impl.provider.ehr.EhrAllergiesProvider">
+        <property name="ehrSession" ref="ehrSession"/>
+    </bean>
+
+    <bean id="diseasesProvider" class="com.marand.thinkmed.medications.connector.impl.provider.ehr.EhrDiseasesProvider">
+        <property name="ehrSession" ref="ehrSession"/>
+    </bean>
+
+    <bean id="heightProvider" class="com.marand.thinkmed.medications.connector.impl.provider.ehr.EhrHeightProvider">
+        <property name="ehrSession" ref="ehrSession"/>
+    </bean>
+
+    <bean id="weightProvider" class="com.marand.thinkmed.medications.connector.impl.provider.ehr.EhrWeightProvider">
+        <property name="ehrSession" ref="ehrSession"/>
+    </bean>
+
+    <bean id="bloodGlucoseProvider"
+            class="com.marand.thinkmed.medications.connector.impl.provider.ehr.EhrBloodGlucoseProvider">
+        <property name="ehrSession" ref="ehrSession"/>
+    </bean>
+
+</beans>

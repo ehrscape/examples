@@ -20,29 +20,40 @@
 package com.marand.thinkmed.medications.model.impl;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.Index;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import com.marand.maf.core.hibernate.entity.AbstractEffectiveEntity;
+import com.marand.thinkmed.medications.dto.BnfMaximumUnitType;
 import com.marand.thinkmed.medications.model.Medication;
 import com.marand.thinkmed.medications.model.MedicationRoute;
 import com.marand.thinkmed.medications.model.MedicationRouteLink;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import org.hibernate.annotations.ColumnDefault;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xfMedicationRouteLinkRoute", columnList = "route_id"),
+    @Index(name = "xfMedicationRouteLinkMed", columnList = "medication_id")})
 public class MedicationRouteLinkImpl extends AbstractEffectiveEntity implements MedicationRouteLink
 {
   private MedicationRoute route;
   private Medication medication;
   private boolean defaultRoute;
+  private boolean discretionary;
+  private Boolean unlicensed;
+  private Integer bnfMaximum;
+  private BnfMaximumUnitType bnfMaximumUnitType;
 
   @Override
   @ManyToOne(targetEntity = MedicationRouteImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedicationRouteLinkRoute")
   public MedicationRoute getRoute()
   {
     return route;
@@ -56,7 +67,6 @@ public class MedicationRouteLinkImpl extends AbstractEffectiveEntity implements 
 
   @Override
   @ManyToOne(targetEntity = MedicationImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedicationRouteLinkMed")
   public Medication getMedication()
   {
     return medication;
@@ -81,12 +91,67 @@ public class MedicationRouteLinkImpl extends AbstractEffectiveEntity implements 
   }
 
   @Override
+  @ColumnDefault("0")
+  public boolean isDiscretionary()
+  {
+    return discretionary;
+  }
+
+  @Override
+  public void setDiscretionary(final boolean discretionary)
+  {
+    this.discretionary = discretionary;
+  }
+
+  @Override
+  public Boolean getUnlicensed()
+  {
+    return unlicensed;
+  }
+
+  @Override
+  public void setUnlicensed(final Boolean unlicensed)
+  {
+    this.unlicensed = unlicensed;
+  }
+
+  @Override
+  public Integer getBnfMaximum()
+  {
+    return bnfMaximum;
+  }
+
+  @Override
+  public void setBnfMaximum(final Integer bnfMaximum)
+  {
+    this.bnfMaximum = bnfMaximum;
+  }
+
+  @Override
+  @Enumerated(EnumType.STRING)
+  public BnfMaximumUnitType getBnfMaximumUnitType()
+  {
+    return bnfMaximumUnitType;
+  }
+
+  @Override
+  public void setBnfMaximumUnitType(final BnfMaximumUnitType bnfMaximumUnitType)
+  {
+    this.bnfMaximumUnitType = bnfMaximumUnitType;
+  }
+
+  @Override
   protected void appendToString(final ToStringBuilder tsb)
   {
     super.appendToString(tsb);
 
     tsb.append("administrationRoute", route)
         .append("medication", medication)
+        .append("defaultRoute", defaultRoute)
+        .append("discretionary", discretionary)
+        .append("unlicensed", unlicensed)
+        .append("bnfMaximum", bnfMaximum)
+        .append("bnfMaximumUnitType", bnfMaximumUnitType)
     ;
   }
 }

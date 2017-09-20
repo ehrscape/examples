@@ -1,6 +1,6 @@
 package com.marand.thinkmed.fdb.dto;
 
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.JsonSerializable;
 
 /**
  * @author Mitja Lapajne
@@ -10,7 +10,6 @@ public class FdbTerminologyDto implements JsonSerializable
   private String Id;
   private String Name;
   private FdbNameValue Terminology;
-  private FdbNameValue ConceptType;
 
   public String getId()
   {
@@ -40,15 +39,5 @@ public class FdbTerminologyDto implements JsonSerializable
   public void setTerminology(final FdbNameValue terminology)
   {
     Terminology = terminology;
-  }
-
-  public FdbNameValue getConceptType()
-  {
-    return ConceptType;
-  }
-
-  public void setConceptType(final FdbNameValue conceptType)
-  {
-    ConceptType = conceptType;
   }
 }

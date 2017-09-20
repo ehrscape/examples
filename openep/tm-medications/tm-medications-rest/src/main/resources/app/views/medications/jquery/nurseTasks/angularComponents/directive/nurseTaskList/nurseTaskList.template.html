@@ -1,0 +1,21 @@
+<div class="nurse-task-list" data-tm-flex-layout="column"
+     data-justify-content="flex-start" data-align-items="stretch" data-item-flex="0 0 auto" style="overflow: auto;">
+
+    <div class="content" data-ng-show="maskData.nurseTaskList.data.length !== 0"
+         data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch"
+         data-tm-flex-item="1 1 auto" style="overflow-y: auto; overflow-x: hidden; border-top : 1px solid #D3D3D3;">
+
+        <nurse-task-list-row data-tm-flex-item="0 0 auto"
+                             data-ng-repeat="task in maskData.nurseTaskList.data"></nurse-task-list-row>
+
+    </div>
+    <div class="content-loader"
+         data-ng-show="maskData.nurseTaskList.data.length === 0"
+         data-tm-flex-layout="column"
+         data-justify-content="flex-start"
+         data-align-items="stretch"
+         data-tm-flex-item="1 1 auto"
+         style=" border-top : 1px solid #D3D3D3;">
+        <div style="margin-top: 25px;">{{::'no.data' | tmDictionaryTermFilter}}</div>
+    </div>
+</div>

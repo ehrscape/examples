@@ -1,0 +1,731 @@
+/**************************************/
+@charset "UTF-8";
+
+.v-pharmacist-tasks-view .TextLabel
+{
+  color: #848998;
+  line-height: 20px;
+}
+
+.v-pharmacist-tasks-view .TextLabel.MedicationLabel
+{
+  color: #7891D8;
+}
+
+/** Temporary until jQuery's framework loader mask implementation gets fixed */
+.v-pharmacist-tasks-view.app-views .loadmask {
+  z-index: 20000;
+}
+
+.v-pharmacist-tasks-view [data-icon]:before {
+  font-family: "data-table" !important;
+  content: attr(data-icon);
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.v-pharmacist-tasks-view [class^="icon-"]:before,
+.v-pharmacist-tasks-view [class*=" icon-"]:before {
+  font-family: "data-table" !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.v-pharmacist-tasks-view .icon-filter:before {
+  content: "b";
+}
+.v-pharmacist-tasks-view .icon-collapse:before {
+  content: "a";
+}
+.v-pharmacist-tasks-view .icon-expand:before {
+  content: "c";
+}
+.v-pharmacist-tasks-view .icon-close:before {
+  content: "d";
+}
+.v-pharmacist-tasks-view .icon-up:before {
+  content: "e";
+}
+.v-pharmacist-tasks-view .icon-down:before {
+  content: "f";
+}
+.v-pharmacist-tasks-view .icon-sort:before {
+  content: "g";
+}
+.v-pharmacist-tasks-view .icon-done:before {
+  content: "h";
+}
+.v-pharmacist-tasks-view .icon-done-all:before {
+  content: "i";
+}
+.v-pharmacist-tasks-view .icon-search:before {
+  content: "j";
+}
+.v-pharmacist-tasks-view .icon-pin:before {
+  content: "k";
+}
+.v-pharmacist-tasks-view .icon-add:before {
+  content: "m";
+}
+.v-pharmacist-tasks-view .icon-right:before {
+  content: "l";
+}
+.v-pharmacist-tasks-view .icon-left:before {
+  content: "n";
+}
+/**************************************/
+
+.v-pharmacist-tasks-view .headerSection .btn-group.group-sub-view {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.v-pharmacist-tasks-view .headerSection .btn-group.group-sub-view > button {
+  border: 1px solid #DCDCDC;
+}
+
+.v-pharmacist-tasks-view .headerSection .btn-group.group-sub-view > button:hover,
+.v-pharmacist-tasks-view .headerSection .btn-group.group-sub-view > button:active,
+.v-pharmacist-tasks-view .headerSection .btn-group.group-sub-view > .selected {
+  border: 1px solid #6C6B6C;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.v-pharmacist-tasks-view .icon-supply  {
+  background-image: url('${context.path}/resources/images/icons/supply_24.png') !important;
+}
+
+.v-pharmacist-tasks-view .icon-supply.selected, .v-pharmacist-tasks-view .icon-supply:hover,
+.v-pharmacist-tasks-view .icon-supply:focus, .v-pharmacist-tasks-view .icon-supply:active {
+  background-image: url('${context.path}/resources/images/icons/supply_on_24.png') !important;
+  background-color: #6C6B6C !important;
+}
+
+.v-pharmacist-tasks-view .icon-dispense {
+  background-image: url('${context.path}/resources/images/icons/dispense_24.png') !important;
+  border-radius: 0 0 0 0;
+}
+
+.v-pharmacist-tasks-view .icon-dispense.selected, .v-pharmacist-tasks-view .icon-dispense:hover,
+.v-pharmacist-tasks-view .icon-dispense:focus, .v-pharmacist-tasks-view .icon-dispense:active {
+  background-image: url('${context.path}/resources/images/icons/dispense_on_24.png') !important;
+  background-color: #6C6B6C !important;
+}
+
+.v-pharmacist-tasks-view .icon-pharmacist {
+  background-image: url('${context.path}/resources/images/icons/mortar_24.png') !important;
+  border-radius: 0 0 0 0;
+}
+
+.v-pharmacist-tasks-view .icon-pharmacist.selected, .v-pharmacist-tasks-view .icon-pharmacist:hover,
+.v-pharmacist-tasks-view .icon-pharmacist:focus, .v-pharmacist-tasks-view .icon-pharmacist:active {
+  background-image: url('${context.path}/resources/images/icons/mortar_on_24.png') !important;
+  background-color: #6C6B6C !important;
+}
+
+.v-pharmacist-tasks-view .icon-perfusion-syringes {
+  background-image: url('${context.path}/resources/images/icons/catheter_24.png') !important;
+}
+
+.v-pharmacist-tasks-view .icon-perfusion-syringes.selected, .v-pharmacist-tasks-view .icon-perfusion-syringes:hover,
+.v-pharmacist-tasks-view .icon-perfusion-syringes:focus, .v-pharmacist-tasks-view .icon-perfusion-syringes:active {
+  background-image: url('${context.path}/resources/images/icons/catheter_white_24.png') !important;
+  background-color: #6C6B6C !important;
+}
+
+
+.v-pharmacist-tasks-view .icon-confirm_and_extend {
+  background-image: url('${context.path}/resources/images/icons/confirmAndExtend_24.png') !important;
+}
+
+.v-pharmacist-tasks-view .icon-confirm {
+  background-image: url('${context.path}/resources/images/icons/checkbox_Checked_24.png') !important;
+}
+
+.v-pharmacist-tasks-view .icon-arrow-left-24 {
+  background-image: url('${context.path}/resources/images/icons/arrowLeft_24.png');
+}
+
+.v-pharmacist-tasks-view .icon-arrow-right-24 {
+  background-image: url('${context.path}/resources/images/icons/arrowRight_24.png');
+}
+
+/* From TherapyView CSS, need to refactor and put in a common place */
+.v-pharmacist-tasks-view .icon_pills,
+.v-pharmacist-tasks-view .icon_infusion,
+.v-pharmacist-tasks-view .icon_injection,
+.v-pharmacist-tasks-view .icon_inhalation,
+.v-pharmacist-tasks-view .icon_bolus,
+.v-pharmacist-tasks-view .icon_continuous_infusion,
+.v-pharmacist-tasks-view .icon_baseline_infusion,
+.v-pharmacist-tasks-view .icon_other_medication
+{
+  background-size: 100%;
+  width: 48px;
+  height: 48px;
+}
+
+.v-pharmacist-tasks-view .icon_pills {
+  background-image: url('${context.path}/resources/images/icons/therapyPill_48.png');
+}
+
+.v-pharmacist-tasks-view .icon_infusion {
+  background-image: url('${context.path}/resources/images/icons/therapyInfusion_48.png');
+}
+
+.v-pharmacist-tasks-view .icon_injection {
+  background-image: url('${context.path}/resources/images/icons/therapyInjection_48.png');
+}
+
+.v-therapy-view .icon_inhalation {
+  background-image: url('${context.path}/resources/images/icons/inhalation_48.png');
+}
+
+.v-therapy-view .icon_bolus {
+  background-image: url('${context.path}/resources/images/icons/bolus_48.png');
+}
+
+.v-pharmacist-tasks-view .icon_continuous_infusion {
+  background-image: url('${context.path}/resources/images/icons/therapyInfusionPermanent_48.png');
+}
+
+.v-pharmacist-tasks-view .icon_baseline_infusion {
+  background-image: url('${context.path}/resources/images/icons/therapyInfusionOM_48.png');
+}
+
+.v-pharmacist-tasks-view .icon_other_medication {
+  background-image: url('${context.path}/resources/images/icons/therapy_48.png');
+}
+/* end of therapy icons */
+
+.v-pharmacist-tasks-view .supply_action_btn {
+  background-position: center center;
+  padding: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-height: 24px;
+  min-width: 24px;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.v-pharmacist-tasks-view .icon-more-dropdown {
+  background-image: url('${context.path}/resources/images/icons/more_16.png') !important;
+  background-position: center center;
+  padding: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-height: 16px;
+  min-width: 16px;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+
+.v-pharmacist-tasks-view .icon-print {
+  background-image: url('${context.path}/resources/images/icons/print_24.png') !important;
+  background-position: center center;
+  padding: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.v-pharmacist-tasks-view .icon-print-finish {
+  background-image: url('${context.path}/resources/images/icons/checkbox_Checked_24.png ') !important;
+  background-position: center center;
+  padding: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.v-pharmacist-tasks-view .textColorYellow
+{
+  color: #FDA61E;
+}
+
+.v-pharmacist-tasks-view .textColorGreen
+{
+  color: #01D54B;
+}
+
+.v-pharmacist-tasks-view .textColorRed
+{
+  color: #BE1E2D;
+}
+
+.v-pharmacist-tasks-view .grid_chooser_btn {
+  width: 34px;
+  height: 34px;
+  float: left;
+  border: 0;
+  /*min-width: 36px !important;*/
+  /*min-height: 35px !important;*/
+
+  background-repeat: no-repeat;
+}
+
+.v-pharmacist-tasks-view .resupply-form-radio-button {
+  display: inline-block;
+  margin-top: -1px !important;
+}
+
+.v-pharmacist-tasks-view .display-inline {
+  display: inline-block;
+}
+
+.v-pharmacist-tasks-view .text-bold {
+  font-weight: 700;
+}
+
+.v-pharmacist-tasks-view .text-data {
+  font-family: 'Segoe UI', 'Arial';
+  font-weight: normal;
+  font-size: 14px;
+  color: #61646D;
+  line-height: 18px;
+}
+
+.v-pharmacist-tasks-view .text-grey {
+  color: #999999;
+}
+
+/*****************************************************/
+
+.v-pharmacist-tasks-view .headerSection {
+  height: 40px;
+  margin-top: 5px;
+  margin-left: 15px;
+}
+.v-pharmacist-tasks-view .supplyController {
+  height: 100%;
+  width: 100%;
+  right: 0;
+  top: 0;
+}
+
+/*****************************************************/
+.v-pharmacist-tasks-view .fieldlist {
+  margin: 0 0 -1em;
+  padding: 0;
+}
+
+.v-pharmacist-tasks-view .fieldlist li {
+  list-style: none;
+  padding-bottom: 1em;
+}
+/*****************************************************/
+
+.v-pharmacist-tasks-view .review-column > a {
+  text-align: center;
+}
+
+
+.verticalAlignCenter {
+  text-align: center;
+}
+
+.v-pharmacist-tasks-view textarea:focus, .v-pharmacist-tasks-view input[type="text"]:focus,
+.v-pharmacist-tasks-view input[type="password"]:focus, .v-pharmacist-tasks-view input[type="datetime"]:focus,
+.v-pharmacist-tasks-view input[type="datetime-local"]:focus, .v-pharmacist-tasks-view input[type="date"]:focus,
+.v-pharmacist-tasks-view input[type="month"]:focus, .v-pharmacist-tasks-view input[type="time"]:focus,
+.v-pharmacist-tasks-view input[type="week"]:focus, .v-pharmacist-tasks-view input[type="number"]:focus,
+.v-pharmacist-tasks-view input[type="email"]:focus, .v-pharmacist-tasks-view input[type="url"]:focus,
+.v-pharmacist-tasks-view input[type="search"]:focus, .v-pharmacist-tasks-view input[type="tel"]:focus,
+.v-pharmacist-tasks-view input[type="color"]:focus, .v-pharmacist-tasks-view .uneditable-input:focus {
+  border: 1px transparent;
+  outline: 0;
+  outline: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.v-pharmacist-tasks-view .borderless {
+  border-radius: 0;
+  border: none;
+  outline: 0;
+}
+
+.v-pharmacist-tasks-view .shadowless {
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+/************************/
+.v-pharmacist-tasks-view .therapyTextInput  {
+  margin-bottom: 0 !important;
+  width: 100px;
+  border-radius: 0 !important;
+
+}
+
+.v-pharmacist-tasks-view .therapyInput, .v-pharmacist-tasks-view .therapyInput:focus {
+  box-shadow: none !important;
+  border-top: 0 !important;
+  border-left: 0 !important;
+  border-bottom: 1px solid #ccc !important;
+  border-right: 0 !important;
+}
+
+
+.v-pharmacist-tasks-view .dt .dt-header .dt-header-cell {
+  color: #577DA0 !important;
+  background: white;
+  text-transform: uppercase;
+  line-height: 18px;
+  font-family: 'Segoe UI', 'Arial';
+  font-weight: normal;
+  font-size: 14px;
+}
+
+.v-pharmacist-tasks-view .dt-row {
+  cursor: pointer;
+}
+
+.v-pharmacist-tasks-view .dt .dt-cell,
+.v-pharmacist-tasks-view .dt .dt-header-cell {
+  overflow: visible;
+}
+
+.v-pharmacist-tasks-view .popupHeader {
+  font-weight: bold;
+  color: #61646D;
+  height: 30px;
+  border: none;
+  background: -webkit-linear-gradient(#D5EFFF, #D1EAF8);
+  background: -o-linear-gradient(#D5EFFF, #D1EAF8);
+  background: -moz-linear-gradient(#D5EFFF, #D1EAF8);
+  background: linear-gradient(#D5EFFF, #D1EAF8);
+}
+
+.v-pharmacist-tasks-view .inline {
+  display: inline;
+}
+
+.v-pharmacist-tasks-view .headerTitleText {
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 18px;
+  color: #63818D;
+  margin: 6px 0 0 10px;
+  display: inline-block;
+}
+.v-pharmacist-tasks-view .pointer {
+  cursor: pointer;
+}
+.v-pharmacist-tasks-view .inline {
+  display: inline;
+}
+.v-pharmacist-tasks-view .popupHeaderCloseBtn {
+  padding: 3px;
+}
+.v-pharmacist-tasks-view .popupContent {
+  margin: 10px 10px 20px 10px;
+}
+
+.v-pharmacist-tasks-view .moreDropDownContextMenu {
+  -webkit-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.35);
+  -moz-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.35);
+  position: absolute;
+  background: white;
+  z-index: 1;
+  height: 66px;
+}
+
+.v-pharmacist-tasks-view .dropdown.angular {
+  position: absolute;
+}
+
+.v-pharmacist-tasks-view .dropdown.angular .dropdown-menu {
+  min-width: initial;
+}
+
+.v-pharmacist-tasks-view .moreDropDownContextMenu > ul {
+  margin: 0 0 0 10px;
+}
+
+.v-pharmacist-tasks-view .moreDropDownContextMenu > ul > li {
+  list-style: none;
+  padding-top: 5px;
+  height: 33px;
+}
+
+
+
+.v-pharmacist-tasks-view .modalWindow {
+  -webkit-box-shadow: 0 2px 5px 0 rgba(0,0,0,0.35);
+  -moz-box-shadow: 0 2px 5px 0 rgba(0,0,0,0.35);
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.35);
+  margin-right: 5px;
+  position: absolute;
+  background: white;
+  z-index: 1;
+  height:210px;
+  width: 300px;
+  top: 30px;
+  left: 100px;
+}
+
+.v-pharmacist-tasks-view .dt.material {
+  height: 100%;
+}
+
+.v-pharmacist-tasks-view .dt .dt-body {
+  height: 100%;
+  width: 100% !important;
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.v-pharmacist-tasks-view .dt .dt-header {
+  width: 100% !important;
+}
+
+.v-pharmacist-tasks-view dt .dt-header .dt-header-cell.sortable .dt-header-cell-label {
+  color: #577DA0 !important;
+}
+
+.v-pharmacist-tasks-view .app-views-toolbar {
+  border-bottom: 0px;
+}
+
+.v-pharmacist-tasks-view .btn.icon-more-dropdown:active {
+  box-shadow: none;
+}
+
+/* Perfusion Syringes */
+.v-pharmacist-tasks-view .perfusion-syringes-list .content {
+  -webkit-overflow-scrolling: touch;
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .header {
+  border-top: 1px solid #D3D3D3;
+  min-height: 30px;
+  -webkit-transition: padding-right 0.5s; /* Safari 3.1 to 6.0 */
+  transition: padding-right 0.25s;
+
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .header,
+.v-pharmacist-tasks-view .perfusion-syringes-list .content .request {
+  border-bottom: 1px solid #D3D3D3;
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .row {
+  padding-left: 10px;
+  border-left: 5px solid transparent; /* match for urgent border */
+  margin: 0; /* bootstrap collide override */
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .content .row.urgent {
+  border-left: 5px solid rgb(255, 0, 0);
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .content .row .task.first {
+  border-top: 1px solid #D3D3D3;
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .content .row.first .task.first {
+  border-top: 0;
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .content .row.urgent.last {
+  border-bottom: 1px solid #D3D3D3;;
+}
+
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .column {
+  box-sizing: border-box;
+  /*border-right: 1px solid #D3D3D3; for testing purposes */
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .column.status,
+.v-pharmacist-tasks-view .perfusion-syringes-list .column.last {
+  border-right: none;
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .column-content.urgent .TextData,
+.v-pharmacist-tasks-view .perfusion-syringes-list .column-content.urgent .TextDataBold {
+  color: rgb(255, 0, 0);
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .column-content {
+  margin: 5px;
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .patient-banner {
+  cursor: pointer;
+}
+
+.v-pharmacist-tasks-view .syringe-progress {
+  min-width: 35px;
+}
+
+.v-pharmacist-tasks-view .syringe-progress .progress-line,
+.v-pharmacist-tasks-view .syringe-progress .background-line {
+  border-radius: 5px 5px;
+  height: 6px;
+}
+
+.v-pharmacist-tasks-view .syringe-progress .background-line {
+  background: #EFEFF4;
+  margin: 5px 15px 5px 0px;
+  width: 100%;
+  position: relative;
+}
+
+.v-pharmacist-tasks-view .syringe-progress.in-progress .progress-line {
+  position: absolute;
+  top: 0;
+}
+
+.v-pharmacist-tasks-view .syringe-progress.in-progress .progress-line {
+  background: #F59700;
+  width: 50%;
+}
+
+.v-pharmacist-tasks-view .syringe-progress.completed .progress-line {
+  background: #40C256;
+  width: 100%;
+}
+
+.v-pharmacist-tasks-view .syringe-progress .icon-syringe-progress {
+  width: 100% !important;
+  height: 16px !important;
+  position: absolute;
+  top: -5px;
+  background-image: url('${context.path}/resources/images/icons/catheter_yellow_16.png');
+  background-position: left !important;
+}
+
+.v-pharmacist-tasks-view .syringe-progress.in-progress .icon-syringe-progress {
+  background-image: url('${context.path}/resources/images/icons/catheter_orange_16.png');
+  background-position: center !important;
+}
+
+.v-pharmacist-tasks-view .syringe-progress.completed .icon-syringe-progress {
+  background-image: url('${context.path}/resources/images/icons/catheter_green_16.png');
+  background-position: right !important;
+}
+
+.v-pharmacist-tasks-view .syringe-overview {
+  padding-right: 15px;
+}
+
+.v-pharmacist-tasks-view .syringe-overview .confirmed-icon {
+  background: url('${context.path}/resources/images/icons/finish_status_16.png') no-repeat center center;
+  width: 16px;
+  height: 32px;
+}
+
+.v-pharmacist-tasks-view .btn.green,
+.v-pharmacist-tasks-view .btn.orange {
+  color: #ffffff;
+  background-image: none;
+  text-shadow: none;
+  border: 0;
+}
+
+.v-pharmacist-tasks-view .btn.green {
+  background-color: #40C256;
+  border-bottom: 1px solid #349C65;
+}
+
+.v-pharmacist-tasks-view .btn.orange {
+  background-color: #F59700;
+  border-bottom: 1px solid #CD7C01;
+}
+
+.v-pharmacist-tasks-view .syringe-list-date-controls {
+  padding-right: 24px;
+}
+
+.v-pharmacist-tasks-view .perfusion-syringes-list .therapy-container > .displayInline {
+  width: auto !important;
+}
+
+/* open / close drop down menu*/
+.v-pharmacist-tasks-view .downArrow {
+  margin: 8px 0px 8px 8px;
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: top;
+  border-top: 4px solid #000;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
+}
+
+.v-pharmacist-tasks-view .selectorBtn {
+  margin-right: 10px;
+  padding: 5px;
+  cursor: pointer;
+  float: right;
+}
+
+.v-pharmacist-tasks-view .selectorBtn:hover {
+  background-color: #e6e6e6;
+}
+
+.v-pharmacist-tasks-view .filterBody {
+  margin-right: 10px;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.35);
+  position: absolute;
+  background: white;
+  z-index: 1;
+  height: 66px;
+  width: 120px;
+  margin-top: 10px;
+  position: absolute;
+  z-index: 30;
+  background: white;
+  direction: ltr;
+}
+
+.v-pharmacist-tasks-view .hideImg {
+  visibility: hidden
+}
+
+.v-pharmacist-tasks-view .open-close-filter-selected {
+  height: 24px;
+  width: 24px;
+  border: 0px;
+  content: url('${context.path}/resources/images/icons/checkbox_Checked_24.png');
+}

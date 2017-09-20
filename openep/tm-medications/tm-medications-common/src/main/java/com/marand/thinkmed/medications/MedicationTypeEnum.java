@@ -31,10 +31,11 @@ public enum MedicationTypeEnum
   MEDICATION,
   SUPPLEMENT,
   SOLUTION,
+  OXYGEN,
 
   //other
   ANTIBIOTIC;
 
-  public static final Set<MedicationTypeEnum> MAIN_TYPES = EnumSet.of(MEDICATION, SUPPLEMENT, SOLUTION);
+  public static final Set<MedicationTypeEnum> MAIN_TYPES = EnumSet.of(MEDICATION, SUPPLEMENT, SOLUTION, OXYGEN);
   public static final Set<MedicationTypeEnum> MEDS_AND_SUPPS = EnumSet.of(MEDICATION, SUPPLEMENT);
 }

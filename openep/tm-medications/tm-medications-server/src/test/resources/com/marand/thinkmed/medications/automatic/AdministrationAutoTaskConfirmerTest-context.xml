@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <import resource="classpath:ac-hibernate-packages-none.xml"/>
+    <import resource="classpath:/com/marand/maf_test/tc-default.xml"/>
+
+    <bean id="administrationAutoTaskConfirmer" class="com.marand.thinkmed.medications.automatic.AdministrationAutoTaskConfirmerImpl">
+        <property name="medicationsOpenEhrDao" ref="medicationsOpenEhrDao"/>
+        <property name="medicationsTasksProvider" ref="medicationsTasksProvider"/>
+        <property name="administrationAutoTaskConfirmerHandler" ref="administrationAutoTaskConfirmerHandler"/>
+        <property name="therapyCacheInvalidator" ref="therapyCacheInvalidator"/>
+        <property name="username" value="${runas.username}"/>
+        <property name="password" value="${runas.password}"/>
+    </bean>
+
+    <bean id="ehrSessionManager" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkehr.session.EhrSessionManager"/>
+    </bean>
+    <bean id="ehrSession" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkehr.session.EhrSession"/>
+    </bean>
+    <bean id="ehrQueryService" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkehr.query.service.QueryService"/>
+    </bean>
+
+    <bean id="medicationsBo" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.business.MedicationsBo"/>
+    </bean>
+
+    <bean id="medicationsOpenEhrDao" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.dao.openehr.MedicationsOpenEhrDao"/>
+    </bean>
+
+    <bean id="administrationAutoTaskConfirmerHandler" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.automatic.AdministrationAutoTaskConfirmerHandler"/>
+    </bean>
+
+    <bean id="therapyCacheInvalidator" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.therapy.TherapyCacheInvalidator"/>
+    </bean>
+
+    <bean id="medicationsTasksProvider" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.task.MedicationsTasksProvider"/>
+    </bean>
+</beans>

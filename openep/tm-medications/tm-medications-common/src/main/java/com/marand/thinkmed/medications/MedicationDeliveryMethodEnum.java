@@ -26,7 +26,13 @@ import org.openehr.jaxb.rm.DvText;
  */
 public enum MedicationDeliveryMethodEnum
 {
+  RECURRING_CONTINUOUS_INFUSION,
   CONTINUOUS_INFUSION;
+
+  public static boolean isContinuousInfusion(final DvText deliveryMethod)
+  {
+    return RECURRING_CONTINUOUS_INFUSION.isEqualTo(deliveryMethod) || CONTINUOUS_INFUSION.isEqualTo(deliveryMethod);
+  }
 
   public static String getFullString(final MedicationDeliveryMethodEnum timingEnum)
   {

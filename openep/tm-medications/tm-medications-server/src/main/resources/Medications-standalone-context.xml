@@ -18,16 +18,15 @@
   ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
-        xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util"
-        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:util="http://www.springframework.org/schema/util" xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-    <context:property-placeholder
-        location="
+    <context:property-placeholder location="
         classpath:medications-standalone.properties,
-        classpath:medications.properties,
-        classpath:password.properties"
+        classpath:medications.properties"
         ignore-unresolvable="true" file-encoding="UTF-8"/>
 
     <import resource="classpath:/ac-service-request.xml"/>
@@ -37,7 +36,6 @@
     <import resource="classpath:/ac-hibernate-audit.xml"/>
     <import resource="classpath:/ac-hibernate-events.xml"/>
     <import resource="classpath:/ac-entity-context.xml"/>
-    <import resource="classpath:/ac-entity-auditing.xml"/>
     <import resource="classpath:/ac-security.xml"/>
     <import resource="classpath:/ac-default-user-details.xml"/>
     <import resource="classpath:/ac-preferences-server.xml"/>
@@ -50,9 +48,10 @@
     <import resource="classpath:/ac-tagging-context.xml"/>
     <import resource="classpath:/ac-jetty.xml"/>
     <import resource="classpath:/ac-jetty-connector.xml"/>
+    <import resource="classpath:/ValueHolder-context.xml"/>
 
 
-    <bean id="remoteService" class="com.marand.maf.core.jboss.remoting.JBossRemotingProxyFactoryBean" abstract="true">
+    <bean id="remoteService" class="com.marand.maf.core.jboss.remoting.JBossRemotingProxyFactory" abstract="true">
         <property name="config">
             <map>
                 <entry key="timeout" value="${service.invocation.timeout}"/>
@@ -65,9 +64,10 @@
         <value>com.marand.maf.core.context.model</value>
         <value>com.marand.maf.core.daterule.model.impl</value>
         <value>com.marand.maf.core.hibernate.entity</value>
+        <value>com.marand.maf.core.valueholder</value>
         <value>com.marand.maf.core.prefs.model</value>
         <value>com.marand.maf.core.security.auditing.model</value>
-        <value>com.marand.maf.core.security.auditing.xmltype.model</value>
+        <value>com.marand.maf.core.security.auditing.xmltype.model.${db.type:oracle}</value>
         <value>com.marand.maf.core.security.model</value>
         <value>com.marand.maf.core.activity.model</value>
         <value>com.marand.maf.core.server.mapping.model.impl</value>
@@ -76,7 +76,7 @@
 
 
     <!-- Swing REST -->
-    <bean class="com.marand.maf.spring.web.jetty.SpringWebAppProvider">
+    <bean id="medsWebAppProvider" class="com.marand.maf.spring.web.jetty.SpringWebAppProvider">
         <property name="monitoredDirSpringResource" value="${jetty.monitored.location}"/>
         <property name="extractWars" value="true"/>
         <property name="scanInterval" value="0"/>
@@ -85,6 +85,11 @@
         <property name="tempDir" value="${user.home}/tm-jetty"/>
     </bean>
 
+    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetObject" ref="deploymentManager" />
+        <property name="targetMethod" value="addAppProvider" />
+        <property name="arguments" ref="medsWebAppProvider" />
+    </bean>
 
     <!-- Disable dependency to automatic DB schema generation -->
     <bean id="databaseSchemaVersionManager" class="java.lang.String"/>
@@ -95,25 +100,15 @@
         <property name="serviceInterface" value="com.marand.ispek.bpm.service.BpmService"/>
         <property name="locatorURI" value="${service.url.bpm}"/>
         <property name="remoteInvocationFactory" ref="bpmServerSecuredRemoteInvocationFactory"/>
-        <property name="advices">
-            <list merge="true">
-                <bean class="com.marand.maf.core.jboss.remoting.aop.RetryInvocationInterceptor"/>
-            </list>
-        </property>
     </bean>
 
     <bean id="taskService" parent="remoteService">
         <property name="serviceInterface" value="com.marand.ispek.bpm.service.TaskService"/>
         <property name="locatorURI" value="${service.url.bpm}"/>
         <property name="remoteInvocationFactory" ref="bpmServerSecuredRemoteInvocationFactory"/>
-        <property name="advices">
-            <list merge="true">
-                <bean class="com.marand.maf.core.jboss.remoting.aop.RetryInvocationInterceptor"/>
-            </list>
-        </property>
     </bean>
 
-    <bean id="bpmServerSecuredRemoteInvocationFactory" class="com.marand.maf.core.security.remoting.jboss.RunAsSecuredRemoteInvocationFactory">
+    <bean id="bpmServerSecuredRemoteInvocationFactory" class="com.marand.maf.core.security.remoting.jboss.ServerToServerInvocationFactory">
         <property name="username" value="${bpm.runas.username}"/>
         <property name="password" value="${bpm.runas.password}"/>
     </bean>

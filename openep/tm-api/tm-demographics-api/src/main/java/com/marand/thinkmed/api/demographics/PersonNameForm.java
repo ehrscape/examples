@@ -29,14 +29,7 @@ import org.apache.commons.lang3.text.StrBuilder;
 public enum PersonNameForm
 {
   NAME_SURNAME(
-      new NameCalculator()
-      {
-        @Override
-        public String calculateName(final String firstName, final String lastName, final String prefix, final String suffix)
-        {
-          return combineName(firstName, lastName, " ");
-        }
-      }),
+      (firstName, lastName, prefix, suffix) -> combineName(firstName, lastName, " ")),
   PREFIX_NAME_SURNAME_SUFFIX(
       new NameCalculator()
       {
@@ -50,23 +43,9 @@ public enum PersonNameForm
         }
       }),
   SURNAME_NAME(
-      new NameCalculator()
-      {
-        @Override
-        public String calculateName(final String firstName, final String lastName, final String prefix, final String suffix)
-        {
-          return combineName(lastName, firstName, " ");
-        }
-      }),
+      (firstName, lastName, prefix, suffix) -> combineName(lastName, firstName, " ")),
   SURNAME_COMMA_NAME(
-      new NameCalculator()
-      {
-        @Override
-        public String calculateName(final String firstName, final String lastName, final String prefix, final String suffix)
-        {
-          return combineName(lastName, firstName, ", ");
-        }
-      });
+      (firstName, lastName, prefix, suffix) -> combineName(lastName, firstName, ", "));
 
   private final NameCalculator calculator;
 
@@ -106,7 +85,7 @@ public enum PersonNameForm
     }
     if (StringUtils.isNotBlank(name2))
     {
-      if (builder.length() > 0)
+      if (!builder.isEmpty())
       {
         builder.append(delimiter);
       }

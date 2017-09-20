@@ -22,14 +22,14 @@ package com.marand.thinkmed.medications.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.marand.maf.core.data.object.DataObject;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * User: MihaA
  */
 
-public class DocumentationTherapiesDto extends DataObject
+public class DocumentationTherapiesDto extends DataTransferObject
 {
   private List<String> therapies = new ArrayList<>();
   private List<String> dischargeTherapies = new ArrayList<>();

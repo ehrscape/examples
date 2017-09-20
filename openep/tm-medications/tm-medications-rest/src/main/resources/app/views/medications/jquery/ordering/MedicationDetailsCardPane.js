@@ -18,190 +18,161 @@
  */
 
 Class.define('app.views.medications.therapy.MedicationDetailsCardPane', 'app.views.common.containers.AppBodyContentContainer', {
+  cls: 'medication-details-card',
   scrollable: 'both',
   /** configs */
   view: null,
-  style: "min-width:150px;max-width:450px;max-height:500px; padding:10px;",
+  medicationData: null,
+  selectedRoute: null,
   /** privates: components */
 
   /** constructor */
   Constructor: function(config)
   {
     this.callSuper(config);
+    if (this.medicationData)
+    {
+      this._buildGui(this.medicationData, this.selectedRoute);
+    }
   },
 
   /** private methods */
-  _createHtmlTemplate: function(medicationData)
+  _buildGui: function(medicationData, selectedRoutes)
   {
-    var html = '';
-    html += '<div class="medication-details-card">';
-    html += '<table border=0 cellpadding=0 cellspacing="0" width=100%>';
-    html += '<tr>';
+    this.setLayout(tm.jquery.HFlexboxLayout.create("flex-start", "flex-start", 0));
 
-    // left
-    html += '<td valign=top>';
-    html += '<div class="' + this._getMedicationIcon(medicationData.doseForm) + '"></div>';
-    html += '</td>';
-    //end left
+    var iconContainer = new tm.jquery.Container({
+      flex: tm.jquery.flexbox.item.Flex.create(0, 0, "auto"),
+      width: 48,
+      height: 48,
+      cls: this._getMedicationIcon(medicationData.doseForm)
+    });
 
-    // right
-    html += '<td>';
-    html += '<div class="detail">';
+    var contentContainer = new tm.jquery.Container({
+      layout: tm.jquery.VFlexboxLayout.create("flex-start", "stretch", 0),
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto"),
+      cls: 'detail'
+    });
+
+    var medicationDetailInfo = '';
     //medication
     if (medicationData.medication.genericName)
     {
-      html += '<p class="TextHeading2">' + medicationData.medication.genericName + '</p>';
-      html += '<p class="TextData">(' + medicationData.medication.name + ')</p>';
+      medicationDetailInfo += '<p class="TextDataBold">' + medicationData.medication.genericName + '</p>';
+      medicationDetailInfo += '<p class="TextData">(' + medicationData.medication.name + ')</p>';
     }
     else
     {
-      html += '<p class="TextHeading2">' + medicationData.medication.name + '</p>';
+      medicationDetailInfo += '<p class="TextDataBold">' + medicationData.medication.name + '</p>';
     }
-    //dose form
-    html += '<span class="TextLabel">' + this.view.getDictionary("dose.form") + ' </span>';
-    html += '<span class="TextDataBold">' + medicationData.doseForm.name + ' </span>';
-    html += '<br>';
-    //medication ingredients
-    if (medicationData.medicationIngredients.length > 0)
+    if (medicationData.doseForm)
     {
-      html += '<table border=0 cellpadding=0 cellspacing="0" width=100%>';
-      html += '<tr>';
-      html += '<td>';
-      html += '<span class="TextLabel">' + this.view.getDictionary("strength") + ' </span>';
-      html += '</td>';
-      for (var i = 0; i < medicationData.medicationIngredients.length; i++)
-      {
-        var strengthString = tm.views.medications.MedicationUtils.getStrengthDisplayString(medicationData.medicationIngredients[i], true);
-        if (i > 0)
-        {
-          html += '<tr>';
-          html += '<td>';
-          html += '</td>';
-        }
-        html += '<td class="strength-label">';
-        html += '<span class="TextDataBold">' + strengthString + ' </span>';
-        html += '</td>';
-        html += '<td class="ingredient-label">';
-        html += '<span class="TextDataBold">' + ' (' + medicationData.medicationIngredients[i].ingredient.name + ')' + ' </span>';
-        html += '</td>';
-        html += '</tr>';
-      }
-      if (medicationData.descriptiveIngredient)
-      {
-        html += '<tr>';
-        html += '<td>';
-        html += '<span class="TextLabel">' + this.view.getDictionary("together") + ' </span>';
-        html += '</td>';
-        html += '<td class="descriptive-ingredient-label">';
-        html += '<span class="TextDataBold">' + tm.views.medications.MedicationUtils.getStrengthDisplayString(medicationData.descriptiveIngredient, true) + ' </span>';
-        html += '</td>';
-        html += '</tr>';
-      }
-      html += '<tr>';
-      html += '<td colspan="2">';
-      html += '<div id="' + this._createSmcpButtonsContainerId() + '">';
-      html += '</div>';
-      html += '</td>';
-      html += '</tr>';
-
-      html += '</table>';
+      //dose form
+      medicationDetailInfo += '<span class="TextLabel">' + this.view.getDictionary("dose.form") + ' </span>';
+      medicationDetailInfo += '<span class="TextDataBold">' + medicationData.doseForm.name + ' </span>';
+      medicationDetailInfo += '<br>';
     }
-    // end right
-    html += '</div>';
-    html += '</td>';
+    if (!tm.jquery.Utils.isEmpty(medicationData.getMedicationPackaging()))
+    {
+      medicationDetailInfo += '<span class="TextLabel">' + this.view.getDictionary("medication.packaging") + ' </span>';
+      medicationDetailInfo += '<span class="TextDataBold">' + medicationData.getMedicationPackaging() + '</span>';
+      medicationDetailInfo += '<br>';
+    }
 
-    html += '</tr>';
-    html += '</table>';
-    html += '</div>';
-    return html;
+    if (!tm.jquery.Utils.isEmpty(medicationData.getPrice()))
+    {
+      medicationDetailInfo += '<span class="TextLabel">' + this.view.getDictionary("price") + ' </span>';
+      medicationDetailInfo += '<span class="TextDataBold">' + medicationData.getPrice() + '</span>';
+      medicationDetailInfo += '<br>';
+    }
+    var medicationDataCom = new tm.jquery.Component({
+      flex: tm.jquery.flexbox.item.Flex.create(0, 0, "auto"),
+      html: medicationDetailInfo
+    });
+
+    contentContainer.add(medicationDataCom);
+
+    //medication ingredients
+    if (medicationData.getMedicationIngredients().length > 0)
+    {
+      var medicationIngredientsStrength = "";
+      for (var i = 0; i < medicationData.getMedicationIngredients().length; i++)
+      {
+        var strengthString =
+            tm.views.medications.MedicationUtils.getStrengthDisplayString(medicationData.getMedicationIngredients()[i], true);
+        if (strengthString)
+        {
+          medicationIngredientsStrength += '<span class="TextDataBold">' + strengthString + ' </span>';
+          medicationIngredientsStrength += '<span class="TextDataBold">' +
+              ' (' + medicationData.getMedicationIngredients()[i].ingredientName + ')' +
+              ' </span>';
+        }
+      }
+      if (medicationData.getDescriptiveIngredient())
+      {
+        medicationIngredientsStrength += '<span class="TextLabel">' + this.view.getDictionary("together") + ' </span>';
+        medicationIngredientsStrength += '<span class="TextDataBold">' +
+            tm.views.medications.MedicationUtils.getStrengthDisplayString(medicationData.getDescriptiveIngredient(), true) +
+            ' </span>';
+      }
+      if (medicationIngredientsStrength)
+      {
+        var medicationIngredient = '<span class="TextLabel">' + this.view.getDictionary("strength") + ' </span>';
+        medicationIngredient += medicationIngredientsStrength;
+        var medicationIngredientCom = new tm.jquery.Component({
+          flex: tm.jquery.flexbox.item.Flex.create(0, 0, "auto"),
+          html: medicationIngredient
+        });
+
+        contentContainer.add(medicationIngredientCom);
+      }
+
+      var smcpButtons = tm.views.medications.MedicationUtils.getSmcpButtonsContainer(medicationData, this.getView());
+      contentContainer.add(smcpButtons);
+    }
+    if (tm.jquery.Utils.isArray(selectedRoutes) && selectedRoutes.length === 1
+        && !tm.jquery.Utils.isEmpty(selectedRoutes[0].bnfMaximumDto))
+    {
+      var bnfConfiguredMax = '<span class="TextLabel">' + this.getView().getDictionary("configured.max") + ' ' + ' </span>';
+      bnfConfiguredMax += '<span class="TextDataBold">' + selectedRoutes[0].bnfMaximumDto.quantity + ' ' +
+          'mg' + '/' + selectedRoutes[0].bnfMaximumDto.quantityUnit.toLowerCase() + ' </span>';
+      bnfConfiguredMax += '<br>';
+
+      var medicationInfoBnfMax = new tm.jquery.Component({
+        flex: tm.jquery.flexbox.item.Flex.create(0, 0, "auto"),
+        html: bnfConfiguredMax
+      });
+
+      contentContainer.add(medicationInfoBnfMax);
+    }
+    this.add(iconContainer);
+    this.add(contentContainer);
   },
 
   _getMedicationIcon: function(doseForm)
   {
-    if (doseForm.doseFormType == 'TBL')
+    if (doseForm && doseForm.doseFormType == 'TBL')
     {
       return "icon_pills";
     }
     return "icon_other_medication";
   },
 
-  _getSmcpButtonsContainer: function(medicationData)
-  {
-    var self = this;
-    var container = new tm.jquery.Container({
-      layout: this.view.getAppFactory().createDefaultHFlexboxLayout("start", "start", 10)
-    });
-
-    for (var documentIndex = 0; documentIndex < medicationData.medicationDocuments.length; documentIndex++)
-    {
-      var medicationDocument = medicationData.medicationDocuments[documentIndex];
-      if (medicationDocument.externalSystem && medicationDocument.documentReference)
-      {
-        var documentButton = self._createDocumentButton(medicationDocument);
-        container.add(documentButton);
-      }
-    }
-
-    return container;
-  },
-
-  _createDocumentButton: function(medicationDocument)
-  {
-    var self = this;
-    var dictionaryName = this.view.getDictionary(medicationDocument.externalSystem);
-    var hasDictionaryName = dictionaryName.split(" ")[0] && dictionaryName.split(" ")[0] != 'undefined';
-    var name = hasDictionaryName ? dictionaryName : medicationDocument.externalSystem;
-    var documentButton = new tm.jquery.Button({cls: 'button-align-left', text: name, type: 'link'});
-    documentButton.on(tm.jquery.ComponentEvent.EVENT_TYPE_CLICK, function()
-    {
-      if (self.view.isTablet()) //todo: isTablet in browser returns false - igor: add check if in browser
-      {
-        var viewSecurity = self.view.getViewData().getViewSecurity();
-        var data = {};
-        data.dau = tm.jquery.Utils.encode64(viewSecurity.username);
-        data.dap = tm.jquery.Utils.encode64(viewSecurity.password);
-
-        var documentUrl =
-            self.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_GET_MEDICATION_DOCUMENT
-                + "?data=" + encodeURI(JSON.stringify(data)) + "&reference=" + medicationDocument.documentReference;
-        window.open(documentUrl);
-      }
-      else
-      {
-        ViewManager.getInstance().sendAction(
-            self.view,
-            ViewAction.create("openMedicationDocument").addParam("reference", medicationDocument.documentReference));
-      }
-    });
-    return documentButton;
-  },
-
-  _createSmcpButtonsContainerId: function()
-  {
-    return this.view.getViewId() + "_smcp_buttons_container";
-  },
-
   /** public methods */
-  setMedicationData: function(medicationData)
+  setMedicationData: function(medicationData, selectedRoutes)
   {
-    var self = this;
     if (medicationData)
     {
-
-      this.setHtml(this._createHtmlTemplate(medicationData));
-      setTimeout(function()
-      {
-        var smcpButtonsContainerId = self._createSmcpButtonsContainerId();
-
-        var smcpButtonsContainerElement = $("#" + smcpButtonsContainerId).get(0);
-        if (tm.jquery.Utils.isEmpty(smcpButtonsContainerElement) == false)
-        {
-          var container = self._getSmcpButtonsContainer(medicationData);
-          container.setRenderToElement(smcpButtonsContainerElement);
-          container.doRender();
-        }
-      }, 100);
-
+      this.removeAll();
+      this._buildGui(medicationData, tm.jquery.Utils.isEmpty(selectedRoutes) ? null : selectedRoutes);
     }
+  },
+
+  /**
+   * Getters & Setters
+   */
+  getView: function()
+  {
+    return this.view;
   }
 });

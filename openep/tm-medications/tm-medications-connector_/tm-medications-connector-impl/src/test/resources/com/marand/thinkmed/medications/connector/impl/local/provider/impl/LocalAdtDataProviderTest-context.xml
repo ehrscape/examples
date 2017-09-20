@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <import resource="classpath:/com/marand/maf_test/tc-default.xml"/>
+    <import resource="classpath:ac-entity-context.xml"/>
+    <import resource="classpath:/com/marand/thinkmed/medications/connector/impl/local/model/impl/ac-hibernate-packages.xml"/>
+    <import resource="classpath:/com/marand/maf_test/server/tc-domain-permission-context.xml"/>
+
+    <bean id="adtDataProvider" class="com.marand.thinkmed.medications.connector.impl.local.provider.LocalAdtDataProvider">
+        <property name="sessionFactory" ref="hibernateSessionFactory"/>
+        <property name="patientDataProvider" ref="patientDataProvider"/>
+    </bean>
+
+    <bean id="patientDataProvider" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.connector.impl.provider.PatientDataProvider"/>
+    </bean>
+
+</beans>

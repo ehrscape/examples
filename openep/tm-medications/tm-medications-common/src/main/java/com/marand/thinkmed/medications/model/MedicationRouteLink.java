@@ -20,6 +20,7 @@
 package com.marand.thinkmed.medications.model;
 
 import com.marand.maf.core.data.entity.EffectiveEntity;
+import com.marand.thinkmed.medications.dto.BnfMaximumUnitType;
 
 /**
  * @author Mitja Lapajne
@@ -37,4 +38,20 @@ public interface MedicationRouteLink extends EffectiveEntity
   boolean isDefaultRoute();
 
   void setDefaultRoute(boolean defaultRoute);
+
+  boolean isDiscretionary();
+
+  void setDiscretionary(boolean discretionary);
+
+  Boolean getUnlicensed();
+
+  void setUnlicensed(Boolean unlicensed);
+
+  Integer getBnfMaximum();
+
+  void setBnfMaximum(Integer bnfMaximum);
+
+  BnfMaximumUnitType getBnfMaximumUnitType();
+
+  void setBnfMaximumUnitType(BnfMaximumUnitType bnfMaximumUnitType);
 }

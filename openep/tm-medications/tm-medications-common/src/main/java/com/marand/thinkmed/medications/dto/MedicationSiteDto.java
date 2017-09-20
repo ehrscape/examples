@@ -20,7 +20,7 @@
 package com.marand.thinkmed.medications.dto;
 
 import com.marand.maf.core.data.object.NamedIdentityDto;
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.JsonSerializable;
 
 /**
  * @author Mitja Lapajne

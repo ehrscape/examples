@@ -20,73 +20,77 @@
 package com.marand.thinkmed.medications.business.impl;
 
 import java.text.Collator;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
-import com.marand.ispek.ehr.common.server.util.EhrUtils;
+import com.marand.ispek.common.Dictionary;
+import com.marand.ispek.ehr.common.EhrLinkType;
 import com.marand.ispek.ehr.common.tdo.CompositionEventContext;
 import com.marand.ispek.ehr.common.tdo.IspekComposition;
 import com.marand.maf.core.EnumUtils;
 import com.marand.maf.core.Pair;
-import com.marand.maf.core.data.object.HourMinuteDto;
-import com.marand.maf.core.openehr.dao.EhrTaggingDao;
-import com.marand.maf.core.openehr.util.InstructionTranslator;
+import com.marand.maf.core.StringUtils;
+import com.marand.maf.core.openehr.dao.openehr.TaggingOpenEhrDao;
 import com.marand.maf.core.openehr.visitor.IspekTdoDataSupport;
-import com.marand.maf.core.openehr.visitor.TdoPopulatingVisitor;
+import com.marand.maf.core.service.RequestContextHolder;
+import com.marand.maf.core.service.ServiceMethod;
+import com.marand.maf.core.service.auditing.Auditing;
+import com.marand.maf.core.service.auditing.Level;
 import com.marand.maf.core.time.DateTimeFormatters;
 import com.marand.maf.core.time.Intervals;
+import com.marand.maf.core.valueholder.ValueHolder;
 import com.marand.openehr.medications.tdo.AdministrationDetailsCluster;
 import com.marand.openehr.medications.tdo.MedicationActionAction;
-import com.marand.openehr.medications.tdo.MedicationAdministrationComposition;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction.OrderActivity;
+import com.marand.openehr.medications.tdo.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster;
+import com.marand.openehr.medications.tdo.MedicationOnDischargeComposition;
 import com.marand.openehr.medications.tdo.MedicationOrderComposition;
+import com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.InfusionAdministrationDetailsPurpose;
 import com.marand.openehr.medications.tdo.MedicationReferenceWeightComposition;
-import com.marand.openehr.rm.RmPath;
+import com.marand.openehr.medications.tdo.StructuredDoseCluster;
+import com.marand.openehr.medications.tdo.StructuredDoseCluster.RatioNumeratorCluster;
 import com.marand.openehr.rm.TdoPathable;
 import com.marand.openehr.util.DataValueUtils;
-import com.marand.openehr.util.OpenEhrLinkType;
 import com.marand.openehr.util.OpenEhrRefUtils;
-import com.marand.thinkehr.tagging.dto.TagFilteringDto;
-import com.marand.thinkehr.tagging.dto.TaggedObjectDto;
-import com.marand.thinkehr.web.FdoConstants;
-import com.marand.thinkmed.api.core.data.NamedIdentity;
-import com.marand.thinkmed.api.organization.data.KnownClinic;
-import com.marand.thinkmed.medications.AdministrationStatusEnum;
-import com.marand.thinkmed.medications.AdministrationTypeEnum;
-import com.marand.thinkmed.medications.ClinicalInterventionEnum;
+import com.marand.thinkehr.tagging.dto.TagDto;
+import com.marand.thinkmed.medications.AdministrationResultEnum;
 import com.marand.thinkmed.medications.DosingFrequencyTypeEnum;
-import com.marand.thinkmed.medications.EhrTerminologyEnum;
-import com.marand.thinkmed.medications.InfusionSetChangeEnum;
 import com.marand.thinkmed.medications.MedicationActionEnum;
+import com.marand.thinkmed.medications.MedicationDeliveryMethodEnum;
 import com.marand.thinkmed.medications.MedicationTypeEnum;
-import com.marand.thinkmed.medications.TherapyDoseTypeEnum;
-import com.marand.thinkmed.medications.TherapySortTypeEnum;
+import com.marand.thinkmed.medications.ParticipationTypeEnum;
+import com.marand.thinkmed.medications.TherapySourceGroupEnum;
 import com.marand.thinkmed.medications.TherapyStatusEnum;
-import com.marand.thinkmed.medications.TherapyTag;
-import com.marand.thinkmed.medications.TherapyTaggingUtils;
-import com.marand.thinkmed.medications.b2b.MedicationsConnector;
+import com.marand.thinkmed.medications.TherapyTagEnum;
+import com.marand.thinkmed.medications.administration.AdministrationProvider;
+import com.marand.thinkmed.medications.admission.MedicationOnAdmissionHandler;
 import com.marand.thinkmed.medications.business.MedicationsBo;
-import com.marand.thinkmed.medications.business.TherapyDocumentationData;
-import com.marand.thinkmed.medications.business.TherapyLinkType;
-import com.marand.thinkmed.medications.business.TherapySimilarityType;
-import com.marand.thinkmed.medications.converter.MedicationConverterSelector;
-import com.marand.thinkmed.medications.converter.MedicationFromEhrConverter;
-import com.marand.thinkmed.medications.converter.MedicationToEhrConverter;
-import com.marand.thinkmed.medications.dao.EhrMedicationsDao;
+import com.marand.thinkmed.medications.business.data.TherapyDocumentationData;
+import com.marand.thinkmed.medications.business.data.TherapyLinkType;
+import com.marand.thinkmed.medications.business.data.TherapySimilarityType;
+import com.marand.thinkmed.medications.business.mapper.MedicationHolderDtoMapper;
+import com.marand.thinkmed.medications.business.util.MedicationsEhrUtils;
+import com.marand.thinkmed.medications.business.util.TherapyIdUtils;
+import com.marand.thinkmed.medications.business.util.TherapyUnitsConverter;
+import com.marand.thinkmed.medications.converter.therapy.MedicationConverterSelector;
+import com.marand.thinkmed.medications.converter.therapy.MedicationFromEhrConverter;
 import com.marand.thinkmed.medications.dao.MedicationsDao;
-import com.marand.thinkmed.medications.dto.AdministrationTimingDto;
-import com.marand.thinkmed.medications.dto.ComplexDoseElementDto;
+import com.marand.thinkmed.medications.dao.openehr.MedicationsOpenEhrDao;
 import com.marand.thinkmed.medications.dto.ComplexTherapyDto;
 import com.marand.thinkmed.medications.dto.ConstantComplexTherapyDto;
 import com.marand.thinkmed.medications.dto.DocumentationTherapiesDto;
@@ -95,753 +99,189 @@ import com.marand.thinkmed.medications.dto.InfusionIngredientDto;
 import com.marand.thinkmed.medications.dto.InfusionRateCalculationDto;
 import com.marand.thinkmed.medications.dto.MedicationDataForTherapyDto;
 import com.marand.thinkmed.medications.dto.MedicationDto;
+import com.marand.thinkmed.medications.dto.MedicationHolderDto;
 import com.marand.thinkmed.medications.dto.MedicationIngredientDto;
-import com.marand.thinkmed.medications.dto.MedicationSearchDto;
+import com.marand.thinkmed.medications.dto.MedicationRouteDto;
 import com.marand.thinkmed.medications.dto.RoundsIntervalDto;
-import com.marand.thinkmed.medications.dto.SimpleTherapyDto;
-import com.marand.thinkmed.medications.dto.TherapyCardInfoDto;
-import com.marand.thinkmed.medications.dto.TherapyChangeDto;
-import com.marand.thinkmed.medications.dto.TherapyChangeHistoryDto;
-import com.marand.thinkmed.medications.dto.TherapyChangeType;
-import com.marand.thinkmed.medications.dto.TherapyDayDto;
-import com.marand.thinkmed.medications.dto.TherapyDoseDto;
+import com.marand.thinkmed.medications.dto.TherapyChangeReasonDto;
 import com.marand.thinkmed.medications.dto.TherapyDto;
-import com.marand.thinkmed.medications.dto.TherapyFlowRowDto;
-import com.marand.thinkmed.medications.dto.TherapyReloadAfterActionDto;
-import com.marand.thinkmed.medications.dto.TimedComplexDoseElementDto;
+import com.marand.thinkmed.medications.dto.TherapyTemplateDto;
+import com.marand.thinkmed.medications.dto.TherapyTemplatesDto;
 import com.marand.thinkmed.medications.dto.VariableComplexTherapyDto;
-import com.marand.thinkmed.medications.dto.administration.AdjustInfusionAdministrationDto;
 import com.marand.thinkmed.medications.dto.administration.AdministrationDto;
-import com.marand.thinkmed.medications.dto.administration.InfusionSetChangeDto;
-import com.marand.thinkmed.medications.dto.administration.StartAdministrationDto;
-import com.marand.thinkmed.medications.dto.administration.StopAdministrationDto;
-import com.marand.thinkmed.medications.dto.administration.TherapyTaskDto;
-import com.marand.thinkmed.medications.dto.administration.TherapyTimelineRowDto;
-import com.marand.thinkmed.medications.dto.administration.TherapyTimelineRowForContInfusionDto;
-import com.marand.thinkmed.medications.mapper.InstructionToAdministrationMapper;
+import com.marand.thinkmed.medications.dto.admission.MedicationOnAdmissionDto;
+import com.marand.thinkmed.medications.dto.admission.MedicationOnAdmissionStatus;
+import com.marand.thinkmed.medications.dto.discharge.DischargeSourceMedicationDto;
+import com.marand.thinkmed.medications.dto.discharge.MedicationOnDischargeGroupDto;
+import com.marand.thinkmed.medications.dto.dose.ComplexDoseElementDto;
+import com.marand.thinkmed.medications.dto.dose.TimedComplexDoseElementDto;
+import com.marand.thinkmed.medications.dto.mentalHealth.MentalHealthMedicationDto;
+import com.marand.thinkmed.medications.dto.mentalHealth.MentalHealthTherapyDto;
+import com.marand.thinkmed.medications.dto.reconsiliation.SourceMedicationDto;
+import com.marand.thinkmed.medications.dto.report.TherapySurgeryReportElementDto;
+import com.marand.thinkmed.medications.task.MedicationsTasksProvider;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationForWarningsSearchDto;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
-import org.joda.time.Duration;
 import org.joda.time.Interval;
-import org.openehr.jaxb.rm.Action;
+import org.openehr.jaxb.rm.Composition;
+import org.openehr.jaxb.rm.DataValue;
 import org.openehr.jaxb.rm.DvCodedText;
-import org.openehr.jaxb.rm.DvCount;
 import org.openehr.jaxb.rm.DvEhrUri;
-import org.openehr.jaxb.rm.DvIdentifier;
+import org.openehr.jaxb.rm.DvInterval;
 import org.openehr.jaxb.rm.DvQuantity;
 import org.openehr.jaxb.rm.DvText;
-import org.openehr.jaxb.rm.Instruction;
-import org.openehr.jaxb.rm.InstructionDetails;
-import org.openehr.jaxb.rm.IsmTransition;
 import org.openehr.jaxb.rm.Link;
-import org.openehr.jaxb.rm.LocatableRef;
-import org.openehr.jaxb.rm.ObjectVersionId;
-import org.openehr.jaxb.rm.Participation;
 import org.openehr.jaxb.rm.PartyIdentified;
-import org.openehr.jaxb.rm.PartyProxy;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.marand.openehr.medications.tdo.AdministrationDetailsCluster.InfusionAdministrationDetailsCluster;
 import static com.marand.openehr.medications.tdo.IngredientsAndFormCluster.IngredientCluster;
 import static com.marand.openehr.medications.tdo.IngredientsAndFormCluster.IngredientCluster.IngredientQuantityCluster;
-import static com.marand.openehr.medications.tdo.MedicationAdministrationComposition.MedicationDetailSection;
-import static com.marand.openehr.medications.tdo.MedicationAdministrationComposition.MedicationDetailSection.ClinicalInterventionAction;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction.OrderActivity;
-import static com.marand.openehr.medications.tdo.MedicationOrderComposition.MedicationDetailSection.MedicationInstructionInstruction.OrderActivity.MedicationTimingCluster;
 import static com.marand.openehr.medications.tdo.MedicationReferenceWeightComposition.MedicationReferenceBodyWeightObservation;
 import static com.marand.openehr.medications.tdo.MedicationReferenceWeightComposition.MedicationReferenceBodyWeightObservation.HistoryHistory;
 
 /**
  * @author Mitja Lapajne
  */
-public class DefaultMedicationsBo
-    implements MedicationsBo, InitializingBean, MedicationFromEhrConverter.MedicationDataProvider
+public class DefaultMedicationsBo implements MedicationsBo, MedicationFromEhrConverter.MedicationDataProvider
 {
-  private EhrMedicationsDao ehrMedicationsDao;
+  private MedicationsOpenEhrDao medicationsOpenEhrDao;
   private MedicationsDao medicationsDao;
-  private EhrTaggingDao ehrTaggingDao;
+  private TaggingOpenEhrDao taggingOpenEhrDao;
 
   private TherapyDisplayProvider therapyDisplayProvider;
-  private MedicationsConnector medicationsConnector;
+  private ValueHolder<Map<Long, MedicationHolderDto>> medicationsValueHolder;
+  private ValueHolder<Map<Long, MedicationRouteDto>> medicationRoutesValueHolder;
+  private MedicationHolderDtoMapper medicationHolderDtoMapper;
+  private MedicationsTasksProvider medicationsTasksProvider;
+  private MedicationOnAdmissionHandler medicationOnAdmissionHandler;
+  private AdministrationProvider administrationProvider;
 
-  public void setEhrMedicationsDao(final EhrMedicationsDao ehrMedicationsDao)
+  @Autowired
+  public void setMedicationsOpenEhrDao(final MedicationsOpenEhrDao medicationsOpenEhrDao)
   {
-    this.ehrMedicationsDao = ehrMedicationsDao;
+    this.medicationsOpenEhrDao = medicationsOpenEhrDao;
   }
 
+  @Autowired
   public void setMedicationsDao(final MedicationsDao medicationsDao)
   {
     this.medicationsDao = medicationsDao;
   }
 
-  public void setEhrTaggingDao(final EhrTaggingDao ehrTaggingDao)
+  @Autowired
+  public void setTaggingOpenEhrDao(final TaggingOpenEhrDao taggingOpenEhrDao)
   {
-    this.ehrTaggingDao = ehrTaggingDao;
+    this.taggingOpenEhrDao = taggingOpenEhrDao;
   }
 
+  @Autowired
   public void setTherapyDisplayProvider(final TherapyDisplayProvider therapyDisplayProvider)
   {
     this.therapyDisplayProvider = therapyDisplayProvider;
   }
 
-  public void setMedicationsConnector(final MedicationsConnector medicationsConnector)
+  @Autowired
+  public void setMedicationsValueHolder(final ValueHolder<Map<Long, MedicationHolderDto>> medicationsValueHolder)
   {
-    this.medicationsConnector = medicationsConnector;
+    this.medicationsValueHolder = medicationsValueHolder;
+  }
+
+  @Autowired
+  public void setMedicationRoutesValueHolder(final ValueHolder<Map<Long, MedicationRouteDto>> medicationRoutesValueHolder)
+  {
+    this.medicationRoutesValueHolder = medicationRoutesValueHolder;
+  }
+
+  @Autowired
+  public void setMedicationHolderDtoMapper(final MedicationHolderDtoMapper medicationHolderDtoMapper)
+  {
+    this.medicationHolderDtoMapper = medicationHolderDtoMapper;
+  }
+
+  @Autowired
+  public void setMedicationsTasksProvider(final MedicationsTasksProvider medicationsTasksProvider)
+  {
+    this.medicationsTasksProvider = medicationsTasksProvider;
+  }
+
+  @Autowired
+  public void setMedicationOnAdmissionHandler(final MedicationOnAdmissionHandler medicationOnAdmissionHandler)
+  {
+    this.medicationOnAdmissionHandler = medicationOnAdmissionHandler;
+  }
+
+  @Autowired
+  public void setAdministrationProvider(final AdministrationProvider administrationProvider)
+  {
+    this.administrationProvider = administrationProvider;
   }
 
   @Override
-  public void afterPropertiesSet() throws Exception
-  {
-    Assert.notNull(ehrMedicationsDao, "ehrMedicationsDao is required");
-    Assert.notNull(therapyDisplayProvider, "therapyDisplayProvider is required");
-    Assert.notNull(medicationsConnector, "medicationsConnector is required");
-  }
-
-  @Override
-  public MedicationOrderComposition saveNewMedicationOrder(
-      final long patientId,
-      final List<TherapyDto> therapiesList,
-      final Long centralCaseId,
-      final Long careProviderId,
-      final long userId,
-      final NamedIdentity prescriber,
-      final RoundsIntervalDto roundsInterval,
-      final DateTime when,
-      final Locale locale)
-  {
-    final MedicationOrderComposition composition =
-        buildMedicationOrderComposition(
-            therapiesList,
-            centralCaseId,
-            careProviderId,
-            userId,
-            prescriber,
-            roundsInterval,
-            when,
-            locale);
-    return ehrMedicationsDao.saveNewMedicationOrderComposition(patientId, composition);
-  }
-
-  private MedicationOrderComposition buildMedicationOrderComposition(
-      final List<TherapyDto> therapiesList,
-      final Long centralCaseId,
-      final Long careProviderId,
-      final long userId,
-      final NamedIdentity prescriber,
-      final RoundsIntervalDto roundsInterval,
-      final DateTime when,
-      final Locale locale)
-  {
-    final MedicationOrderComposition composition = MedicationsEhrUtils.createEmptyMedicationOrderComposition();
-    final Map<String, MedicationInstructionInstruction> fromLinks = new HashMap<>();
-    final Map<String, MedicationInstructionInstruction> toLinks = new HashMap<>();
-
-    for (final TherapyDto therapy : therapiesList)
-    {
-      if (therapy.getTherapyDescription() == null)
-      {
-        therapyDisplayProvider.fillDisplayValues(therapy, true, true, locale);
-      }
-      final MedicationToEhrConverter<?> therapyConverter = MedicationConverterSelector.getConverter(therapy);
-      final MedicationInstructionInstruction instruction = therapyConverter.createInstructionFromTherapy(therapy);
-
-      MedicationsEhrUtils.addInstructionTo(composition, instruction);
-
-      if (therapy.getLinkToTherapy() != null)
-      {
-        toLinks.put(therapy.getLinkToTherapy(), instruction);
-      }
-      if (therapy.getLinkFromTherapy() != null)
-      {
-        fromLinks.put(therapy.getLinkFromTherapy(), instruction);
-      }
-
-      //createTherapyLinks(therapy, instruction, composition, therapiesList);
-      MedicationsEhrUtils.addMedicationActionTo(composition, instruction, MedicationActionEnum.SCHEDULE, when);
-
-      final DateTime therapyStart = therapy.getStart().isAfter(when) ? therapy.getStart() : when;
-      MedicationsEhrUtils.addMedicationActionTo(composition, instruction, MedicationActionEnum.START, therapyStart);
-
-      final boolean roundsTimeForSession = MedicationsEhrUtils.isRoundsTimeForSession(when, roundsInterval);
-      if (roundsTimeForSession)
-      {
-        MedicationsEhrUtils.addMedicationActionTo(composition, instruction, MedicationActionEnum.REVIEW, when);
-      }
-    }
-
-    createTherapyLinks(fromLinks, toLinks, composition);
-    final NamedIdentity usersName = medicationsConnector.getUsersName(userId, when);
-    addContext(composition, usersName, prescriber, centralCaseId, careProviderId, when);
-    return composition;
-  }
-
-  private void createTherapyLinks(
-      final Map<String, MedicationInstructionInstruction> fromLinks,
-      final Map<String, MedicationInstructionInstruction> toLinks,
-      final MedicationOrderComposition composition)
-  {
-    for (final String fromLink : fromLinks.keySet())
-    {
-      final MedicationInstructionInstruction instruction = fromLinks.get(fromLink);
-      final MedicationInstructionInstruction linkInstruction = toLinks.get(fromLink);
-
-      //final RmPath rmPath = TdoPathable.pathOfItem(composition, linkInstruction);
-      final Link link = new Link();
-      link.setMeaning(DataValueUtils.getText("startOnEndOf"));                   //todo fix name
-      link.setType(DataValueUtils.getText(OpenEhrLinkType.ISSUE.getName()));   //todo fix type
-      final DvEhrUri value = new DvEhrUri();
-      value.setValue(String.valueOf(composition.getMedicationDetail().getMedicationInstruction().indexOf(linkInstruction)));
-      link.setTarget(value);
-      instruction.getLinks().add(link);
-    }
-  }
-
-  //private void createTherapyLinks(
-  //    final TherapyDto therapy,
-  //    final MedicationInstructionInstruction therapyInstruction,
-  //    final MedicationOrderComposition therapyComposition,
-  //    final List<TherapyDto> therapiesList)
-  //{
-  //  if (therapy.getLinkFromTherapy() != null)
-  //  {
-  //    for (final TherapyDto previousTherapy : therapiesList)
-  //    {
-  //      if (previousTherapy.getLinkToTherapy() != null &&
-  //          previousTherapy.getLinkToTherapy().equals(therapy.getLinkFromTherapy()))
-  //      {
-  //        final RmPath rmPath = TdoPathable.pathOfItem(therapyComposition, therapyInstruction);
-  //        final Link link = new Link();
-  //        link.setMeaning(DataValueUtils.getText("startOnEndOf"));                   //todo fix name
-  //        link.setType(DataValueUtils.getText(OpenEhrLinkType.ISSUE.getName()));   //todo fix type
-  //        link.setTarget(DataValueUtils.getEhrUri("1", rmPath));
-  //        therapyInstruction.getLinks().add(link);
-  //      }
-  //    }
-  //  }
-  //}
-
-  private void updateExistingContext(final MedicationOrderComposition composition, final NamedIdentity composer)
-  {
-    updateExistingContext(composition, composer, null);
-  }
-
-  private void updateExistingContext(
-      final MedicationOrderComposition composition,
-      final NamedIdentity composer,
-      final NamedIdentity prescriber)
-  {
-    addContext(
-        composition,
-        composer,
-        prescriber,
-        null,
-        null,
-        DataValueUtils.getDateTime(composition.getCompositionEventContext().getStartTime()));
-  }
-
-  private void addContext(
-      final IspekComposition medicationOrder,
-      final NamedIdentity composer,
-      final NamedIdentity prescriber,
-      final Long centralCaseId,
-      final Long careProviderId,
-      final DateTime when)
-  {
-    final CompositionEventContext compositionEventContext =
-        IspekTdoDataSupport.getEventContext(CompositionEventContext.class, when);
-
-    if (centralCaseId != null)
-    {
-      final List<CompositionEventContext.ContextDetailCluster> contextDetailClusterList = new ArrayList<>();
-      final CompositionEventContext.ContextDetailCluster contextDetailCluster = new CompositionEventContext.ContextDetailCluster();
-      contextDetailCluster.setPeriodOfCareIdentifier(DataValueUtils.getText(Long.toString(centralCaseId)));
-
-      if (careProviderId != null)
-      {
-        contextDetailCluster.setDepartmentalPeriodOfCareIdentifier(DataValueUtils.getText(Long.toString(careProviderId)));
-      }
-
-      contextDetailClusterList.add(contextDetailCluster);
-      compositionEventContext.setContextDetail(contextDetailClusterList);
-    }
-    else if (medicationOrder.getCompositionEventContext() != null)
-    {
-      compositionEventContext.setContextDetail(medicationOrder.getCompositionEventContext().getContextDetail());
-    }
-    medicationOrder.setCompositionEventContext(compositionEventContext);
-
-    final TdoPopulatingVisitor.DataContext dataContext =
-        TdoPopulatingVisitor.getSloveneContext(when)
-            .withCompositionDynamic(true)
-            .withReplaceParticipation(true)
-            .withCompositionComposer(
-                IspekTdoDataSupport.getPartyIdentified(composer.name(), Long.toString(composer.id())));
-    if (prescriber != null)
-    {
-      final Participation participation = new Participation();
-      final PartyIdentified performerProxy = new PartyIdentified();
-      final DvIdentifier partyIdentifier = new DvIdentifier();
-      partyIdentifier.setId(Long.toString(prescriber.id()));
-      performerProxy.getIdentifiers().add(partyIdentifier);
-      performerProxy.setName(prescriber.name());
-      participation.setPerformer(performerProxy);
-      participation.setFunction(DataValueUtils.getText("prescriber"));
-      participation.setMode(FdoConstants.PARTICIPATION_UNSPECIFIED_MODE);
-
-      dataContext.withEntryParticipation(participation);
-    }
-
-    new TdoPopulatingVisitor().visitBean(medicationOrder, dataContext);
-  }
-
-  @Override
-  public List<TherapyFlowRowDto> getTherapyFlow(
-      final long patientId,
-      final long centralCaseId,
-      final Double patientHeight,
-      final DateTime startDate,
-      final int dayCount,
-      final Integer todayIndex,
-      final RoundsIntervalDto roundsInterval,
-      final TherapySortTypeEnum therapySortTypeEnum,
-      final KnownClinic department,
-      final DateTime currentTime,
-      final Locale locale)
-  {
-    final DateTime startDateAtMidnight = startDate.withTimeAtStartOfDay();
-    DateTime searchEnd = startDateAtMidnight.plusDays(dayCount);
-
-    //show therapies that start in the future
-    if ((todayIndex != null && todayIndex == dayCount - 1) || startDate.plusDays(dayCount - 1).isAfter(currentTime))
-    {
-      searchEnd = Intervals.INFINITE.getEnd();
-    }
-
-    final Interval searchInterval = new Interval(startDateAtMidnight, searchEnd);
-    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionsList =
-        ehrMedicationsDao.findMedicationInstructions(patientId, searchInterval, null);
-
-    final Map<Integer, Double> referenceWeightsByDay = new HashMap<>();
-    for (int i = 0; i < dayCount; i++)
-    {
-      final Double referenceWeight = ehrMedicationsDao.getPatientLastReferenceWeight(
-          patientId, Intervals.infiniteTo(startDateAtMidnight.plusDays(i).plusDays(1)));
-      if (referenceWeight != null)
-      {
-        referenceWeightsByDay.put(i, referenceWeight);
-      }
-    }
-    return buildTherapyFlow(
-        patientId,
-        centralCaseId,
-        patientHeight,
-        instructionsList,
-        startDateAtMidnight,
-        dayCount,
-        todayIndex,
-        roundsInterval,
-        therapySortTypeEnum,
-        referenceWeightsByDay,
-        department,
-        currentTime,
-        locale);
-  }
-
-  private List<TherapyFlowRowDto> buildTherapyFlow(
-      final long patientId,
-      final long centralCaseId,
-      final Double patientHeight,
+  public Map<Long, MedicationDataForTherapyDto> getMedicationDataForTherapies(
       final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionsList,
-      final DateTime startDate,
-      final int dayCount,
-      final Integer todayIndex,
-      final RoundsIntervalDto roundsInterval,
-      final TherapySortTypeEnum therapySortTypeEnum,
-      final Map<Integer, Double> referenceWeightsByDay,
-      final KnownClinic department,
-      final DateTime currentTime,
-      final Locale locale)
+      @Nullable final String careProviderId)
   {
-    if (instructionsList.isEmpty())
-    {
-      return new ArrayList<>();
-    }
-    sortTherapiesByMedicationTimingStart(instructionsList, false);
-
-    final Map<TherapyFlowRowDto, List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>>> therapyRowsMap = new LinkedHashMap<>();
-
-    final Map<Long, MedicationDataForTherapyDto> medicationsMap =
-        getMedicationDataForTherapies(instructionsList, department, currentTime);
-
-    for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair : instructionsList)
-    {
-      final MedicationOrderComposition composition = instructionPair.getFirst();
-      final MedicationInstructionInstruction instruction = instructionPair.getSecond();
-      final OrderActivity orderActivity = instruction.getOrder().get(0);
-
-      TherapyFlowRowDto therapyRowDto = findSimilarTherapy(instructionPair, therapyRowsMap, medicationsMap);
-      if (therapyRowDto == null)
-      {
-        therapyRowDto = new TherapyFlowRowDto();
-
-        final Long mainMedicationId = getMainMedicationId(orderActivity);
-        final MedicationDataForTherapyDto mainMedicationData = medicationsMap.get(mainMedicationId);
-        if (mainMedicationData != null)
-        {
-          therapyRowDto.setCustomGroup(mainMedicationData.getCustomGroupName());
-          therapyRowDto.setCustomGroupSortOrder(mainMedicationData.getCustomGroupSortOrder());
-          therapyRowDto.setAtcGroupCode(mainMedicationData.getAtcCode());
-          therapyRowDto.setAtcGroupName(mainMedicationData.getAtcName());
-        }
-      }
-
-      if (!therapyRowsMap.containsKey(therapyRowDto))
-      {
-        therapyRowsMap.put(
-            therapyRowDto, new ArrayList<Pair<MedicationOrderComposition, MedicationInstructionInstruction>>());
-      }
-
-      therapyRowsMap.get(therapyRowDto).add(instructionPair);
-
-      if (therapyRowDto.getRoute() == null)
-      {
-        therapyRowDto.setRoute(orderActivity.getAdministrationDetails().getRoute().get(0).getValue());
-      }
-
-      final Interval instructionInterval = getInstructionInterval(orderActivity.getMedicationTiming());
-
-      for (int i = 0; i < dayCount; i++)
-      {
-        Interval therapyDay = Intervals.wholeDay(startDate.plusDays(i));
-        //if today or future, show therapies that start in the future
-        final boolean isToday = todayIndex != null && todayIndex == i;
-        if (isToday || startDate.plusDays(i).isAfter(currentTime))
-        {
-          therapyDay = Intervals.infiniteFrom(therapyDay.getStart());
-        }
-
-        if (instructionInterval.overlap(therapyDay) != null)
-        {
-          final Double referenceWeight = referenceWeightsByDay.get(i);
-          final TherapyDto therapy =
-              convertInstructionToTherapyDto(
-                  composition,
-                  instruction,
-                  referenceWeight,
-                  patientHeight,
-                  currentTime,
-                  isToday,
-                  locale);
-          final TherapyDayDto dayDto = new TherapyDayDto();
-          dayDto.setTherapy(therapy);
-
-          fillTherapyDayState(
-              dayDto,
-              patientId,
-              therapy,
-              instruction,
-              composition,
-              roundsInterval,
-              medicationsMap,
-              therapyDay,
-              currentTime);
-          therapyRowDto.getTherapyFlowDayMap().put(i, dayDto);
-        }
-      }
-    }
-
-    final List<TherapyFlowRowDto> therapiesList = new ArrayList<>(therapyRowsMap.keySet());
-    sortTherapyFlowRows(therapiesList, therapySortTypeEnum);
-    if (todayIndex != null)
-    {
-      fillTherapyFlowLinksDisplay(therapiesList, todayIndex);
-    }
-
-    if (centralCaseId > 0)
-    {
-      final TagFilteringDto filter = new TagFilteringDto();
-      filter.setCompositionVersion(TagFilteringDto.CompositionVersion.LAST_VERSION_OF_ANY_TAGGED);
-
-      final Set<TaggedObjectDto<Instruction>> taggedTherapies =
-          ehrTaggingDao.findObjectCompositionPairs(
-              filter, TherapyTaggingUtils.generateTag(TherapyTag.PRESCRIPTION, centralCaseId));
-
-      fillPrescriptionTagsForTherapyFlow(therapiesList, taggedTherapies);
-    }
-
-    return therapiesList;
-  }
-
-  private void fillPrescriptionTagsForTherapyFlow(
-      final List<TherapyFlowRowDto> therapiesList,
-      final Set<TaggedObjectDto<Instruction>> therapiesWithPrescriptionTag)
-  {
-    final List<TherapyDto> therapyDtos = new ArrayList<>();
-    for (final TherapyFlowRowDto flowRowDto : therapiesList)
-    {
-      for (final Integer key : flowRowDto.getTherapyFlowDayMap().keySet())
-      {
-        therapyDtos.add(flowRowDto.getTherapyFlowDayMap().get(key).getTherapy());
-      }
-    }
-    fillPrescriptionTagsForTherapies(therapyDtos, therapiesWithPrescriptionTag);
-  }
-
-  //fills linkToTherapy for all linked therapies (when linksFromTherapy exists)
-  private void fillTherapyFlowLinksDisplay(final List<TherapyFlowRowDto> therapiesList, final Integer todayIndex)
-  {
-    String link = "A";
-    for (final TherapyFlowRowDto therapyFlowRowDto : therapiesList)
-    {
-      final TherapyDayDto therapyDayDto = therapyFlowRowDto.getTherapyFlowDayMap().get(todayIndex);
-
-      if (therapyDayDto != null && therapyDayDto.getTherapy().getLinkFromTherapy() != null)
-      {
-        final boolean incrementLink = setTherapyFlowLinkDisplay(therapyDayDto.getTherapy(), therapiesList, todayIndex, link);
-        if (incrementLink)
-        {
-          final int charValue = link.charAt(0);
-          link = String.valueOf((char)(charValue + 1));
-        }
-      }
-    }
-  }
-
-  private boolean setTherapyFlowLinkDisplay(
-      final TherapyDto therapyWithLink,
-      final List<TherapyFlowRowDto> therapiesList,
-      final Integer todayIndex,
-      final String link)
-  {
-    boolean linkUsed = false;
-
-    for (final TherapyFlowRowDto therapyFlowRowDto : therapiesList)
-    {
-      final TherapyDayDto therapyDayDto = therapyFlowRowDto.getTherapyFlowDayMap().get(todayIndex);
-      if (therapyDayDto != null)
-      {
-        final TherapyDto therapyDto = therapyDayDto.getTherapy();
-        final boolean therapyUsedNewLink = setTherapyLinkDisplayValue(therapyWithLink, therapyDto, link);
-        linkUsed = therapyUsedNewLink ? true : linkUsed;
-      }
-    }
-    return linkUsed;
-  }
-
-  private boolean setTherapyLinkDisplayValue(final TherapyDto therapyWithLink, final TherapyDto therapyDto, final String link)
-  {
-    final String therapyFromLink = therapyWithLink.getLinkFromTherapy();
-    final String therapyId =
-        InstructionTranslator.createId(therapyDto.getEhrOrderName(), therapyDto.getCompositionUid());
-    if (therapyId.equals(therapyFromLink))
-    {
-      if (therapyDto.getLinkFromTherapy() != null && therapyDto.getLinkFromTherapy().length() < 4)
-      {
-        therapyDto.setLinkToTherapy(therapyDto.getLinkFromTherapy());
-        final String therapyLinkName = therapyDto.getLinkFromTherapy().substring(0, 1) +
-            (Integer.parseInt(therapyDto.getLinkFromTherapy().substring(1)) + 1);
-        therapyWithLink.setLinkFromTherapy(therapyLinkName);
-      }
-      else
-      {
-        therapyDto.setLinkToTherapy(link + '1');
-        therapyWithLink.setLinkFromTherapy(link + '2');
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private Map<Long, MedicationDataForTherapyDto> getMedicationDataForTherapies(
-      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionsList,
-      final KnownClinic department,
-      final DateTime currentTime)
-  {
+    final Map<Long, MedicationDataForTherapyDto> medicationsMap = new HashMap<>();
     final Set<Long> medicationIds = new HashSet<>();
 
     for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair : instructionsList)
     {
-      final OrderActivity orderActivity = instructionPair.getSecond().getOrder().get(0);
+      final OrderActivity orderActivity = MedicationsEhrUtils.getRepresentingOrderActivity(instructionPair.getSecond());
       medicationIds.addAll(getMedicationIds(orderActivity));
     }
-    if (!medicationIds.isEmpty())
-    {
-      return medicationsDao.getMedicationDataForTherapies(medicationIds, department, currentTime);
-    }
-    return new HashMap<>();
-  }
-
-  private boolean containsAntibiotic(
-      final List<Long> medicationIds,
-      final Map<Long, MedicationDataForTherapyDto> medicationsMap)
-  {
     for (final Long medicationId : medicationIds)
     {
-      final MedicationDataForTherapyDto mainMedicationData = medicationsMap.get(medicationId);
-      if (mainMedicationData != null && mainMedicationData.isAntibiotic())
-      {
-        return true;
-      }
+      final MedicationHolderDto medicationHolderDto = medicationsValueHolder.getValue().get(medicationId);
+      final MedicationDataForTherapyDto dto =
+          medicationHolderDtoMapper.mapToMedicationDataForTherapyDto(medicationHolderDto, careProviderId);
+      medicationsMap.put(medicationId, dto);
     }
-    return false;
+    return medicationsMap;
   }
 
-  private void sortTherapyFlowRows(
-      final List<TherapyFlowRowDto> therapyRows,
-      final TherapySortTypeEnum therapySortTypeEnum)
+  @Override
+  public boolean isTherapyModifiedFromLastReview(
+      @Nonnull final MedicationInstructionInstruction instruction,
+      @Nonnull final List<MedicationActionAction> actionsList,
+      @Nonnull final DateTime compositionCreatedTime)
   {
-    Collections.sort(
-        therapyRows, new Comparator<TherapyFlowRowDto>()
-        {
-          @Override
-          public int compare(
-              final TherapyFlowRowDto o1, final TherapyFlowRowDto o2)
-          {
-            final TherapyDto firstTherapy = o1.getTherapyFlowDayMap().values().iterator().next().getTherapy();
-            final TherapyDto secondTherapy = o2.getTherapyFlowDayMap().values().iterator().next().getTherapy();
+    Preconditions.checkNotNull(instruction, "instruction");
+    Preconditions.checkNotNull(actionsList, "actionsList");
+    Preconditions.checkNotNull(compositionCreatedTime, "compositionCreatedTime");
 
-            return sortTherapies(firstTherapy, secondTherapy, therapySortTypeEnum);
-          }
-        }
-    );
-  }
+    final Optional<DateTime> latestModifyActionTime = actionsList
+        .stream()
+        .filter(action -> MedicationActionEnum.getActionEnum(action) == MedicationActionEnum.MODIFY_EXISTING)
+        .map(a -> DataValueUtils.getDateTime(a.getTime()))
+        .max(Comparator.naturalOrder());
 
-  private void sortTherapyTimelineRows(
-      final List<TherapyTimelineRowDto> timelineRows,
-      final TherapySortTypeEnum therapySortTypeEnum)
-  {
-    Collections.sort(
-        timelineRows, new Comparator<TherapyTimelineRowDto>()
-        {
-          @Override
-          public int compare(final TherapyTimelineRowDto o1, final TherapyTimelineRowDto o2)
-          {
-            return sortTherapies(o1.getTherapy(), o2.getTherapy(), therapySortTypeEnum);
-          }
-        }
-    );
-  }
-
-  private int sortTherapies(
-      final TherapyDto firstTherapy,
-      final TherapyDto secondTherapy,
-      final TherapySortTypeEnum therapySortTypeEnum)
-  {
-    if (TherapySortTypeEnum.CREATED_TIME.contains(therapySortTypeEnum))
-    {
-      return therapySortTypeEnum == TherapySortTypeEnum.CREATED_TIME_DESC
-             ? secondTherapy.getCreatedTimestamp().compareTo(firstTherapy.getCreatedTimestamp())
-             : firstTherapy.getCreatedTimestamp().compareTo(secondTherapy.getCreatedTimestamp());
-    }
-    else if (TherapySortTypeEnum.DESCRIPTION.contains(therapySortTypeEnum))
-    {
-      final Collator collator = Collator.getInstance();
-      return therapySortTypeEnum == TherapySortTypeEnum.DESCRIPTION_DESC
-             ? compareTherapiesForSort(secondTherapy, firstTherapy, collator)
-             : compareTherapiesForSort(firstTherapy, secondTherapy, collator);
-    }
-    else
-    {
-      throw new IllegalArgumentException("Unsopported therapy sort type!");
-    }
-  }
-
-  private void removeOldTherapiesFromTimeline(final List<TherapyTimelineRowDto> timelines, final DateTime showTherapiesFrom)
-  {
-    final List<TherapyTimelineRowDto> activeTherapyTimelines = new ArrayList<>();
-    for (final TherapyTimelineRowDto timeline : timelines)
-    {
-      final DateTime therapyEnd = timeline.getTherapy().getEnd();
-      if (therapyEnd == null || Intervals.infiniteFrom(showTherapiesFrom).contains(therapyEnd))
-      {
-        activeTherapyTimelines.add(timeline);
-      }
-    }
-    timelines.clear();
-    timelines.addAll(activeTherapyTimelines);
-  }
-
-  private int compareTherapiesForSort(final TherapyDto firstTherapy, final TherapyDto secondTherapy, final Collator collator)
-  {
-    final boolean firstTherapyIsBaselineInfusion =
-        firstTherapy instanceof ComplexTherapyDto && ((ComplexTherapyDto)firstTherapy).isBaselineInfusion();
-    final boolean secondTherapyIsBaselineInfusion =
-        secondTherapy instanceof ComplexTherapyDto && ((ComplexTherapyDto)secondTherapy).isBaselineInfusion();
-
-    if (firstTherapyIsBaselineInfusion && !secondTherapyIsBaselineInfusion)
-    {
-      return -1;
-    }
-    if (!firstTherapyIsBaselineInfusion && secondTherapyIsBaselineInfusion)
-    {
-      return 1;
-    }
-    return collator.compare(firstTherapy.getTherapyDescription(), secondTherapy.getTherapyDescription());
-  }
-
-  boolean wasTherapyModifiedFromLastReview(
-      final MedicationInstructionInstruction instruction,
-      final List<MedicationActionAction> actionsList,
-      final DateTime linksCreateTimestamp)
-  {
-    final List<Link> instructionLinks = MedicationsEhrUtils.getLinksOfType(instruction, OpenEhrLinkType.UPDATE);
-    if (instructionLinks.isEmpty())
+    final boolean hasUpdateLink = MedicationsEhrUtils.hasLinksOfType(instruction, EhrLinkType.UPDATE);
+    if (!hasUpdateLink && !latestModifyActionTime.isPresent())
     {
       return false;
     }
+
+    final DateTime latestModifyTime =
+        latestModifyActionTime.isPresent() && latestModifyActionTime.get().isAfter(compositionCreatedTime)
+        ? latestModifyActionTime.get()
+        : compositionCreatedTime;
+
     for (final MedicationActionAction action : actionsList)
     {
-      final MedicationActionEnum actionEnum =
-          MedicationActionEnum.getAction(
-              action.getIsmTransition().getCareflowStep(),
-              action.getIsmTransition().getCurrentState());
+      final MedicationActionEnum actionEnum = MedicationActionEnum.getActionEnum(action);
       final DateTime actionDateTime = DataValueUtils.getDateTime(action.getTime());
-      if (actionEnum == MedicationActionEnum.REVIEW && !actionDateTime.isBefore(linksCreateTimestamp))
+      if (MedicationActionEnum.THERAPY_REVIEW_ACTIONS.contains(actionEnum) && actionDateTime.isAfter(latestModifyTime))
       {
         return false;
       }
     }
+
     return true;
-  }
-
-  @Override
-  public TherapyReloadAfterActionDto reloadSingleTherapyAfterAction(
-      final long patientId,
-      final String compositionUid,
-      final String ehrOrderName,
-      final RoundsIntervalDto roundsInterval,
-      final DateTime when)
-  {
-    final MedicationOrderComposition composition =
-        ehrMedicationsDao.loadMedicationOrderComposition(patientId, compositionUid);
-    final MedicationInstructionInstruction instruction =
-        MedicationsEhrUtils.getMedicationInstructionByEhrName(composition, ehrOrderName);
-
-    final TherapyReloadAfterActionDto reloadDto = new TherapyReloadAfterActionDto();
-    reloadDto.setEhrCompositionId(composition.getUid().getValue());
-    reloadDto.setEhrOrderName(instruction.getName().getValue());
-    final DateTime therapyStart = getTherapyStart(patientId, instruction);
-    final DateTime therapyEnd =
-        DataValueUtils.getDateTime(instruction.getOrder().get(0).getMedicationTiming().getStopDate());
-
-    reloadDto.setTherapyStart(therapyStart);
-    reloadDto.setTherapyEnd(therapyEnd);
-    final List<MedicationActionAction> actionsList = getInstructionActions(composition, instruction);
-    final TherapyStatusEnum therapyStatus =
-        getTherapyStatusFromMedicationAction(actionsList, therapyStart, roundsInterval, Intervals.wholeDay(when), when);
-    reloadDto.setTherapyStatus(therapyStatus);
-    final boolean therapyActionsAllowed = areTherapyActionsAllowed(therapyStatus, roundsInterval, when);
-    reloadDto.setTherapyActionsAllowed(therapyActionsAllowed);
-    final boolean therapyEndsBeforeNextRounds =
-        doesTherapyEndBeforeNextRounds(therapyEnd, roundsInterval, when);
-    reloadDto.setTherapyEndsBeforeNextRounds(therapyEndsBeforeNextRounds);
-
-    return reloadDto;
   }
 
   @Override
@@ -862,151 +302,56 @@ public class DefaultMedicationsBo
   }
 
   @Override
-  public DateTime getTherapyStart(final long patientId, final String compositionUid, final String ehrOrderName)
+  public DateTime getOriginalTherapyStart(
+      @Nonnull final String patientId,
+      @Nonnull final MedicationOrderComposition composition)
   {
-    final MedicationOrderComposition composition =
-        ehrMedicationsDao.loadMedicationOrderComposition(patientId, compositionUid);
-    final MedicationInstructionInstruction instruction =
-        MedicationsEhrUtils.getMedicationInstructionByEhrName(composition, ehrOrderName);
-    return getTherapyStart(patientId, instruction);
-  }
+    StringUtils.checkNotBlank(patientId, "patientId");
+    Preconditions.checkNotNull(composition, "composition");
 
-  private DateTime getTherapyStart(final long patientId, final MedicationInstructionInstruction instruction)
-  {
-    final MedicationInstructionInstruction firstInstruction = getFirstInstruction(patientId, instruction);
-    return DataValueUtils.getDateTime(firstInstruction.getOrder().get(0).getMedicationTiming().getStartDate());
-  }
-
-  MedicationInstructionInstruction getFirstInstruction(
-      final long patientId,
-      final MedicationInstructionInstruction instruction)
-  {
-    MedicationInstructionInstruction firstInstruction = instruction;
-
-    List<Link> updateLinks = MedicationsEhrUtils.getLinksOfType(firstInstruction, OpenEhrLinkType.UPDATE);
-    while (!updateLinks.isEmpty())
-    {
-      firstInstruction = getPreviousInstruction(patientId, firstInstruction).getSecond();
-      updateLinks = MedicationsEhrUtils.getLinksOfType(firstInstruction, OpenEhrLinkType.UPDATE);
-    }
-    return firstInstruction;
-  }
-
-  private Pair<MedicationOrderComposition, MedicationInstructionInstruction> getPreviousInstruction(
-      final long patientId,
-      final MedicationInstructionInstruction instruction)
-  {
-    final List<Link> updateLinks = MedicationsEhrUtils.getLinksOfType(instruction, OpenEhrLinkType.UPDATE);
-    return updateLinks.isEmpty() ? null : getInstructionFromLink(patientId, updateLinks.get(0));
+    final String originalTherapyId = getOriginalTherapyId(composition);
+    return medicationsOpenEhrDao.getTherapyInstructionStart(
+        patientId,
+        TherapyIdUtils.parseTherapyId(originalTherapyId).getFirst());
   }
 
   @Override
   public Pair<MedicationOrderComposition, MedicationInstructionInstruction> getInstructionFromLink(
-      final long patientId,
-      final Link link)
+      @Nonnull final String patientId,
+      @Nonnull final MedicationInstructionInstruction instruction,
+      @Nonnull final EhrLinkType linkType,
+      final boolean getLatestVersion)
   {
-    final DvEhrUri target = link.getTarget();
-    final OpenEhrRefUtils.EhrUriComponents ehrUri = OpenEhrRefUtils.parseEhrUri(target.getValue());
-    final String compositionId = InstructionTranslator.getCompositionUidWithoutVersion(ehrUri.getCompositionId());
-    final MedicationOrderComposition composition =
-        ehrMedicationsDao.loadMedicationOrderComposition(patientId, compositionId);
-    final List<Object> instructions = TdoPathable.itemsAtPath(ehrUri.getArchetypePath(), composition);
-    return Pair.of(composition, (MedicationInstructionInstruction)instructions.get(0));
+    StringUtils.checkNotBlank(patientId, "patientId");
+    Preconditions.checkNotNull(instruction, "instruction");
+    Preconditions.checkNotNull(linkType, "linkType");
+
+    final List<Link> updateLinks = MedicationsEhrUtils.getLinksOfType(instruction, linkType);
+    return updateLinks.isEmpty() ? null : getInstructionFromLink(patientId, updateLinks.get(0), getLatestVersion);
   }
 
-  private boolean areTherapyActionsAllowed(
-      final TherapyStatusEnum therapyStatus,
-      final RoundsIntervalDto roundsInterval,
-      final DateTime currentTime)
+  @Override
+  public Pair<MedicationOrderComposition, MedicationInstructionInstruction> getInstructionFromLink(
+      final String patientId,
+      final Link link,
+      final boolean getLatestVersion)
   {
-    final boolean roundsTime = MedicationsEhrUtils.isRoundsTimeForSession(currentTime, roundsInterval);
-    final boolean isLate = therapyStatus == TherapyStatusEnum.LATE || therapyStatus == TherapyStatusEnum.VERY_LATE;
-    return isLate || (roundsTime && therapyStatus == TherapyStatusEnum.NORMAL) || therapyStatus == TherapyStatusEnum.SUSPENDED;
+    final String targetCompositionId = MedicationsEhrUtils.getTargetCompositionIdFromLink(link);
+    final String compositionId = getLatestVersion
+                                 ? TherapyIdUtils.getCompositionUidWithoutVersion(targetCompositionId)
+                                 : targetCompositionId;
+
+    final MedicationOrderComposition composition = medicationsOpenEhrDao.loadMedicationOrderComposition(patientId, compositionId);
+    return Pair.of(composition, composition.getMedicationDetail().getMedicationInstruction().get(0));
   }
 
-  private boolean doesTherapyEndBeforeNextRounds(
-      final DateTime therapyEnd, final RoundsIntervalDto roundsInterval, final DateTime currentTime)
-  {
-    if (therapyEnd == null)
-    {
-      return false;
-    }
-    final DateTime startOfNextDaysRounds =
-        currentTime.withTimeAtStartOfDay()
-            .plusDays(1)
-            .plusHours(roundsInterval.getStartHour())
-            .plusMinutes(roundsInterval.getStartMinute());
-
-    return therapyEnd.isBefore(startOfNextDaysRounds);
-  }
-
-  private TherapyStatusEnum getTherapyStatusFromMedicationAction(
-      final List<MedicationActionAction> actionsList,  //sorted by time asc
-      final DateTime therapyStart,
-      final RoundsIntervalDto roundsInterval,
-      final Interval therapyDayInterval,
-      final DateTime currentTime)
-  {
-    final DateTime startOfTodaysRounds =
-        currentTime.withTimeAtStartOfDay()
-            .plusHours(roundsInterval.getStartHour())
-            .plusMinutes(roundsInterval.getStartMinute());
-    final DateTime startOfNextDaysRounds = startOfTodaysRounds.plusDays(1);
-
-    final Set<MedicationActionEnum> actionEnumSet = new HashSet<>();
-    for (final MedicationActionAction action : actionsList)
-    {
-      final MedicationActionEnum actionEnum =
-          MedicationActionEnum.getAction(
-              action.getIsmTransition().getCareflowStep(), action.getIsmTransition().getCurrentState());
-      actionEnumSet.add(actionEnum);
-    }
-
-    if (actionEnumSet.contains(MedicationActionEnum.CANCEL))
-    {
-      return TherapyStatusEnum.CANCELLED;
-    }
-    if (actionEnumSet.contains(MedicationActionEnum.ABORT))
-    {
-      return TherapyStatusEnum.ABORTED;
-    }
-    final boolean suspended = isTherapySuspended(actionsList);
-    if (suspended)
-    {
-      return TherapyStatusEnum.SUSPENDED;
-    }
-    if (therapyStart.isAfter(startOfNextDaysRounds))
-    {
-      return TherapyStatusEnum.FUTURE;
-    }
-    final boolean reviewed = isTherapyReviewed(actionsList, therapyDayInterval);
-    if (reviewed)
-    {
-      return TherapyStatusEnum.REVIEWED;
-    }
-
-    final int minuteOfDay = currentTime.getMinuteOfDay();
-    final int minuteOfRoundsEnd = roundsInterval.getEndHour() * 60 + roundsInterval.getEndMinute();
-    final boolean therapyStartBeforeTodaysRounds = therapyStart.isBefore(startOfTodaysRounds);
-    if (therapyStartBeforeTodaysRounds && minuteOfDay > minuteOfRoundsEnd - 60 && minuteOfDay < minuteOfRoundsEnd)
-    {
-      return TherapyStatusEnum.LATE;
-    }
-    if (therapyStartBeforeTodaysRounds && minuteOfDay > minuteOfRoundsEnd)
-    {
-      return TherapyStatusEnum.VERY_LATE;
-    }
-    return TherapyStatusEnum.NORMAL;
-  }
-
-  private boolean isTherapySuspended(final List<MedicationActionAction> actionsList)  //actions sorted by time ascending
+  @Override
+  public boolean isTherapySuspended(final List<MedicationActionAction> actionsList)  //actions sorted by time ascending
   {
     boolean suspended = false;
     for (final MedicationActionAction action : actionsList)
     {
-      final MedicationActionEnum actionEnum =
-          MedicationActionEnum.getAction(
-              action.getIsmTransition().getCareflowStep(), action.getIsmTransition().getCurrentState());
+      final MedicationActionEnum actionEnum = MedicationActionEnum.getActionEnum(action);
       if (actionEnum == MedicationActionEnum.SUSPEND)
       {
         suspended = true;
@@ -1019,53 +364,41 @@ public class DefaultMedicationsBo
     return suspended;
   }
 
-  private boolean isTherapyReviewed(
-      final List<MedicationActionAction> actionsList,   //actions sorted by time ascending
-      final Interval searchInterval)
+  @Override
+  public void sortTherapyTemplates(final TherapyTemplatesDto templates)
   {
-    for (final MedicationActionAction action : actionsList)
-    {
-      final MedicationActionEnum actionEnum =
-          MedicationActionEnum.getAction(
-              action.getIsmTransition().getCareflowStep(), action.getIsmTransition().getCurrentState());
-      final DateTime actionDateTime = DataValueUtils.getDateTime(action.getTime());
-      if (actionEnum == MedicationActionEnum.REVIEW && searchInterval.contains(actionDateTime))
-      {
-        return true;
-      }
-    }
-    return false;
+    sortTherapyTemplateElements(templates.getOrganizationTemplates());
+    sortTherapyTemplateElements(templates.getUserTemplates());
+    sortTherapyTemplateElements(templates.getPatientTemplates());
   }
 
-  private TherapyFlowRowDto findSimilarTherapy(
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapy,
-      final Map<TherapyFlowRowDto, List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>>> therapyRowsMap,
-      final Map<Long, MedicationDataForTherapyDto> medicationsMap)
+  private void sortTherapyTemplateElements(final List<TherapyTemplateDto> templates)
   {
-    TherapyFlowRowDto similarTherapy = null;
-    for (final TherapyFlowRowDto therapyFlowRow : therapyRowsMap.keySet())
+    final Collator collator = Collator.getInstance();
+    for (final TherapyTemplateDto template : templates)
     {
-      for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> compareTherapy :
-          therapyRowsMap.get(therapyFlowRow))
-      {
-        final boolean therapiesLinkedByEdit = areInstructionsLinkedByUpdate(therapy, compareTherapy);
-        if (therapiesLinkedByEdit)
-        {
-          return therapyFlowRow;
-        }
-      }
-
-      for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> compareTherapy :
-          therapyRowsMap.get(therapyFlowRow))
-      {
-        final boolean similar = areTherapiesSimilar(therapy, compareTherapy, medicationsMap, false);
-        if (similar)
-        {
-          similarTherapy = therapyFlowRow;
-        }
-      }
+      Collections.sort(
+          template.getTemplateElements(), (o1, o2) -> compareTherapiesForSort(o1.getTherapy(), o2.getTherapy(), collator));
     }
-    return similarTherapy;
+  }
+
+  @Override
+  public int compareTherapiesForSort(final TherapyDto firstTherapy, final TherapyDto secondTherapy, final Collator collator)
+  {
+    final boolean firstTherapyIsBaselineInfusion =
+        firstTherapy instanceof ComplexTherapyDto && ((ComplexTherapyDto)firstTherapy).isBaselineInfusion();
+    final boolean secondTherapyIsBaselineInfusion =
+        secondTherapy instanceof ComplexTherapyDto && ((ComplexTherapyDto)secondTherapy).isBaselineInfusion();
+
+    if (firstTherapyIsBaselineInfusion && !secondTherapyIsBaselineInfusion)
+    {
+      return -1;
+    }
+    if (!firstTherapyIsBaselineInfusion && secondTherapyIsBaselineInfusion)
+    {
+      return 1;
+    }
+    return collator.compare(firstTherapy.getTherapyDescription(), secondTherapy.getTherapyDescription());
   }
 
   @Override
@@ -1074,23 +407,19 @@ public class DefaultMedicationsBo
       final Pair<MedicationOrderComposition, MedicationInstructionInstruction> compareInstructionPair)
   {
     if (doesInstructionHaveLinkToCompareInstruction(
-        instructionPair.getSecond(), compareInstructionPair, OpenEhrLinkType.UPDATE))
+        instructionPair.getSecond(), compareInstructionPair, EhrLinkType.UPDATE))
     {
       return true;
     }
-    if (doesInstructionHaveLinkToCompareInstruction(
-        compareInstructionPair.getSecond(), instructionPair, OpenEhrLinkType.UPDATE))
-    {
-      return true;
-    }
-    return false;
+    return doesInstructionHaveLinkToCompareInstruction(
+        compareInstructionPair.getSecond(), instructionPair, EhrLinkType.UPDATE);
   }
 
   @Override
   public boolean doesInstructionHaveLinkToCompareInstruction(
       final MedicationInstructionInstruction instruction,
       final Pair<MedicationOrderComposition, MedicationInstructionInstruction> compareInstructionPair,
-      final OpenEhrLinkType linkType)
+      final EhrLinkType linkType)
   {
     for (final Link link : instruction.getLinks())
     {
@@ -1099,8 +428,8 @@ public class DefaultMedicationsBo
         final OpenEhrRefUtils.EhrUriComponents ehrUri = OpenEhrRefUtils.parseEhrUri(link.getTarget().getValue());
         final MedicationOrderComposition compareComposition = compareInstructionPair.getFirst();
         final MedicationInstructionInstruction compareInstruction = compareInstructionPair.getSecond();
-        if (InstructionTranslator.getCompositionUidWithoutVersion(ehrUri.getCompositionId()).equals(
-            InstructionTranslator.getCompositionUidWithoutVersion(compareComposition.getUid().getValue())))
+        if (TherapyIdUtils.getCompositionUidWithoutVersion(ehrUri.getCompositionId()).equals(
+            TherapyIdUtils.getCompositionUidWithoutVersion(compareComposition.getUid().getValue())))
         {
           final List<Object> linkedInstructions = TdoPathable.itemsAtPath(ehrUri.getArchetypePath(), compareComposition);
           if (!linkedInstructions.isEmpty() && linkedInstructions.get(0).equals(compareInstruction))
@@ -1119,12 +448,13 @@ public class DefaultMedicationsBo
       final Map<Long, MedicationDataForTherapyDto> medicationsMap,
       final boolean canOverlap)
   {
-    final OrderActivity orderActivity = instructionPair.getSecond().getOrder().get(0);
-    final OrderActivity compareOrderActivity = compareInstructionPair.getSecond().getOrder().get(0);
+    final OrderActivity orderActivity = MedicationsEhrUtils.getRepresentingOrderActivity(instructionPair.getSecond());
+    final OrderActivity compareOrderActivity =
+        MedicationsEhrUtils.getRepresentingOrderActivity(compareInstructionPair.getSecond());
 
     final boolean simpleTherapy = MedicationsEhrUtils.isSimpleTherapy(orderActivity);
-    final Interval therapyInterval = getInstructionInterval(orderActivity.getMedicationTiming());
-    final Interval therapyOrderInterval = getInstructionInterval(compareOrderActivity.getMedicationTiming());
+    final Interval therapyInterval = MedicationsEhrUtils.getInstructionInterval(orderActivity.getMedicationTiming());
+    final Interval therapyOrderInterval = MedicationsEhrUtils.getInstructionInterval(compareOrderActivity.getMedicationTiming());
     if (canOverlap || !therapyInterval.overlaps(therapyOrderInterval))
     {
       final boolean compareTherapyIsSimple = MedicationsEhrUtils.isSimpleTherapy(compareOrderActivity);
@@ -1154,18 +484,19 @@ public class DefaultMedicationsBo
       final Map<Long, MedicationDataForTherapyDto> medicationsMap)
   {
     //therapy
-    final String route = orderActivity.getAdministrationDetails().getRoute().get(0).getValue();
+    final List<DvCodedText> routes = orderActivity.getAdministrationDetails().getRoute();
     final Long medicationId = getMainMedicationId(orderActivity);
     final String medicationName = orderActivity.getMedicine() != null ? orderActivity.getMedicine().getValue() : null;
 
     //compare therapy
-    final String compareRoute = compareOrderActivity.getAdministrationDetails().getRoute().get(0).getValue();
+    final List<DvCodedText> compareRoutes = compareOrderActivity.getAdministrationDetails().getRoute();
     final Long compareMedicationId = getMainMedicationId(compareOrderActivity);
-    final String compareMedicationName = compareOrderActivity.getMedicine() != null ? compareOrderActivity.getMedicine().getValue() : null;
+    final String compareMedicationName =
+        compareOrderActivity.getMedicine() != null ? compareOrderActivity.getMedicine().getValue() : null;
 
     final boolean similarMedication =
         isSimilarMedication(medicationId, medicationName, compareMedicationId, compareMedicationName, medicationsMap);
-    final boolean sameRoute = route.equals(compareRoute);
+    final boolean sameRoute = CollectionUtils.containsAny(routes, compareRoutes);
 
     return similarMedication && sameRoute;
   }
@@ -1202,9 +533,9 @@ public class DefaultMedicationsBo
       final MedicationDataForTherapyDto medication, final MedicationDataForTherapyDto compareMedication)
   {
     return medication != null && compareMedication != null &&
-        ((medication.getAtcCode() == null && compareMedication.getAtcCode() == null) ||
-            medication.getAtcCode() != null && compareMedication.getAtcCode() != null &&
-                medication.getAtcCode().equals(compareMedication.getAtcCode()));
+        ((medication.getAtcGroupCode() == null && compareMedication.getAtcGroupCode() == null) ||
+            medication.getAtcGroupCode() != null && compareMedication.getAtcGroupCode() != null &&
+                medication.getAtcGroupCode().equals(compareMedication.getAtcGroupCode()));
   }
 
   private boolean isSameOrNoCustomGroup(
@@ -1223,7 +554,7 @@ public class DefaultMedicationsBo
       final Map<Long, MedicationDataForTherapyDto> medicationsMap)
   {
     final boolean therapyBaselineInfusion = isBaselineInfusion(orderActivity);
-    final boolean compareTherapyBaselineInfusion = isBaselineInfusion(orderActivity);
+    final boolean compareTherapyBaselineInfusion = isBaselineInfusion(compareOrderActivity);
 
     if (therapyBaselineInfusion && compareTherapyBaselineInfusion)
     {
@@ -1234,16 +565,17 @@ public class DefaultMedicationsBo
         compareOrderActivity.getIngredientsAndForm().getIngredient().size() == 1)
     {
       //therapy
-      final String route = orderActivity.getAdministrationDetails().getRoute().get(0).getValue();
+      final List<DvCodedText> routes = orderActivity.getAdministrationDetails().getRoute();
       final Long medicationId = getMainMedicationId(orderActivity);
       final String medicationName = orderActivity.getIngredientsAndForm().getIngredient().get(0).getName().getValue();
 
       //compare therapy
-      final String compareRoute = compareOrderActivity.getAdministrationDetails().getRoute().get(0).getValue();
+      final List<DvCodedText> compareRoutes = compareOrderActivity.getAdministrationDetails().getRoute();
       final Long compareMedicationId = getMainMedicationId(compareOrderActivity);
-      final String compareMedicationName = compareOrderActivity.getIngredientsAndForm().getIngredient().get(0).getName().getValue();
+      final String compareMedicationName =
+          compareOrderActivity.getIngredientsAndForm().getIngredient().get(0).getName().getValue();
 
-      final boolean sameRoute = route.equals(compareRoute);
+      final boolean sameRoute = CollectionUtils.containsAny(routes, compareRoutes);
       final boolean similarMedication =
           isSimilarMedication(medicationId, medicationName, compareMedicationId, compareMedicationName, medicationsMap);
 
@@ -1259,13 +591,13 @@ public class DefaultMedicationsBo
     if (!administration.getInfusionAdministrationDetails().isEmpty())
     {
       final InfusionAdministrationDetailsCluster infusionDetails = administration.getInfusionAdministrationDetails().get(0);
-      return infusionDetails.getPurposeEnum() ==
-          MedicationOrderComposition.MedicationDetailSection.InfusionAdministrationDetailsPurpose.BASELINE_ELECTROLYTE_INFUSION;
+      return infusionDetails.getPurposeEnum() == InfusionAdministrationDetailsPurpose.BASELINE_ELECTROLYTE_INFUSION;
     }
     return false;
   }
 
-  private List<Long> getMedicationIds(final OrderActivity orderActivity)
+  @Override
+  public List<Long> getMedicationIds(final OrderActivity orderActivity)
   {
     final List<Long> medicationIds = new ArrayList<>();
     final boolean simpleTherapy = MedicationsEhrUtils.isSimpleTherapy(orderActivity);
@@ -1293,7 +625,33 @@ public class DefaultMedicationsBo
     return medicationIds;
   }
 
-  private Long getMainMedicationId(final OrderActivity orderActivity)
+  @Override
+  public List<Long> getMedicationIds(final MedicationActionAction medicationAction)
+  {
+    final List<Long> medicationIds = new ArrayList<>();
+    final boolean simpleTherapy = MedicationsEhrUtils.isSimpleTherapy(medicationAction);
+    if (simpleTherapy)
+    {
+      if (medicationAction.getMedicine() instanceof DvCodedText)
+      {
+        medicationIds.add(Long.parseLong(((DvCodedText)medicationAction.getMedicine()).getDefiningCode().getCodeString()));
+      }
+    }
+    else
+    {
+      for (final IngredientCluster ingredient : medicationAction.getIngredientsAndForm().getIngredient())
+      {
+        if (ingredient.getName() instanceof DvCodedText)
+        {
+          medicationIds.add(Long.parseLong(((DvCodedText)ingredient.getName()).getDefiningCode().getCodeString()));
+        }
+      }
+    }
+    return medicationIds;
+  }
+
+  @Override
+  public Long getMainMedicationId(final OrderActivity orderActivity)
   {
     if (orderActivity.getIngredientsAndForm() != null && !orderActivity.getIngredientsAndForm().getIngredient().isEmpty())
     {
@@ -1313,74 +671,21 @@ public class DefaultMedicationsBo
     return null;
   }
 
-  @Override
-  public Long getMainMedicationId(final TherapyDto therapy)
-  {
-    if (therapy instanceof SimpleTherapyDto)
-    {
-      return ((SimpleTherapyDto)therapy).getMedication().getId();
-    }
-
-    if (therapy instanceof ComplexTherapyDto)
-    {
-      return ((ComplexTherapyDto)therapy).getIngredientsList().get(0).getMedication().getId();
-    }
-
-    return null;
-  }
-
-  @Override
-  public void saveConsecutiveDays(
-      final Long patientId,
-      final String compositionUid,
-      final String ehrOrderName,
-      final Long userId,
-      final Integer consecutiveDays)
-  {
-    final MedicationOrderComposition composition =
-        ehrMedicationsDao.loadMedicationOrderComposition(patientId, compositionUid);
-    final MedicationInstructionInstruction instruction =
-        MedicationsEhrUtils.getMedicationInstructionByEhrName(composition, ehrOrderName);
-    final NamedIdentity usersName = medicationsConnector.getUsersName(userId, DataValueUtils.getDateTime(composition.getCompositionEventContext().getStartTime()));
-
-    updateConsecutiveDays(instruction, consecutiveDays);
-    updateExistingContext(composition, usersName);
-    ehrMedicationsDao.modifyMedicationOrderComposition(patientId, composition);
-  }
-
-  private void updateConsecutiveDays(final MedicationInstructionInstruction instruction, final Integer consecutiveDays)
-  {
-    for (final OrderActivity order : instruction.getOrder())
-    {
-      if (consecutiveDays != null)
-      {
-        order.setPastDaysOfTherapy(new DvCount());
-        order.getPastDaysOfTherapy().setMagnitude(consecutiveDays);
-      }
-      else
-      {
-        order.setPastDaysOfTherapy(null);
-      }
-    }
-  }
-
-  private Interval getInstructionInterval(final MedicationTimingCluster medicationTiming)
-  {
-    final DateTime start = DataValueUtils.getDateTime(medicationTiming.getStartDate());
-    final DateTime stop =
-        medicationTiming.getStopDate() != null ?
-        DataValueUtils.getDateTime(medicationTiming.getStopDate()) :
-        null;
-
-    return stop != null ? new Interval(start, stop) : Intervals.infiniteFrom(start);
-  }
-
   private boolean isOnlyOnceThenEx(final MedicationTimingCluster medicationTiming)
   {
     return
         medicationTiming.getTimingDescription() != null &&
             medicationTiming.getTimingDescription().getValue().equals(
                 DosingFrequencyTypeEnum.getFullString(DosingFrequencyTypeEnum.ONCE_THEN_EX));
+  }
+
+  @Override
+  public boolean isMentalHealthMedication(final long medicationId)
+  {
+    final Map<Long, MedicationHolderDto> value = medicationsValueHolder.getValue();
+    final MedicationHolderDto medicationHolderDto = value.get(medicationId);
+
+    return medicationHolderDto != null && medicationHolderDto.isMentalHealthDrug();
   }
 
   @Override
@@ -1423,128 +728,43 @@ public class DefaultMedicationsBo
   }
 
   @Override
-  public <M extends TherapyDto> Pair<MedicationOrderComposition, MedicationInstructionInstruction> modifyTherapy(
-      final long patientId,
-      final M therapy,
-      final Long centralCaseId,
-      final Long careProviderId,
-      final RoundsIntervalDto roundsInterval,
-      final long userId,
-      final NamedIdentity prescriber,
-      final DateTime when,
-      final boolean alwaysOverrideTherapy,
-      final Locale locale)
+  public boolean isTherapySuspended(final MedicationOrderComposition composition, final MedicationInstructionInstruction instruction)
   {
-    final DateTime updateTime = new DateTime(when.withSecondOfMinute(0).withMillisOfSecond(0));
-    therapyDisplayProvider.fillDisplayValues(therapy, true, true, locale);
-    final MedicationOrderComposition oldComposition =
-        ehrMedicationsDao.loadMedicationOrderComposition(patientId, therapy.getCompositionUid());
-    final MedicationInstructionInstruction oldInstruction =
-        MedicationsEhrUtils.getMedicationInstructionByEhrName(oldComposition, therapy.getEhrOrderName());
-
-    final MedicationToEhrConverter<M> converter =
-        (MedicationToEhrConverter<M>)MedicationConverterSelector.getConverter(therapy);
-    final NamedIdentity usersName = medicationsConnector.getUsersName(userId, when);
-
-    //if therapy not started yet or alwaysOverrideTherapy is true
-    if (alwaysOverrideTherapy ||
-        DataValueUtils.getDateTime(
-            oldInstruction.getOrder().get(0).getMedicationTiming().getStartDate()).isAfter(updateTime))
-    {
-      //fix start
-      converter.fillInstructionFromTherapy(oldInstruction, therapy);
-      final MedicationActionAction startAction =
-          getInstructionAction(oldComposition, oldInstruction, MedicationActionEnum.START, null);
-      startAction.setTime(DataValueUtils.getDateTime(updateTime));
-
-      final boolean therapySuspended = isTherapySuspended(oldComposition, oldInstruction);
-      if (therapySuspended)
-      {
-        MedicationsEhrUtils.addMedicationActionTo(oldComposition, oldInstruction, MedicationActionEnum.REISSUE, when);
-      }
-      final MedicationActionAction reviewAction =
-          getInstructionAction(oldComposition, oldInstruction, MedicationActionEnum.REVIEW, Intervals.wholeDay(updateTime));
-      if (reviewAction == null && roundsInterval != null)
-      {
-        reviewTherapyIfInRoundsInterval(patientId, oldComposition, oldInstruction, roundsInterval, updateTime);
-      }
-      updateExistingContext(oldComposition, usersName, prescriber);
-      ehrMedicationsDao.modifyMedicationOrderComposition(patientId, oldComposition);
-      return Pair.of(oldComposition, oldInstruction);
-    }
-    else
-    {
-      //create new instruction
-      final MedicationOrderComposition newComposition = MedicationsEhrUtils.createEmptyMedicationOrderComposition();
-      final MedicationInstructionInstruction newInstruction = converter.createInstructionFromTherapy(therapy);
-      newComposition.getMedicationDetail().getMedicationInstruction().add(newInstruction);
-
-      //link new instruction to old instruction
-      final Link linkToExisting =
-          OpenEhrRefUtils.getLinkToTdoTarget("original", OpenEhrLinkType.UPDATE, oldComposition, oldInstruction);
-      newInstruction.getLinks().add(linkToExisting);
-
-      //add SCHEDULE and START actions
-      final DateTime therapyStart = therapy.getStart().isAfter(updateTime) ? therapy.getStart() : updateTime;
-      MedicationsEhrUtils.addMedicationActionTo(newComposition, newInstruction, MedicationActionEnum.SCHEDULE, updateTime);
-      MedicationsEhrUtils.addMedicationActionTo(newComposition, newInstruction, MedicationActionEnum.START, therapyStart);
-
-      if (roundsInterval != null)
-      {
-        reviewTherapyIfInRoundsInterval(patientId, newComposition, newInstruction, roundsInterval, updateTime);
-      }
-      addContext(newComposition, usersName, prescriber, centralCaseId, careProviderId, when);
-      final String newCompositionUid =
-          ehrMedicationsDao.saveNewMedicationOrderComposition(patientId, newComposition).getUid().getValue();
-      newComposition.setUid((OpenEhrRefUtils.getObjectVersionId(newCompositionUid)));
-      newInstruction.setName(DataValueUtils.getText("Medication instruction"));
-      //old composition
-      final DateTime oldCompositionStopDate = updateTime.isBefore(therapy.getStart()) ? updateTime : therapy.getStart();
-      for (final OrderActivity orderActivity : oldInstruction.getOrder())
-      {
-        orderActivity.getMedicationTiming().setStopDate(DataValueUtils.getDateTime(oldCompositionStopDate));
-      }
-      MedicationsEhrUtils.addMedicationActionTo(oldComposition, oldInstruction, MedicationActionEnum.COMPLETE, updateTime);
-      updateExistingContext(oldComposition, usersName, prescriber);
-      ehrMedicationsDao.modifyMedicationOrderComposition(patientId, oldComposition);
-      return Pair.of(newComposition, newInstruction);
-    }
-  }
-
-  @Override
-  public boolean isTherapySuspended(
-      final MedicationOrderComposition composition, final MedicationInstructionInstruction instruction)
-  {
-    final List<MedicationActionAction> actions = getInstructionActions(composition, instruction);
+    final List<MedicationActionAction> actions = MedicationsEhrUtils.getInstructionActions(composition, instruction);
     return isTherapySuspended(actions);
   }
 
-  private boolean reviewTherapyIfInRoundsInterval(
-      final long patientId,
-      final MedicationOrderComposition composition,
-      final MedicationInstructionInstruction instruction,
-      final RoundsIntervalDto roundsInterval,
-      final DateTime when)
+  @Override
+  public TherapyChangeReasonDto getTherapySuspendReason(
+      @Nonnull final MedicationOrderComposition composition,
+      @Nonnull final MedicationInstructionInstruction instruction)
   {
-    final DateTime therapyStart = getTherapyStart(patientId, instruction);
-    final DateTime startOfTodaysRounds =
-        when.withTimeAtStartOfDay()
-            .plusHours(roundsInterval.getStartHour())
-            .plusMinutes(roundsInterval.getStartMinute());
-    final DateTime endOfTodaysRounds =
-        when.withTimeAtStartOfDay()
-            .plusHours(roundsInterval.getEndHour())
-            .plusMinutes(roundsInterval.getEndMinute());
-    final Interval todaysRoundsInterval = new Interval(startOfTodaysRounds, endOfTodaysRounds);
+    Preconditions.checkNotNull(composition, "composition is required");
+    Preconditions.checkNotNull(instruction, "instruction is required");
 
-    final DateTime endOfLastRounds =
-        when.isBefore(endOfTodaysRounds) ? endOfTodaysRounds.minusDays(1) : endOfTodaysRounds;
-    if (todaysRoundsInterval.contains(when) || therapyStart.isBefore(endOfLastRounds))
+    final List<MedicationActionAction> actions = MedicationsEhrUtils.getInstructionActions(composition, instruction);
+    TherapyChangeReasonDto suspendReason = null;
+    for (final MedicationActionAction action : actions)
     {
-      MedicationsEhrUtils.addMedicationActionTo(composition, instruction, MedicationActionEnum.REVIEW, when);
-      return true;
+      final MedicationActionEnum actionEnum = MedicationActionEnum.getActionEnum(action);
+      if (actionEnum == MedicationActionEnum.SUSPEND)
+      {
+        suspendReason = MedicationsEhrUtils.getTherapyChangeReasonDtoFromAction(action);
+      }
+      else if (actionEnum == MedicationActionEnum.REISSUE)
+      {
+        suspendReason = null;
+      }
     }
-    return false;
+    return suspendReason;
+  }
+
+  @Override
+  public boolean isTherapyCancelledOrAborted(
+      final MedicationOrderComposition composition, final MedicationInstructionInstruction instruction)
+  {
+    final List<MedicationActionAction> actions = MedicationsEhrUtils.getInstructionActions(composition, instruction);
+    return isTherapyCanceledOrAborted(actions);
   }
 
   @Override
@@ -1552,14 +772,12 @@ public class DefaultMedicationsBo
       final MedicationOrderComposition composition,
       final MedicationInstructionInstruction instruction)
   {
-    final List<MedicationActionAction> instructionActions = getInstructionActions(composition, instruction);
+    final List<MedicationActionAction> instructionActions = MedicationsEhrUtils.getInstructionActions(
+        composition,
+        instruction);
     for (final MedicationActionAction action : instructionActions)
     {
-      final MedicationActionEnum actionEnum =
-          MedicationActionEnum.getAction(
-              action.getIsmTransition().getCareflowStep(),
-              action.getIsmTransition().getCurrentState());
-
+      final MedicationActionEnum actionEnum = MedicationActionEnum.getActionEnum(action);
       if (MedicationActionEnum.THERAPY_FINISHED.contains(actionEnum))
       {
         return true;
@@ -1568,55 +786,51 @@ public class DefaultMedicationsBo
     return false;
   }
 
-  private List<MedicationActionAction> getInstructionActions(
-      final MedicationOrderComposition composition,
-      final MedicationInstructionInstruction instruction)
-  {
-    final String instructionPath = TdoPathable.pathOfItem(composition, instruction).getCanonicalString();
-    final List<MedicationActionAction> actionsList = new ArrayList<>();
-    for (final MedicationActionAction action : composition.getMedicationDetail().getMedicationAction())
-    {
-      if (action.getInstructionDetails().getInstructionId().getPath().equals(instructionPath))
-      {
-        actionsList.add(action);
-      }
-    }
-
-    Collections.sort(
-        actionsList, new Comparator<MedicationActionAction>()
-        {
-          @Override
-          public int compare(
-              final MedicationActionAction action1,
-              final MedicationActionAction action2)
-          {
-            return DataValueUtils.getDateTime(action1.getTime()).compareTo(DataValueUtils.getDateTime(action2.getTime()));
-          }
-        }
-    );
-    return actionsList;
-  }
-
-  private MedicationActionAction getInstructionAction(
+  @Override
+  public MedicationActionAction getInstructionAction(
       final MedicationOrderComposition composition,
       final MedicationInstructionInstruction instruction,
       final MedicationActionEnum searchActionEnum,
       @Nullable final Interval searchInterval)
   {
-    final String instructionPath = TdoPathable.pathOfItem(composition, instruction).getCanonicalString();
-
-    for (final MedicationActionAction action : composition.getMedicationDetail().getMedicationAction())
+    if (composition.getMedicationDetail().getMedicationInstruction().size() == 1)
     {
-      if (action.getInstructionDetails().getInstructionId().getPath().equals(instructionPath))
+      final List<MedicationActionAction> actions = composition.getMedicationDetail().getMedicationAction();
+      for (final MedicationActionAction action : actions)
       {
-        final MedicationActionEnum actionEnum =
-            MedicationActionEnum.getAction(
-                action.getIsmTransition().getCareflowStep(),
-                action.getIsmTransition().getCurrentState());
-        if (searchInterval != null)
+        final MedicationActionEnum actionEnum = MedicationActionEnum.getActionEnum(action);
+        if (actionEnum == searchActionEnum)
         {
           final DateTime actionDateTime = DataValueUtils.getDateTime(action.getTime());
-          if (searchInterval.contains(actionDateTime))
+          if (searchInterval == null || searchInterval.contains(actionDateTime))
+          {
+            return action;
+          }
+        }
+      }
+      return null;
+    }
+    else
+    {
+      final String instructionPath = TdoPathable.pathOfItem(composition, instruction).getCanonicalString();
+
+      for (final MedicationActionAction action : composition.getMedicationDetail().getMedicationAction())
+      {
+        if (action.getInstructionDetails().getInstructionId().getPath().equals(instructionPath))
+        {
+          final MedicationActionEnum actionEnum = MedicationActionEnum.getActionEnum(action);
+          if (searchInterval != null)
+          {
+            final DateTime actionDateTime = DataValueUtils.getDateTime(action.getTime());
+            if (searchInterval.contains(actionDateTime))
+            {
+              if (actionEnum == searchActionEnum)
+              {
+                return action;
+              }
+            }
+          }
+          else
           {
             if (actionEnum == searchActionEnum)
             {
@@ -1624,188 +838,26 @@ public class DefaultMedicationsBo
             }
           }
         }
-        else
-        {
-          if (actionEnum == searchActionEnum)
-          {
-            return action;
-          }
-        }
       }
+      return null;
     }
-    return null;
-  }
-
-  @Override
-  public void abortTherapy(
-      final long patientId,
-      final String compositionUid,
-      final String ehrOrderName,
-      final long userId,
-      final DateTime when)
-  {
-    final MedicationOrderComposition composition =
-        ehrMedicationsDao.loadMedicationOrderComposition(patientId, compositionUid);
-    final MedicationInstructionInstruction instruction =
-        MedicationsEhrUtils.getMedicationInstructionByEhrName(composition, ehrOrderName);
-
-    abortTherapy(patientId, composition, instruction, userId, when);
-  }
-
-  @Override
-  public void abortTherapy(
-      final long patientId,
-      final MedicationOrderComposition composition,
-      final MedicationInstructionInstruction instruction,
-      final long userId,
-      final DateTime when)
-  {
-    final DateTime medicationTimingStart =
-        DataValueUtils.getDateTime(instruction.getOrder().get(0).getMedicationTiming().getStartDate());
-    final DateTime medicationTimingEnd =
-        DataValueUtils.getDateTime(instruction.getOrder().get(0).getMedicationTiming().getStopDate());
-    final boolean continuousInfusion = MedicationsEhrUtils.isContinuousInfusion(instruction);
-
-    //if medication not started yet
-    if (medicationTimingStart.isAfter(when))
-    {
-      for (final OrderActivity orderActivity : instruction.getOrder())
-      {
-        orderActivity.getMedicationTiming().setStartDate(DataValueUtils.getDateTime(when));
-        orderActivity.getMedicationTiming().setStopDate(DataValueUtils.getDateTime(when));
-      }
-      MedicationsEhrUtils.addMedicationActionTo(composition, instruction, MedicationActionEnum.CANCEL, when);
-    }
-    else
-    {
-      if (medicationTimingEnd == null || medicationTimingEnd.isAfter(when))
-      {
-        for (final OrderActivity orderActivity : instruction.getOrder())
-        {
-          orderActivity.getMedicationTiming().setStopDate(DataValueUtils.getDateTime(when));
-        }
-      }
-      MedicationsEhrUtils.addMedicationActionTo(composition, instruction, MedicationActionEnum.ABORT, when);
-    }
-
-    final NamedIdentity usersName = medicationsConnector.getUsersName(userId, when);
-    updateExistingContext(composition, usersName);
-    ehrMedicationsDao.modifyMedicationOrderComposition(patientId, composition);
-  }
-
-  @Override
-  public String reviewTherapy(
-      final long patientId,
-      final String compositionUid,
-      final String ehrOrderName,
-      final long userId,
-      final DateTime when)
-  {
-    return addMedicationActionAndSaveComposition(
-        patientId,
-        compositionUid,
-        ehrOrderName,
-        MedicationActionEnum.REVIEW,
-        userId,
-        when);
-  }
-
-  @Override
-  public String suspendTherapy(
-      final long patientId,
-      final String compositionUid,
-      final String ehrOrderName,
-      final long userId,
-      final DateTime when)
-  {
-    return addMedicationActionAndSaveComposition(
-        patientId,
-        compositionUid,
-        ehrOrderName,
-        MedicationActionEnum.SUSPEND,
-        userId,
-        when);
-  }
-
-  @Override
-  public void reissueTherapy(
-      final long patientId,
-      final String compositionUid,
-      final String ehrOrderName,
-      final RoundsIntervalDto roundsInterval,
-      final long userId,
-      final DateTime when)
-  {
-    final MedicationOrderComposition composition =
-        ehrMedicationsDao.loadMedicationOrderComposition(patientId, compositionUid);
-    final MedicationInstructionInstruction instruction =
-        MedicationsEhrUtils.getMedicationInstructionByEhrName(composition, ehrOrderName);
-
-    MedicationsEhrUtils.addMedicationActionTo(composition, instruction, MedicationActionEnum.REISSUE, when);
-
-    final MedicationActionAction reviewAction =
-        getInstructionAction(composition, instruction, MedicationActionEnum.REVIEW, Intervals.wholeDay(when));
-    if (reviewAction == null)
-    {
-      reviewTherapyIfInRoundsInterval(patientId, composition, instruction, roundsInterval, when);
-    }
-    final NamedIdentity usersName = medicationsConnector.getUsersName(userId, when);
-    updateExistingContext(composition, usersName);
-    ehrMedicationsDao.modifyMedicationOrderComposition(patientId, composition);
-  }
-
-  @Override
-  public String suspendTherapy(
-      final long patientId,
-      final MedicationOrderComposition composition,
-      final MedicationInstructionInstruction instruction,
-      final long userId,
-      final DateTime when)
-  {
-    MedicationsEhrUtils.addMedicationActionTo(composition, instruction, MedicationActionEnum.SUSPEND, when);
-
-    final NamedIdentity usersName = medicationsConnector.getUsersName(userId, when);
-    updateExistingContext(composition, usersName);
-    return ehrMedicationsDao.modifyMedicationOrderComposition(patientId, composition);
-  }
-
-  private String addMedicationActionAndSaveComposition(
-      final long patientId,
-      final String compositionUid,
-      final String ehrOrderName,
-      final MedicationActionEnum actionEnum,
-      final long userId,
-      final DateTime when)
-  {
-    final MedicationOrderComposition composition =
-        ehrMedicationsDao.loadMedicationOrderComposition(patientId, compositionUid);
-    final MedicationInstructionInstruction instruction =
-        MedicationsEhrUtils.getMedicationInstructionByEhrName(composition, ehrOrderName);
-
-    MedicationsEhrUtils.addMedicationActionTo(composition, instruction, actionEnum, when);
-
-    final NamedIdentity usersName = medicationsConnector.getUsersName(userId, when);
-    updateExistingContext(composition, usersName);
-    return ehrMedicationsDao.modifyMedicationOrderComposition(patientId, composition);
   }
 
   @Override
   public String getTherapyFormattedDisplay(
-      final long patientId, final String therapyId, final DateTime when, final Locale locale)
+      final String patientId, final String therapyId, final DateTime when, final Locale locale)
   {
     final TherapyDto therapy = getTherapy(patientId, therapyId, when, locale);
     return therapy.getFormattedTherapyDisplay();
   }
 
-  private TherapyDto getTherapy(
-      final long patientId, final String therapyId, final DateTime when, final Locale locale)
+  @Override
+  public TherapyDto getTherapy(
+      final String patientId, final String compositionId, final String ehrOrderName, final DateTime when, final Locale locale)
   {
-    final Pair<String, String> compositionIdAndInstructionName =
-        InstructionTranslator.getCompositionIdAndInstructionName(therapyId);
     final Pair<MedicationOrderComposition, MedicationInstructionInstruction> medicationInstructionPair =
-        loadMedicationInstructionPair(
-            patientId, compositionIdAndInstructionName.getFirst(), compositionIdAndInstructionName.getSecond());
-    return convertInstructionToTherapyDto(
+        medicationsOpenEhrDao.getTherapyInstructionPair(patientId, compositionId, ehrOrderName);
+    return convertInstructionToTherapyDtoWithDisplayValues(
         medicationInstructionPair.getFirst(),
         medicationInstructionPair.getSecond(),
         null,
@@ -1815,80 +867,101 @@ public class DefaultMedicationsBo
         locale);
   }
 
-  private Pair<MedicationOrderComposition, MedicationInstructionInstruction> loadMedicationInstructionPair(
-      final long patientId,
-      final String compositionId,
-      final String ehrOrderName)
+  private TherapyDto getTherapy(
+      final String patientId, final String therapyId, final DateTime when, final Locale locale)
   {
-    final MedicationOrderComposition composition =
-        ehrMedicationsDao.loadMedicationOrderComposition(patientId, compositionId);
-    final MedicationInstructionInstruction instruction =
-        MedicationsEhrUtils.getMedicationInstructionByEhrName(composition, ehrOrderName);
-    return Pair.of(composition, instruction);
+    final Pair<String, String> compositionIdAndInstructionName = TherapyIdUtils.parseTherapyId(therapyId);
+    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> medicationInstructionPair =
+        medicationsOpenEhrDao.getTherapyInstructionPair(
+            patientId, compositionIdAndInstructionName.getFirst(), compositionIdAndInstructionName.getSecond());
+    return convertInstructionToTherapyDtoWithDisplayValues(
+        medicationInstructionPair.getFirst(),
+        medicationInstructionPair.getSecond(),
+        null,
+        null,
+        when,
+        true,
+        locale);
   }
 
   @Override
   public TherapyDto convertInstructionToTherapyDto(
-      final MedicationOrderComposition composition,
-      final MedicationInstructionInstruction instruction,
+      @Nonnull final IspekComposition composition,
+      @Nonnull final MedicationInstructionInstruction instruction,
+      final DateTime currentTime)
+  {
+    Preconditions.checkNotNull(composition, "composition must not be null");
+    Preconditions.checkNotNull(instruction, "instruction must not be null");
+
+    final MedicationFromEhrConverter<?> converter = MedicationConverterSelector.getConverter(instruction);
+    final TherapyDto therapyDto = converter.createTherapyFromInstruction(
+        instruction,
+        ((Composition)composition).getUid().getValue(),
+        instruction.getName().getValue(),
+        DataValueUtils.getDateTime(composition.getCompositionEventContext().getStartTime()),
+        currentTime,
+        this);
+
+    final PartyIdentified composer = (PartyIdentified)((Composition)composition).getComposer();
+    therapyDto.setComposerName(composer.getName());
+    final DvText prescriberCode = DataValueUtils.getText(ParticipationTypeEnum.PRESCRIBER.getCode());
+
+    instruction.getOtherParticipations()
+        .stream()
+        .filter(participation -> participation.getFunction().equals(prescriberCode))
+        .forEach(participation -> therapyDto.setPrescriberName(((PartyIdentified)participation.getPerformer()).getName()));
+
+    return therapyDto;
+  }
+
+  @Override
+  public TherapyDto convertInstructionToTherapyDtoWithDisplayValues(
+      @Nonnull final IspekComposition composition,
+      @Nonnull final MedicationInstructionInstruction instruction,
       final Double referenceWeight,
       final Double patientHeight,
       final DateTime currentTime,
       final boolean isToday,
       final Locale locale)
   {
-    final MedicationFromEhrConverter<?> converter = MedicationConverterSelector.getConverter(instruction);
+    Preconditions.checkNotNull(composition, "composition");
+    Preconditions.checkNotNull(instruction, "instruction");
 
-    final TherapyDto therapyDto = converter.createTherapyFromInstruction(
-        instruction,
-        composition.getUid().getValue(),
-        instruction.getName().getValue(),
-        DataValueUtils.getDateTime(composition.getCompositionEventContext().getStartTime()),
-        currentTime,
-        this);
-
-    final List<Link> issueLinks = MedicationsEhrUtils.getLinksOfType(instruction, OpenEhrLinkType.ISSUE);
-    if (!issueLinks.isEmpty())
-    {
-      final Link link = issueLinks.get(0);
-      final DvEhrUri target = link.getTarget();
-      final OpenEhrRefUtils.EhrUriComponents ehrUri = OpenEhrRefUtils.parseEhrUri(target.getValue());
-      //final String compositionId = InstructionTranslator.getCompositionUidWithoutVersion(ehrUri.getCompositionId());
-      //final MedicationOrderComposition composition =
-      //    ehrMedicationsDao.loadMedicationOrderComposition(patientId, compositionId);
-      final List<Object> linkedInstructions = TdoPathable.itemsAtPath(ehrUri.getArchetypePath(), composition);
-
-      final String therapyId = InstructionTranslator.createId(
-          ((MedicationInstructionInstruction)linkedInstructions.get(0)).getName().getValue(),
-          composition.getUid().getValue());
-      therapyDto.setLinkFromTherapy(therapyId);
-    }
-
-    final PartyIdentified composer = (PartyIdentified)composition.getComposer();
-    therapyDto.setComposerName(composer.getName());
-    if (!instruction.getOtherParticipations().isEmpty())
-    {
-      final PartyProxy performer = instruction.getOtherParticipations().get(0).getPerformer();
-      therapyDto.setPrescriberName(((PartyIdentified)performer).getName());
-    }
+    final TherapyDto therapyDto = convertInstructionToTherapyDto(composition, instruction, currentTime);
 
     if (therapyDto instanceof ComplexTherapyDto && referenceWeight != null)
     {
-      fillInfusionFormulaFromRate((ComplexTherapyDto)therapyDto, referenceWeight, patientHeight, currentTime);
+      fillInfusionFormulaFromRate((ComplexTherapyDto)therapyDto, referenceWeight, patientHeight);
     }
 
-    if (locale != null)
-    {
-      therapyDisplayProvider.fillDisplayValues(therapyDto, isToday, true, locale);
-    }
+    fillDisplayValues(therapyDto, referenceWeight, patientHeight, isToday, locale);
     return therapyDto;
   }
 
   @Override
-  public void fillInfusionFormulaFromRate(final ComplexTherapyDto therapy, final Double referenceWeight, final Double patientHeight, final DateTime when)
+  public void fillDisplayValues(
+      @Nonnull final TherapyDto therapy,
+      final Double referenceWeight,
+      final Double patientHeight,
+      final boolean isToday,
+      final Locale locale)
   {
-    final InfusionRateCalculationDto calculationData = getInfusionRateCalculationData(therapy, when);
-    if (calculationData != null)
+    Preconditions.checkNotNull(therapy, "therapy");
+
+    if (locale != null)
+    {
+      therapyDisplayProvider.fillDisplayValues(therapy, isToday, isToday, locale);
+    }
+  }
+
+  @Override
+  public void fillInfusionFormulaFromRate(
+      final ComplexTherapyDto therapy,
+      final Double referenceWeight,
+      final Double patientHeight)
+  {
+    final InfusionRateCalculationDto calculationData = getInfusionRateCalculationData(therapy);
+    if (calculationData != null && calculationData.getQuantity() != null && calculationData.getQuantityDenominator() != null)
     {
       if (therapy instanceof ConstantComplexTherapyDto)
       {
@@ -1951,6 +1024,25 @@ public class DefaultMedicationsBo
       formulaTimeUnit = formulaUnitParts[2];
     }
 
+    final Double rateWithPatientUnit = getRateWithPatientUnits(rate, patientHeight, referenceWeight, formulaPatientUnit);
+
+    final Double rateInMassUnit = rateWithPatientUnit * calculationDto.getQuantity() / calculationDto.getQuantityDenominator(); // mg/kg/h
+    final Double rateInFormulaMassUnit =
+        TherapyUnitsConverter.convertToUnit(rateInMassUnit, calculationDto.getQuantityUnit(), formulaMassUnit); // ug/kg/h
+    if (rateInFormulaMassUnit != null)
+    {
+      final Double timeRatio = TherapyUnitsConverter.convertToUnit(1.0, "h", formulaTimeUnit);
+      return rateInFormulaMassUnit / timeRatio;  // ug/kg/min
+    }
+    return null;
+  }
+
+  private Double getRateWithPatientUnits(
+      final Double rate,
+      final Double patientHeight,
+      final Double referenceWeight,
+      final String formulaPatientUnit)
+  {
     final Double rateWithPatientUnit;
     if (formulaPatientUnit != null && formulaPatientUnit.equals("kg"))
     {
@@ -1965,24 +1057,35 @@ public class DefaultMedicationsBo
     {
       rateWithPatientUnit = rate;
     }
+    return rateWithPatientUnit;
+  }
 
-    final Double rateInMassUnit = rateWithPatientUnit * calculationDto.getQuantity() / calculationDto.getVolume(); // mg/kg/h
-    final Double rateInFormulaMassUnit =
-        TherapyUnitsConverter.convertToUnit(rateInMassUnit, calculationDto.getQuantityUnit(), formulaMassUnit); // ug/kg/h
-    if (rateInFormulaMassUnit != null)
+  private Double calculateInfusionRateInMassUnit(
+      final Double rate,
+      final InfusionRateCalculationDto calculationDto,
+      final Double patientHeight,
+      final String formulaUnit,
+      final Double referenceWeight)
+  {
+    final String[] formulaUnitParts = Pattern.compile("/").split(formulaUnit);
+    String formulaPatientUnit = null;
+
+    if (formulaUnitParts.length != 2)
     {
-      final Double timeRatio = TherapyUnitsConverter.convertToUnit(1.0, "h", formulaTimeUnit);
-      return rateInFormulaMassUnit / timeRatio;  // ug/kg/min
+      formulaPatientUnit = formulaUnitParts[1];
     }
-    return null;
+
+    final Double rateWithPatientUnit = getRateWithPatientUnits(rate, patientHeight, referenceWeight, formulaPatientUnit);
+
+    return rateWithPatientUnit * calculationDto.getQuantity() / calculationDto.getQuantityDenominator();
   }
 
   @Override
   public void fillInfusionRateFromFormula(
-      final ComplexTherapyDto therapy, final Double referenceWeight, final Double patientHeight, final DateTime when)
+      final ComplexTherapyDto therapy, final Double referenceWeight, final Double patientHeight)
   {
-    final InfusionRateCalculationDto calculationData = getInfusionRateCalculationData(therapy, when);
-    if (calculationData != null)
+    final InfusionRateCalculationDto calculationData = getInfusionRateCalculationData(therapy);
+    if (calculationData != null && calculationData.getQuantity() != null && calculationData.getQuantityDenominator() != null)
     {
       if (therapy instanceof ConstantComplexTherapyDto)
       {
@@ -1996,7 +1099,11 @@ public class DefaultMedicationsBo
               calculationData,
               referenceWeight,
               patientHeight);
-          doseElement.setRate(rate);
+
+          if (rate != null)
+          {
+            doseElement.setRate(rate);
+          }
         }
       }
       else
@@ -2014,7 +1121,11 @@ public class DefaultMedicationsBo
                 calculationData,
                 referenceWeight,
                 patientHeight);
-            timedDoseElement.getDoseElement().setRate(rate);
+
+            if (rate != null)
+            {
+              timedDoseElement.getDoseElement().setRate(rate);
+            }
           }
         }
       }
@@ -2068,15 +1179,16 @@ public class DefaultMedicationsBo
     }
     final Double timeRatio = TherapyUnitsConverter.convertToUnit(1.0, formulaTimeUnit, "h");
     final Double formulaInHours = formulaInRateMassUnit / timeRatio;  // mg/min
-    return formulaInHours * calculationDto.getVolume() / calculationDto.getQuantity(); // ml/h
+    return formulaInHours * calculationDto.getQuantityDenominator() / calculationDto.getQuantity(); // ml/h
   }
 
-  private Double calculateBodySurfaceArea(final Double heightInCm, final Double weightInKg)
+  @Override
+  public double calculateBodySurfaceArea(final double heightInCm, final double weightInKg)
   {
     return Math.sqrt((heightInCm * weightInKg) / 3600.0);
   }
 
-  InfusionRateCalculationDto getInfusionRateCalculationData(final ComplexTherapyDto therapy, final DateTime when)
+  InfusionRateCalculationDto getInfusionRateCalculationData(final ComplexTherapyDto therapy)
   {
     if (therapy.getIngredientsList().size() == 1)
     {
@@ -2086,13 +1198,15 @@ public class DefaultMedicationsBo
         if (therapy.isContinuousInfusion() && onlyInfusionIngredient.getMedication().getId() != null)
         {
           final MedicationIngredientDto medicationDefiningIngredient =
-              medicationsDao.getMedicationDefiningIngredient(onlyInfusionIngredient.getMedication().getId(), when);
-          if (medicationDefiningIngredient != null && "ml".equals(medicationDefiningIngredient.getStrengthDenominatorUnit()))
+              medicationsValueHolder.getValue().get(onlyInfusionIngredient.getMedication().getId()).getDefiningIngredient();
+          if (medicationDefiningIngredient != null &&
+              ("ml".equals(medicationDefiningIngredient.getStrengthDenominatorUnit()) ||
+                  "mL".equals(medicationDefiningIngredient.getStrengthDenominatorUnit())))
           {
             final InfusionRateCalculationDto calculationDto = new InfusionRateCalculationDto();
             calculationDto.setQuantity(medicationDefiningIngredient.getStrengthNumerator());
             calculationDto.setQuantityUnit(medicationDefiningIngredient.getStrengthNumeratorUnit());
-            calculationDto.setVolume(medicationDefiningIngredient.getStrengthDenominator());
+            calculationDto.setQuantityDenominator(medicationDefiningIngredient.getStrengthDenominator());
             return calculationDto;
           }
         }
@@ -2101,7 +1215,7 @@ public class DefaultMedicationsBo
           final InfusionRateCalculationDto calculationDto = new InfusionRateCalculationDto();
           calculationDto.setQuantity(onlyInfusionIngredient.getQuantity());
           calculationDto.setQuantityUnit(onlyInfusionIngredient.getQuantityUnit());
-          calculationDto.setVolume(onlyInfusionIngredient.getVolume());
+          calculationDto.setQuantityDenominator(onlyInfusionIngredient.getQuantityDenominator());
           return calculationDto;
         }
       }
@@ -2121,7 +1235,7 @@ public class DefaultMedicationsBo
           calculationDto = new InfusionRateCalculationDto();
           calculationDto.setQuantity(ingredient.getQuantity());
           calculationDto.setQuantityUnit(ingredient.getQuantityUnit());
-          calculationDto.setVolume(therapy.getVolumeSum());
+          calculationDto.setQuantityDenominator(therapy.getVolumeSum());
         }
       }
       return calculationDto;
@@ -2130,31 +1244,31 @@ public class DefaultMedicationsBo
   }
 
   @Override
-  public List<MedicationForWarningsSearchDto> getTherapiesForWarningsSearch(final long patientId, final DateTime when)
+  public List<MedicationForWarningsSearchDto> getTherapiesForWarningsSearch(final String patientId, final DateTime when)
   {
     final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList =
-        ehrMedicationsDao.findMedicationInstructions(patientId, Intervals.infiniteFrom(when), null);
-    return extractWarningsSearchDtos(medicationInstructionsList, when);
+        medicationsOpenEhrDao.findMedicationInstructions(patientId, Intervals.infiniteFrom(when), null);
+
+    return extractWarningsSearchDtos(medicationInstructionsList.stream().map(Pair::getFirst).collect(Collectors.toList()));
   }
 
   @Override
   public List<TherapyDto> getTherapies(
-      final long patientId,
-      final Long centralCaseId,
+      final String patientId,
+      final String centralCaseId,
       final Double referenceWeight,
       @Nullable final Locale locale,
       final DateTime when)
   {
     final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList =
-        ehrMedicationsDao.findMedicationInstructions(patientId, null, centralCaseId);
-    final List<TherapyDto> therapiesList = new ArrayList<>();
-    fillTherapiesList(therapiesList, medicationInstructionsList, referenceWeight, null, locale, when);
-    return therapiesList;
+        medicationsOpenEhrDao.findMedicationInstructions(patientId, null, centralCaseId);
+
+    return convertInstructionsToTherapies(medicationInstructionsList, referenceWeight, null, locale, when);
   }
 
   @Override
   public List<TherapyDto> getTherapies(
-      final long patientId,
+      final String patientId,
       final Interval searchInterval,
       final Double referenceWeight,
       final Double patientHeight,
@@ -2162,32 +1276,381 @@ public class DefaultMedicationsBo
       final DateTime when)
   {
     final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList =
-        ehrMedicationsDao.findMedicationInstructions(patientId, searchInterval, null);
-    final List<TherapyDto> therapiesList = new ArrayList<>();
-    fillTherapiesList(therapiesList, medicationInstructionsList, referenceWeight, patientHeight, locale, when);
-    return therapiesList;
+        medicationsOpenEhrDao.findMedicationInstructions(patientId, searchInterval, null);
+
+    return convertInstructionsToTherapies(medicationInstructionsList, referenceWeight, patientHeight, locale, when);
   }
 
-  private void fillTherapiesList(
-      final List<TherapyDto> therapiesList,
+  @Override
+  public List<MedicationOnDischargeGroupDto> getMedicationOnDischargeGroups(
+      final String patientId,
+      final DateTime lastHospitalizationStart,
+      @Nullable final Interval searchInterval,
+      final Double referenceWeight,
+      final Double patientHeight, // is this @Nullable ?
+      @Nullable final Locale locale,
+      final DateTime when)
+  {
+    final List<MedicationOnDischargeGroupDto> dischargeGroupsDtoList = new ArrayList<>();
+
+    final Map<String, Pair<TherapyStatusEnum, TherapyChangeReasonDto>> reasonsForCompositionsFromAdmission =
+        medicationsOpenEhrDao.getLastChangeReasonsForCompositionsFromAdmission(patientId, false);
+
+    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList =
+        medicationsOpenEhrDao.findMedicationInstructions(patientId, searchInterval, null);
+
+    final Map<String, String> linkedAdmissionCompositions = findLinkedMedicationsOnAdmissionFromInstructions(
+        medicationInstructionsList);
+
+    final List<TherapyDto> therapiesList = convertInstructionsToTherapies(
+        medicationInstructionsList,
+        referenceWeight,
+        patientHeight,
+        locale,
+        when);
+
+    // create inpatient therapies group
+    final MedicationOnDischargeGroupDto inpatientTherapies = new MedicationOnDischargeGroupDto();
+    inpatientTherapies.setGroupEnum(TherapySourceGroupEnum.INPATIENT_THERAPIES);
+    inpatientTherapies.setGroupName(
+        Dictionary.getEntry(EnumUtils.getIdentifier(TherapySourceGroupEnum.INPATIENT_THERAPIES), locale));
+
+    // fill inpatient therapies group
+    for (final TherapyDto therapyDto : therapiesList)
+    {
+      final String compositionId = therapyDto.getCompositionUid();
+      final DischargeSourceMedicationDto sourceMedicationDto = new DischargeSourceMedicationDto();
+
+      therapyDto.setCompositionUid(null);
+      sourceMedicationDto.setTherapy(therapyDto);
+      sourceMedicationDto.setSourceId(compositionId);
+      sourceMedicationDto.setReviewed(
+          taggingOpenEhrDao.getTags(compositionId).contains(new TagDto(TherapyTagEnum.REVIEWED_ON_DISCHARGE.getPrefix())));
+
+      if (therapyDto.isLinkedToAdmission())
+      {
+        // set change reason for inpatient therapy
+        for (final Map.Entry<String, String> entry : linkedAdmissionCompositions.entrySet())
+        {
+          if (entry.getValue().equals(TherapyIdUtils.getCompositionUidWithoutVersion(compositionId)))
+          {
+            final Pair<TherapyStatusEnum, TherapyChangeReasonDto> reasonDtoPair = reasonsForCompositionsFromAdmission
+                .get(entry.getKey());
+
+            if (reasonDtoPair != null)
+            {
+              sourceMedicationDto.setChangeReason(reasonDtoPair.getSecond());
+              sourceMedicationDto.setStatus(reasonDtoPair.getFirst());
+            }
+          }
+        }
+      }
+      inpatientTherapies.getGroupElements().add(sourceMedicationDto);
+    }
+
+    final List<MedicationOnAdmissionDto> existingMedicationsOnAdmission = medicationOnAdmissionHandler.getMedicationsOnAdmission(
+        patientId,
+        lastHospitalizationStart,
+        when,
+        locale);
+
+    // create admission therapies group
+    final MedicationOnDischargeGroupDto therapiesOnAdmission = new MedicationOnDischargeGroupDto();
+    therapiesOnAdmission.setGroupEnum(TherapySourceGroupEnum.MEDICATION_ON_ADMISSION);
+    therapiesOnAdmission.setGroupName(
+        Dictionary.getEntry(
+            EnumUtils.getIdentifier(TherapySourceGroupEnum.MEDICATION_ON_ADMISSION), locale));
+
+    // fill admission therapies group
+    for (final MedicationOnAdmissionDto admissionDto : existingMedicationsOnAdmission)
+    {
+      final boolean isSuspendedOrPending = admissionDto.getStatus() == MedicationOnAdmissionStatus.SUSPENDED ||
+          admissionDto.getStatus() == MedicationOnAdmissionStatus.PENDING;
+
+      final String compositionUidWithoutVersion = TherapyIdUtils.getCompositionUidWithoutVersion(
+          admissionDto.getTherapy()
+              .getCompositionUid());
+
+      if (linkedAdmissionCompositions.get(compositionUidWithoutVersion) == null)
+      {
+        final DischargeSourceMedicationDto sourceMedicationDto = new DischargeSourceMedicationDto();
+        final String compositionId = admissionDto.getTherapy().getCompositionUid();
+
+        admissionDto.getTherapy().setCompositionUid(null);
+        admissionDto.getTherapy().setLinkedToAdmission(true);
+
+        //TODO Nejc check
+        if (admissionDto.getStatus() == MedicationOnAdmissionStatus.SUSPENDED)
+        {
+          sourceMedicationDto.setStatus(TherapyStatusEnum.SUSPENDED);
+        }
+        sourceMedicationDto.setTherapy(admissionDto.getTherapy());
+        sourceMedicationDto.setSourceId(compositionId);
+        sourceMedicationDto.setReviewed(
+            taggingOpenEhrDao.getTags(compositionId).contains(new TagDto(TherapyTagEnum.REVIEWED_ON_DISCHARGE.getPrefix())));
+
+        final Pair<TherapyStatusEnum, TherapyChangeReasonDto> changeReasonDtoPair = reasonsForCompositionsFromAdmission
+            .get(compositionUidWithoutVersion);
+
+        if (changeReasonDtoPair != null)
+        {
+          sourceMedicationDto.setChangeReason(changeReasonDtoPair.getSecond());
+          sourceMedicationDto.setStatus(changeReasonDtoPair.getFirst());
+        }
+
+        if (isSuspendedOrPending)
+        {
+          inpatientTherapies.getGroupElements().add(sourceMedicationDto);
+        }
+        else
+        {
+          therapiesOnAdmission.getGroupElements().add(sourceMedicationDto);
+        }
+      }
+    }
+    sortTherapiesByAdmissionLink(inpatientTherapies.getGroupElements());
+
+    // add inpatient and admission therapies groups to list
+    dischargeGroupsDtoList.add(inpatientTherapies);
+    //TODO Nejc check
+    //dischargeGroupsDtoList.add(therapiesOnAdmission);
+
+    return dischargeGroupsDtoList;
+  }
+
+  @Override
+  public List<MentalHealthTherapyDto> getMentalHealthTherapies(
+      final String patientId,
+      final Interval searchInterval,
+      final DateTime when,
+      final Locale locale)
+  {
+    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList =
+        medicationsOpenEhrDao.findMedicationInstructions(patientId, searchInterval, null);
+
+    final List<MentalHealthTherapyDto> mentalHealthTherapyDtos = extractMentalHealthTherapiesList(medicationInstructionsList);
+    final Set<MentalHealthTherapyDto> filteredMentalHealthTherapyList = filterMentalHealthTherapyList(mentalHealthTherapyDtos);
+
+    return new ArrayList(filteredMentalHealthTherapyList);
+  }
+
+  @Override
+  public List<TherapyDto> getLinkTherapyCandidates(
+      @Nonnull final String patientId,
+      @Nonnull final Double referenceWeight,
+      final Double patientHeight,
+      @Nonnull final DateTime when,
+      @Nonnull final Locale locale)
+  {
+    Preconditions.checkNotNull(patientId, "patientId must not be null");
+    Preconditions.checkNotNull(referenceWeight, "referenceWeight must not be null");
+    Preconditions.checkNotNull(when, "when must not be null");
+    Preconditions.checkNotNull(locale, "locale must not be null");
+
+    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> continuousInfusionInstructions =
+        medicationsOpenEhrDao.findMedicationInstructions(patientId, Intervals.infiniteFrom(when), null)
+            .stream()
+            .filter(this::isContinuousInfusion)
+            .collect(Collectors.toList());
+
+    final Set<String> followedCompositionIds = continuousInfusionInstructions
+        .stream()
+        .filter(pair -> !isTherapyCancelledOrAborted(pair.getFirst(), pair.getSecond()))
+        .filter(pair -> hasFollowLink(pair.getSecond()))
+        .map(this::getFollowLinkCompositionUid)
+        .collect(Collectors.toSet());
+
+    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> followInstructionCandidates =
+        continuousInfusionInstructions
+            .stream()
+            .filter(pair -> !isTherapyCancelledOrAborted(pair.getFirst(), pair.getSecond()))
+            .filter(this::hasTherapyEnd)
+            .filter(pair -> !followedCompositionIds.contains(
+                TherapyIdUtils.getCompositionUidWithoutVersion(pair.getFirst().getUid().getValue())))
+            .collect(Collectors.toList());
+
+    return convertInstructionsToTherapies(followInstructionCandidates, referenceWeight, patientHeight, locale, when);
+  }
+
+  private boolean hasFollowLink(final MedicationInstructionInstruction instruction)
+  {
+    return !MedicationsEhrUtils.getLinksOfType(instruction, EhrLinkType.FOLLOW).isEmpty();
+  }
+
+  private String getFollowLinkCompositionUid(final Pair<MedicationOrderComposition, MedicationInstructionInstruction> pair)
+  {
+    final List<Link> followLinks = MedicationsEhrUtils.getLinksOfType(pair.getSecond(), EhrLinkType.FOLLOW);
+
+    if (followLinks.isEmpty())
+    {
+      return null;
+    }
+    else
+    {
+      final String targetCompositionId = MedicationsEhrUtils.getTargetCompositionIdFromLink(followLinks.get(0));
+      return TherapyIdUtils.getCompositionUidWithoutVersion(targetCompositionId);
+    }
+  }
+
+  private boolean hasTherapyEnd(final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instruction)
+  {
+    final OrderActivity orderActivity = instruction.getSecond().getOrder().get(0);
+    final MedicationTimingCluster medicationTiming = orderActivity.getMedicationTiming();
+    return medicationTiming.getStopDate() != null;
+  }
+
+  private boolean isContinuousInfusion(final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instruction)
+  {
+    final OrderActivity orderActivity = instruction.getSecond().getOrder().get(0);
+    final AdministrationDetailsCluster administration = orderActivity.getAdministrationDetails();
+    return MedicationDeliveryMethodEnum.isContinuousInfusion(administration.getDeliveryMethod());
+  }
+
+  Set<MentalHealthTherapyDto> filterMentalHealthTherapyList(final List<MentalHealthTherapyDto> mentalHealthTherapyDtos)
+  {
+    final Set<MentalHealthTherapyDto> removedDuplicates = new TreeSet<>((o1, o2) -> {
+      final int statusCompare =  o1.getTherapyStatusEnum().compareTo(o2.getTherapyStatusEnum());
+      if (statusCompare == 0)
+      {
+        final Long o1Id = o1.getMentalHealthMedicationDto().getId();
+        final Long o2Id = o2.getMentalHealthMedicationDto().getId();
+
+        final int idCompare = o1Id.compareTo(o2Id);
+
+        final Long o1RouteId = o1.getMentalHealthMedicationDto().getRoute().getId();
+        final Long o2RouteId = o2.getMentalHealthMedicationDto().getRoute().getId();
+
+        return idCompare == 0 ? o1RouteId.compareTo(o2RouteId) : idCompare;
+      }
+      else
+      {
+        return statusCompare;
+      }
+    });
+
+    removedDuplicates.addAll(mentalHealthTherapyDtos);
+    return removedDuplicates;
+  }
+
+  private void sortTherapiesByAdmissionLink(
+      final List<SourceMedicationDto> therapies)
+  {
+    final Collator collator = Collator.getInstance();
+    Collections.sort(
+        therapies, (o1, o2) -> {
+          if (o1.getTherapy().isLinkedToAdmission() && !o2.getTherapy().isLinkedToAdmission())
+          {
+            return -1;
+          }
+          if (!o1.getTherapy().isLinkedToAdmission() && o2.getTherapy().isLinkedToAdmission())
+          {
+            return 1;
+          }
+          return compareTherapiesForSort(o1.getTherapy(), o2.getTherapy(), collator);
+        });
+  }
+
+  private Map<String, String> findLinkedMedicationsOnAdmissionFromInstructions(
+      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList)
+  {
+    final Map<String, String> linkedAdmissionIdWithInpatientId = new HashMap<>();
+    for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair : medicationInstructionsList)
+    {
+      final List<Link> admissionLinks = MedicationsEhrUtils.getLinksOfType(
+          instructionPair.getSecond(),
+          EhrLinkType.MEDICATION_ON_ADMISSION);
+
+      if (!admissionLinks.isEmpty())
+      {
+        final DvEhrUri target = admissionLinks.get(0).getTarget();
+        final OpenEhrRefUtils.EhrUriComponents ehrUri = OpenEhrRefUtils.parseEhrUri(target.getValue());
+        linkedAdmissionIdWithInpatientId.put(
+            TherapyIdUtils.getCompositionUidWithoutVersion(ehrUri.getCompositionId()),
+            TherapyIdUtils.getCompositionUidWithoutVersion(instructionPair.getFirst().getUid().getValue()));
+      }
+    }
+    return linkedAdmissionIdWithInpatientId;
+  }
+
+  private List<TherapyDto> convertInstructionsToTherapies(
       final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList,
       final Double referenceWeight,
       final Double patientHeight,
       @Nullable final Locale locale,
       final DateTime when)
   {
+    final List<TherapyDto> therapiesList = new ArrayList<>();
     for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair : medicationInstructionsList)
     {
-      final MedicationOrderComposition composition = instructionPair.getFirst();
-      final MedicationInstructionInstruction instruction = instructionPair.getSecond();
-      final TherapyDto therapyDto =
-          getTherapyFromMedicationInstruction(composition, instruction, referenceWeight, patientHeight, when);
-      if (locale != null)
+      final List<MedicationActionAction> actions =
+          MedicationsEhrUtils.getInstructionActions(instructionPair.getFirst(), instructionPair.getSecond());
+      final boolean therapyEndedWithModify = isTherapyCompletedWithModify(actions);
+      if (!therapyEndedWithModify)
       {
-        therapyDisplayProvider.fillDisplayValues(therapyDto, true, true, locale);
+        final MedicationOrderComposition composition = instructionPair.getFirst();
+        final MedicationInstructionInstruction instruction = instructionPair.getSecond();
+        final TherapyDto therapyDto =
+            getTherapyFromMedicationInstruction(composition, instruction, referenceWeight, patientHeight, when);
+        if (locale != null)
+        {
+          therapyDisplayProvider.fillDisplayValues(therapyDto, true, true, locale);
+        }
+        therapiesList.add(therapyDto);
       }
-      therapiesList.add(therapyDto);
     }
+
+    return therapiesList;
+  }
+
+  List<MentalHealthTherapyDto> extractMentalHealthTherapiesList(
+      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList)
+  {
+    final List<MentalHealthTherapyDto> mentalHealthTherapyDtos = new ArrayList<>();
+    for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> medicationInstruction : medicationInstructionsList)
+    {
+      final OrderActivity orderActivity = MedicationsEhrUtils.getRepresentingOrderActivity(medicationInstruction.getSecond());
+      final List<Long> medicationIds = getMedicationIds(orderActivity);
+
+      mentalHealthTherapyDtos.addAll(
+          medicationIds.stream()
+              .filter(this::isMentalHealthMedication)
+              .map(medicationId -> buildMentalHealthTherapyDto(orderActivity, medicationId, medicationInstruction))
+              .collect(Collectors.toList()));
+    }
+    return mentalHealthTherapyDtos;
+  }
+
+  private MentalHealthTherapyDto buildMentalHealthTherapyDto(
+      final OrderActivity orderActivity,
+      final Long medicationId,
+      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> medicationInstruction)
+  {
+    final MentalHealthTherapyDto mentalHealthTherapyDto = new MentalHealthTherapyDto();
+    final MedicationDto medicationDto = getMedication(medicationId);
+
+    TherapyStatusEnum therapyStatusEnum = TherapyStatusEnum.NORMAL;
+    if (isTherapySuspended(MedicationsEhrUtils.getInstructionActions(medicationInstruction.getFirst(), medicationInstruction.getSecond())))
+    {
+      therapyStatusEnum = TherapyStatusEnum.SUSPENDED;
+    }
+    else if (isTherapyCancelledOrAborted(medicationInstruction.getFirst(), medicationInstruction.getSecond()))
+    {
+      therapyStatusEnum = TherapyStatusEnum.ABORTED;
+    }
+
+    final String routeId = orderActivity.getAdministrationDetails().getRoute().get(0).getDefiningCode().getCodeString();
+
+    final MentalHealthMedicationDto mentalHealthMedicationDto = new MentalHealthMedicationDto(
+        medicationId,
+        medicationDto.getShortName(),
+        medicationDto.getGenericName(),
+        getMedicationRoute(Long.valueOf(routeId)));
+
+    mentalHealthTherapyDto.setMentalHealthMedicationDto(mentalHealthMedicationDto);
+    mentalHealthTherapyDto.setGenericName(medicationDto.getGenericName());
+    mentalHealthTherapyDto.setTherapyStatusEnum(therapyStatusEnum);
+
+    return mentalHealthTherapyDto;
   }
 
   private TherapyDto getTherapyFromMedicationInstruction(
@@ -2208,53 +1671,93 @@ public class DefaultMedicationsBo
 
     if (therapy instanceof ComplexTherapyDto && referenceWeight != null)
     {
-      fillInfusionFormulaFromRate((ComplexTherapyDto)therapy, referenceWeight, patientHeight, when);
+      fillInfusionFormulaFromRate((ComplexTherapyDto)therapy, referenceWeight, patientHeight);
     }
 
     return therapy;
   }
 
   @Override
-  public List<TherapyDto> getPatientTherapiesForReport(
-      final long patientId,
+  public List<TherapySurgeryReportElementDto> getTherapySurgeryReportElements(
+      @Nonnull final String patientId,
       final Double patientHeight,
-      final DateTime searchStart,
-      final RoundsIntervalDto roundsIntervalDto,
-      final DateTime currentTime)
+      @Nonnull final DateTime searchStart,
+      @Nonnull final RoundsIntervalDto roundsIntervalDto,
+      @Nonnull final Locale locale,
+      @Nonnull final DateTime when)
   {
+    Preconditions.checkNotNull(patientId, "patientId");
+    Preconditions.checkNotNull(searchStart, "searchStart");
+    Preconditions.checkNotNull(roundsIntervalDto, "roundsIntervalDto");
+    Preconditions.checkNotNull(locale, "locale");
+    Preconditions.checkNotNull(when, "when");
+
     final DateTime roundsStart = new DateTime(
         searchStart.getYear(),
         searchStart.getMonthOfYear(),
         searchStart.getDayOfMonth(),
         roundsIntervalDto.getStartHour(),
         roundsIntervalDto.getStartMinute());
+
     final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionsList =
-        ehrMedicationsDao.findMedicationInstructions(patientId, Intervals.infiniteFrom(roundsStart), null);
+        medicationsOpenEhrDao.findMedicationInstructions(
+            patientId,
+            Intervals.infiniteFrom(roundsStart),
+            null);
 
-    final Double referenceWeight =
-        ehrMedicationsDao.getPatientLastReferenceWeight(patientId, Intervals.infiniteTo(searchStart));
+    final Double referenceWeight = medicationsOpenEhrDao.getPatientLastReferenceWeight(
+        patientId,
+        Intervals.infiniteTo(searchStart));
 
-    final List<TherapyDto> therapiesList = new ArrayList<>();
+
+    final List<TherapySurgeryReportElementDto> elements = new ArrayList<>();
+    final Map<Long, MedicationDataForTherapyDto> medicationsMap = getMedicationDataForTherapies(instructionsList, null);
+
     for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair : instructionsList)
     {
       final MedicationOrderComposition composition = instructionPair.getFirst();
       final MedicationInstructionInstruction instruction = instructionPair.getSecond();
 
       final MedicationTimingCluster medicationTiming = instruction.getOrder().get(0).getMedicationTiming();
-      final Interval instructionInterval = getInstructionInterval(medicationTiming);
+      final Interval instructionInterval = MedicationsEhrUtils.getInstructionInterval(medicationTiming);
       final boolean onlyOnce = isOnlyOnceThenEx(medicationTiming);
-      if (instructionInterval.overlaps(Intervals.infiniteFrom(searchStart)) || onlyOnce)
+      if (instructionInterval.overlaps(Intervals.infiniteFrom(searchStart)) ||
+          onlyOnce && instructionInterval.getStart().isAfter(searchStart.minusHours(1)))
       {
-        final List<MedicationActionAction> actions = getInstructionActions(composition, instruction);
+        final List<MedicationActionAction> actions = MedicationsEhrUtils.getInstructionActions(composition, instruction);
         if (!isTherapyCanceledAbortedOrSuspended(actions))
         {
-          final TherapyDto therapyDto =
-              getTherapyFromMedicationInstruction(composition, instruction, referenceWeight, patientHeight, currentTime);
-          therapiesList.add(therapyDto);
+          final TherapyDto therapy = getTherapyFromMedicationInstruction(
+              composition,
+              instruction,
+              referenceWeight,
+              patientHeight,
+              when);
+
+          therapyDisplayProvider.fillDisplayValues(therapy, false, true, false, locale, true);
+
+          final boolean containsAntibiotics = getMedicationIds(MedicationsEhrUtils.getRepresentingOrderActivity(instruction))
+              .stream()
+              .anyMatch(id -> medicationsMap.containsKey(id) && medicationsMap.get(id).isAntibiotic());
+
+          if (containsAntibiotics)
+          {
+            final int consecutiveDays = getTherapyConsecutiveDay(
+                getOriginalTherapyStart(patientId, composition),
+                when,
+                when,
+                therapy.getPastDaysOfTherapy());
+
+            elements.add(new TherapySurgeryReportElementDto(therapy.getFormattedTherapyDisplay(), consecutiveDays));
+          }
+          else
+          {
+            elements.add(new TherapySurgeryReportElementDto(therapy.getFormattedTherapyDisplay()));
+          }
         }
       }
     }
-    return therapiesList;
+    return elements;
   }
 
   private boolean isTherapyCanceledAbortedOrSuspended(final List<MedicationActionAction> actions)
@@ -2270,10 +1773,7 @@ public class DefaultMedicationsBo
   {
     for (final MedicationActionAction action : actions)
     {
-      final MedicationActionEnum actionEnum =
-          MedicationActionEnum.getAction(
-              action.getIsmTransition().getCareflowStep(),
-              action.getIsmTransition().getCurrentState());
+      final MedicationActionEnum actionEnum = MedicationActionEnum.getActionEnum(action);
       if (actionEnum == MedicationActionEnum.CANCEL || actionEnum == MedicationActionEnum.ABORT)
       {
         return true;
@@ -2282,21 +1782,37 @@ public class DefaultMedicationsBo
     return false;
   }
 
-  List<MedicationForWarningsSearchDto> extractWarningsSearchDtos(
-      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructionsList,
-      final DateTime when)
+  private boolean isTherapyCompletedWithModify(final List<MedicationActionAction> actions)
   {
-    final List<MedicationForWarningsSearchDto> medicationSummariesList = new ArrayList<MedicationForWarningsSearchDto>();
-    for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> medicationInstruction : medicationInstructionsList)
+    for (final MedicationActionAction action : actions)
     {
-      final OrderActivity orderActivity = medicationInstruction.getSecond().getOrder().get(0);
+      final MedicationActionEnum actionEnum = MedicationActionEnum.getActionEnum(action);
+      if (actionEnum == MedicationActionEnum.COMPLETE)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public List<MedicationForWarningsSearchDto> extractWarningsSearchDtos(
+      @Nonnull final List<MedicationOrderComposition> compositions)
+  {
+    Preconditions.checkNotNull(compositions, "compositions must not be null");
+
+    final List<MedicationForWarningsSearchDto> medicationSummariesList = new ArrayList<>();
+    for (final MedicationOrderComposition composition : compositions)
+    {
+      final OrderActivity orderActivity = MedicationsEhrUtils.getRepresentingOrderActivity(
+          composition.getMedicationDetail().getMedicationInstruction().get(0));
 
       if (orderActivity.getIngredientsAndForm() != null && !orderActivity.getIngredientsAndForm().getIngredient().isEmpty())
       {
         for (final IngredientCluster ingredient : orderActivity.getIngredientsAndForm().getIngredient())
         {
           final MedicationForWarningsSearchDto medicationDto =
-              buildWarningSearchDtoFromIngredient(orderActivity, ingredient, when);
+              buildWarningSearchDtoFromIngredient(orderActivity, ingredient);
           if (medicationDto != null)
           {
             medicationSummariesList.add(medicationDto);
@@ -2305,7 +1821,7 @@ public class DefaultMedicationsBo
       }
       else
       {
-        final MedicationForWarningsSearchDto medicationDto = buildWarningSearchDtoFromMedication(orderActivity, when);
+        final MedicationForWarningsSearchDto medicationDto = buildWarningSearchDtoFromMedication(orderActivity);
         if (medicationDto != null)
         {
           medicationSummariesList.add(medicationDto);
@@ -2316,9 +1832,7 @@ public class DefaultMedicationsBo
   }
 
   MedicationForWarningsSearchDto buildWarningSearchDtoFromIngredient(
-      final OrderActivity orderActivity,
-      final IngredientCluster ingredient,
-      final DateTime when)
+      final OrderActivity orderActivity, final IngredientCluster ingredient)
   {
     if (ingredient.getName() instanceof DvCodedText) //if DvCodedText then medication exists in database
     {
@@ -2343,12 +1857,12 @@ public class DefaultMedicationsBo
       }
 
       final String route = orderActivity.getAdministrationDetails().getRoute().get(0).getDefiningCode().getCodeString();
-      return buildWarningSearchDto(orderActivity.getMedicationTiming(), medicationId, route, doseAmount, doseUnit, when);
+      return buildWarningSearchDto(orderActivity.getMedicationTiming(), medicationId, route, doseAmount, doseUnit);
     }
     return null;
   }
 
-  MedicationForWarningsSearchDto buildWarningSearchDtoFromMedication(final OrderActivity orderActivity, final DateTime when)
+  MedicationForWarningsSearchDto buildWarningSearchDtoFromMedication(final OrderActivity orderActivity)
   {
     if (orderActivity.getMedicine() instanceof DvCodedText) //if DvCodedText then medication exists in database
     {
@@ -2357,18 +1871,36 @@ public class DefaultMedicationsBo
 
       Double doseAmount = null;
       String doseUnit = null;
-      if (orderActivity.getStructuredDose().getQuantity() != null)
+
+      final StructuredDoseCluster structuredDose = orderActivity.getStructuredDose();
+      if (structuredDose != null)
       {
-        doseAmount = orderActivity.getStructuredDose().getQuantity().getMagnitude();
-        doseUnit = orderActivity.getStructuredDose().getDoseUnit().getDefiningCode().getCodeString();
+        final DataValue quantity = structuredDose.getQuantity();
+        if (quantity != null)
+        {
+          doseUnit = structuredDose.getDoseUnit().getDefiningCode().getCodeString();
+          doseAmount = quantity instanceof DvQuantity
+                       ? ((DvQuantity)quantity).getMagnitude()
+                       : ((DvQuantity)((DvInterval)quantity).getUpper()).getMagnitude();
+        }
+        else
+        {
+          final RatioNumeratorCluster numerator = structuredDose.getRatioNumerator();
+          if (numerator != null)
+          {
+            doseUnit = numerator.getDoseUnit().getDefiningCode().getCodeString();
+            doseAmount = numerator.getAmount() instanceof DvQuantity
+                         ? ((DvQuantity)numerator.getAmount()).getMagnitude()
+                         : ((DvQuantity)((DvInterval)numerator.getAmount()).getUpper()).getMagnitude();
+          }
+        }
       }
-      else if (orderActivity.getStructuredDose().getRatioNumerator() != null)
-      {
-        doseAmount = orderActivity.getStructuredDose().getRatioNumerator().getAmount().getMagnitude();
-        doseUnit = orderActivity.getStructuredDose().getRatioNumerator().getDoseUnit().getDefiningCode().getCodeString();
-      }
-      final String route = orderActivity.getAdministrationDetails().getRoute().get(0).getDefiningCode().getCodeString();
-      return buildWarningSearchDto(orderActivity.getMedicationTiming(), medicationId, route, doseAmount, doseUnit, when);
+
+      final String route = !orderActivity.getAdministrationDetails().getRoute().isEmpty() ?
+                           orderActivity.getAdministrationDetails().getRoute().get(0).getDefiningCode().getCodeString() :
+                           null;
+
+      return buildWarningSearchDto(orderActivity.getMedicationTiming(), medicationId, route, doseAmount, doseUnit);
     }
     return null;
   }
@@ -2378,8 +1910,7 @@ public class DefaultMedicationsBo
       final Long medicationId,
       final String route,
       final Double doseAmount,
-      final String doseUnit,
-      final DateTime currentTime)
+      final String doseUnit)
   {
     final MedicationForWarningsSearchDto summary = new MedicationForWarningsSearchDto();
     final DateTime start = DataValueUtils.getDateTime(medicationTimingCluster.getStartDate());
@@ -2389,12 +1920,13 @@ public class DefaultMedicationsBo
             start != null ? start : Intervals.INFINITE.getStart(),
             stop != null ? stop : Intervals.INFINITE.getEnd())
     );
-    final MedicationDto medicationDto = medicationsDao.getMedicationById(medicationId, currentTime);
+    final MedicationDto medicationDto = getMedication(medicationId);
     if (medicationDto == null)
     {
       throw new IllegalArgumentException("Medication with id: " + medicationId + " not found!");
     }
-    summary.setDescription(medicationDto.getName());
+    summary.setName(medicationDto.getName());
+    summary.setShortName(medicationDto.getShortName());
     summary.setId(medicationDto.getId());
 
     final int dailyFrequency = getMedicationDailyFrequency(medicationTimingCluster);
@@ -2418,7 +1950,12 @@ public class DefaultMedicationsBo
     }
     if (medicationTiming.getTiming() != null && medicationTiming.getTiming().getInterval() != null)
     {
-      return 24 / DataValueUtils.getPeriod(medicationTiming.getTiming().getInterval().getValue()).getHours();
+      final int hours = DataValueUtils.getPeriod(medicationTiming.getTiming().getInterval().getValue()).getHours();
+      if (hours != 0)
+      {
+        return 24 / hours;
+      }
+      return 1;
     }
     if (medicationTiming.getNumberOfAdministrations() != null)
     {
@@ -2449,285 +1986,56 @@ public class DefaultMedicationsBo
   }
 
   @Override
-  public List<HourMinuteDto> getPossibleAdministrations(
-      final AdministrationTimingDto administrationTiming, final String frequency)
+  public MedicationDto getMedication(final Long medicationId)
   {
-    Preconditions.checkNotNull(administrationTiming);
-    Preconditions.checkNotNull(frequency);
-
-    for (final AdministrationTimingDto.AdministrationTimestampsDto administrationTimestamps : administrationTiming.getTimestampsList())
-    {
-      if (frequency.equals(administrationTimestamps.getFrequency()))
-      {
-        return administrationTimestamps.getTimesList();
-      }
-    }
-    return null;
+    final Map<Long, MedicationHolderDto> value = medicationsValueHolder.getValue();
+    return medicationHolderDtoMapper.mapToMedicationDto(value.get(medicationId));
   }
 
   @Override
-  public MedicationDto getMedication(final Long medicationId, final DateTime when)
+  public DoseFormDto getDoseForm(final String doseFormCode, final DateTime when)
   {
-    return medicationsDao.getMedicationById(medicationId, when);
+    return medicationsDao.getDoseFormByCode(doseFormCode, when);
   }
 
   @Override
-  public DoseFormDto getDoseForm(final String code, final DateTime when)
+  public DoseFormDto getMedicationDoseForm(final long medicationId)
   {
-    return medicationsDao.getDoseFormByCode(code, when);
+    return medicationsValueHolder.getValue().get(medicationId).getDoseFormDto();
   }
 
   @Override
-  public TherapyCardInfoDto getTherapyCardInfoData(
-      final long patientId,
-      final Double patientHeight,
-      final String compositionId,
-      final String ehrOrderName,
-      final Locale locale,
-      final Interval similarTherapiesInterval,
-      final DateTime when)
+  public MedicationRouteDto getMedicationRoute(final long routeId)
   {
-    final TherapyCardInfoDto cardInfoDto = new TherapyCardInfoDto();
-
-    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> currentInstructionPair =
-        loadMedicationInstructionPair(patientId, compositionId, ehrOrderName);
-
-    final Double referenceWeight = ehrMedicationsDao.getPatientLastReferenceWeight(patientId, Intervals.infiniteTo(when));
-
-    final TherapyDto currentTherapy =
-        convertInstructionToTherapyDto(
-            currentInstructionPair.getFirst(),
-            currentInstructionPair.getSecond(),
-            referenceWeight,
-            patientHeight,
-            when,
-            true,
-            locale);
-
-    cardInfoDto.setCurrentTherapy(currentTherapy);
-
-    MedicationInstructionInstruction instruction = currentInstructionPair.getSecond();
-    TherapyDto therapy = currentTherapy;
-
-    List<Link> updateLinks = MedicationsEhrUtils.getLinksOfType(instruction, OpenEhrLinkType.UPDATE);
-    while (!updateLinks.isEmpty())
-    {
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> previousInstructionPair =
-          getPreviousInstruction(patientId, instruction);
-
-      final TherapyDto previousTherapy =
-          convertInstructionToTherapyDto(
-              previousInstructionPair.getFirst(),
-              previousInstructionPair.getSecond(),
-              referenceWeight,
-              patientHeight,
-              when,
-              true,
-              locale);
-
-      final TherapyChangeHistoryDto changeHistory = calculateTherapyChange(previousTherapy, therapy);
-      cardInfoDto.getChangeHistoryList().add(changeHistory);
-
-      instruction = previousInstructionPair.getSecond();
-      updateLinks = MedicationsEhrUtils.getLinksOfType(instruction, OpenEhrLinkType.UPDATE);
-      therapy = previousTherapy;
-    }
-    cardInfoDto.setOriginalTherapy(therapy);
-
-    if (similarTherapiesInterval != null)
-    {
-      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> otherTherapies =
-          ehrMedicationsDao.findMedicationInstructions(patientId, similarTherapiesInterval, null);
-
-      final Map<Long, MedicationDataForTherapyDto> medicationsDataMap =
-          getMedicationDataForTherapies(otherTherapies, null, when);
-
-      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> similarTherapies = new ArrayList<>();
-
-      for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> otherTherapy : otherTherapies)
-      {
-        final boolean sameUid = EhrUtils.extractIdBeforeVersion(otherTherapy.getFirst())
-            .equals(EhrUtils.extractIdBeforeVersion(currentInstructionPair.getFirst()));
-        final boolean sameInstructionName =
-            otherTherapy.getSecond().getName().getValue().equals(currentInstructionPair.getSecond().getName().getValue());
-        final boolean sameTherapy = sameUid && sameInstructionName;
-        final boolean linkedByUpdate = areInstructionsLinkedByUpdate(currentInstructionPair, otherTherapy);
-        if (!sameTherapy && !linkedByUpdate)
-        {
-          final boolean therapyIsSimilar =
-              areTherapiesSimilar(otherTherapy, currentInstructionPair, medicationsDataMap, false);
-          if (therapyIsSimilar)
-          {
-            final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyLinedByUpdate =
-                getTherapyLinedByUpdate(otherTherapy, similarTherapies);
-            if (therapyLinedByUpdate != null)
-            {
-              similarTherapies.remove(therapyLinedByUpdate);
-            }
-            similarTherapies.add(otherTherapy);
-          }
-        }
-      }
-      for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> similarTherapy : similarTherapies)
-      {
-        final TherapyDto similarTherapyDto =
-            convertInstructionToTherapyDto(
-                similarTherapy.getFirst(),
-                similarTherapy.getSecond(),
-                referenceWeight,
-                patientHeight,
-                when,
-                true,
-                locale);
-
-        cardInfoDto.getSimilarTherapies().add(similarTherapyDto.getFormattedTherapyDisplay());
-      }
-    }
-
-    return cardInfoDto;
-  }
-
-  private Pair<MedicationOrderComposition, MedicationInstructionInstruction> getTherapyLinedByUpdate(
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapy,
-      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> therapiesToCompare)
-  {
-    for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> compareTherapy : therapiesToCompare)
-    {
-      final boolean linkedByUpdate = areInstructionsLinkedByUpdate(therapy, compareTherapy);
-      if (linkedByUpdate)
-      {
-        return compareTherapy;
-      }
-    }
-    return null;
+    return medicationRoutesValueHolder.getValue().get(routeId);
   }
 
   @Override
-  public Pair<MedicationOrderComposition, MedicationInstructionInstruction> getOriginalTherapy(
-      final Long patientId, final String compositionUid, final String ehrOrderName)
+  public String getOriginalTherapyId(final String patientId, final String compositionUid)
   {
-    Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair =
-        ehrMedicationsDao.getTherapyInstructionPair(patientId, compositionUid, ehrOrderName);
-
-
-    List<Link> updateLinks = MedicationsEhrUtils.getLinksOfType(instructionPair.getSecond(), OpenEhrLinkType.UPDATE);
-    while (!updateLinks.isEmpty())
-    //while (!instructionPair.getSecond().getLinks().isEmpty())
-    {
-      instructionPair = getPreviousInstruction(patientId, instructionPair.getSecond());
-      updateLinks = MedicationsEhrUtils.getLinksOfType(instructionPair.getSecond(), OpenEhrLinkType.UPDATE);
-    }
-    return instructionPair;
+    return getOriginalTherapyId(medicationsOpenEhrDao.loadMedicationOrderComposition(patientId, compositionUid));
   }
 
-  TherapyChangeHistoryDto calculateTherapyChange(
-      final TherapyDto therapy,
-      final TherapyDto changedTherapy)
+  @Override
+  public String getOriginalTherapyId(@Nonnull final MedicationOrderComposition composition)
   {
-    final TherapyChangeHistoryDto changeHistoryDto = new TherapyChangeHistoryDto();
+    Preconditions.checkNotNull(composition, "composition");
 
-    changeHistoryDto.setEditor(changedTherapy.getPrescriberName());
-    changeHistoryDto.setChangeTime(changedTherapy.getStart());
-
-    if (therapy instanceof SimpleTherapyDto)
+    final MedicationInstructionInstruction instruction = composition.getMedicationDetail().getMedicationInstruction().get(0);
+    final List<Link> originLinks = MedicationsEhrUtils.getLinksOfType(instruction, EhrLinkType.ORIGIN);
+    if (!originLinks.isEmpty())
     {
-      if (changedTherapy instanceof SimpleTherapyDto)
-      {
-        final SimpleTherapyDto simpleTherapy = (SimpleTherapyDto)therapy;
-        final SimpleTherapyDto changedSimpleTherapy = (SimpleTherapyDto)changedTherapy;
-        if (!simpleTherapy.getMedication().getDisplayName().equals(changedSimpleTherapy.getMedication().getDisplayName()))
-        {
-          final TherapyChangeDto change = new TherapyChangeDto();
-          change.setOldValue(simpleTherapy.getMedication().getDisplayName());
-          change.setNewValue(changedSimpleTherapy.getMedication().getDisplayName());
-          change.setType(TherapyChangeType.MEDICATION);
-          changeHistoryDto.getChanges().add(change);
-        }
-        if (!simpleTherapy.getQuantityDisplay().equals(changedSimpleTherapy.getQuantityDisplay()))
-        {
-          final TherapyChangeDto change = new TherapyChangeDto();
-          change.setOldValue(simpleTherapy.getQuantityDisplay());
-          change.setNewValue(changedSimpleTherapy.getQuantityDisplay());
-          change.setType(TherapyChangeType.DOSE);
-          changeHistoryDto.getChanges().add(change);
-        }
-      }
-      else
-      {
-        throw new IllegalArgumentException("Therapy not saved correctly");
-      }
+      final DvEhrUri target = originLinks.get(0).getTarget();
+      final OpenEhrRefUtils.EhrUriComponents ehrUri = OpenEhrRefUtils.parseEhrUri(target.getValue());
+      return TherapyIdUtils.createTherapyId(ehrUri.getCompositionId());
     }
-
-    if (therapy instanceof ComplexTherapyDto)
-    {
-      if (changedTherapy instanceof ComplexTherapyDto)
-      {
-        final ComplexTherapyDto complexTherapy = (ComplexTherapyDto)therapy;
-        final ComplexTherapyDto changedComplexTherapy = (ComplexTherapyDto)changedTherapy;
-        if (complexTherapy.getSpeedDisplay() != null &&
-            !complexTherapy.getSpeedDisplay().equals(changedComplexTherapy.getSpeedDisplay()))
-        {
-          final TherapyChangeDto change = new TherapyChangeDto();
-          change.setOldValue(complexTherapy.getSpeedDisplay());
-          change.setNewValue(changedComplexTherapy.getSpeedDisplay());
-          change.setType(TherapyChangeType.SPEED);
-          changeHistoryDto.getChanges().add(change);
-        }
-      }
-      else
-      {
-        throw new IllegalArgumentException("Therapy not saved correctly");
-      }
-    }
-
-    final boolean dosingFrequencyChange =
-        therapy.getFrequencyDisplay() != null && changedTherapy.getFrequencyDisplay() != null &&
-            !therapy.getFrequencyDisplay().equals(changedTherapy.getFrequencyDisplay());
-    final boolean dosingDaysFrequencyChange =
-        (therapy.getDaysFrequencyDisplay() != null && changedTherapy.getDaysFrequencyDisplay() == null) ||
-            (therapy.getDaysFrequencyDisplay() == null && changedTherapy.getDaysFrequencyDisplay() != null) ||
-            (therapy.getDaysFrequencyDisplay() != null && changedTherapy.getDaysFrequencyDisplay() != null &&
-                !therapy.getDaysFrequencyDisplay().equals(changedTherapy.getFrequencyDisplay()));
-    final boolean daysOfWeekFrequencyChange =
-        (therapy.getDaysOfWeekDisplay() != null && changedTherapy.getDaysOfWeekDisplay() == null) ||
-            (therapy.getDaysOfWeekDisplay() == null && changedTherapy.getDaysOfWeekDisplay() != null) ||
-            (therapy.getDaysOfWeekDisplay() != null && changedTherapy.getDaysOfWeekDisplay() != null &&
-                !therapy.getDaysOfWeekDisplay().equals(changedTherapy.getDaysOfWeekDisplay()));
-
-    if (dosingFrequencyChange || dosingDaysFrequencyChange || daysOfWeekFrequencyChange)
-    {
-      final TherapyChangeDto change = new TherapyChangeDto();
-      String oldValue = therapy.getFrequencyDisplay();
-      if (therapy.getDaysFrequencyDisplay() != null)
-      {
-        oldValue += " - " + therapy.getDaysFrequencyDisplay();
-      }
-      if (therapy.getDaysOfWeekDisplay() != null)
-      {
-        oldValue += " - " + therapy.getDaysOfWeekDisplay();
-      }
-      change.setOldValue(oldValue);
-
-      String newValue = changedTherapy.getFrequencyDisplay();
-      if (changedTherapy.getDaysFrequencyDisplay() != null)
-      {
-        newValue += " - " + changedTherapy.getDaysFrequencyDisplay();
-      }
-      if (changedTherapy.getDaysOfWeekDisplay() != null)
-      {
-        newValue += " - " + changedTherapy.getDaysOfWeekDisplay();
-      }
-      change.setNewValue(newValue);
-      change.setType(TherapyChangeType.DOSE_INTERVAL);
-      changeHistoryDto.getChanges().add(change);
-    }
-
-    return changeHistoryDto;
+    return TherapyIdUtils.createTherapyId(composition);
   }
 
   @Override
   public MedicationReferenceWeightComposition buildReferenceWeightComposition(
-      final double weight, final DateTime when, final long composerId)
+      final double weight,
+      final DateTime when)
   {
     final MedicationReferenceWeightComposition comp = new MedicationReferenceWeightComposition();
     final MedicationReferenceBodyWeightObservation medicationReferenceBodyWeight = new MedicationReferenceBodyWeightObservation();
@@ -2741,967 +2049,67 @@ public class DefaultMedicationsBo
 
     final CompositionEventContext context = IspekTdoDataSupport.getEventContext(CompositionEventContext.class, when);
     comp.setCompositionEventContext(context);
-    final NamedIdentity usersName = medicationsConnector.getUsersName(composerId, when);
-    new TdoPopulatingVisitor().visitBean(
-        comp,
-        TdoPopulatingVisitor.getSloveneContext(when)
-            .withCompositionDynamic(true)
-            .withCompositionComposer(IspekTdoDataSupport.getPartyIdentified(usersName.name(), Long.toString(composerId)))
-    );
 
+    final PartyIdentified composer = RequestContextHolder.getContext().getUserMetadata()
+        .map(meta -> IspekTdoDataSupport.getPartyIdentified(meta.getFullName(), meta.getId()))
+        .get();
+
+    MedicationsEhrUtils.visitComposition(comp, composer, when);
     return comp;
   }
 
   @Override
-  public List<TherapyTimelineRowDto> buildTherapyTimeline(
-      final long patientId,
-      final long centralCaseId,
-      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructions,
-      final Map<String, List<MedicationAdministrationComposition>> administrations,
-      @Nullable final List<TherapyTaskDto> tasks,
-      final Interval tasksInterval,
-      final RoundsIntervalDto roundsInterval,
-      final TherapySortTypeEnum therapySortTypeEnum,
-      final KnownClinic department,
-      final DateTime when,
-      final Locale locale)
-  {
-    final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> sortedInstructions = new ArrayList<>();
-    sortedInstructions.addAll(medicationInstructions);
-    sortTherapiesByMedicationTimingStart(sortedInstructions, true);
-
-    final Map<String, TherapyTimelineRowDto> therapyTimelinesMap = new HashMap<>();
-    final Map<String, String> similarTherapiesMap = new HashMap<>(); //therapy, latest similar therapy
-
-    fillTherapyTimelinesMaps(
-        patientId,
-        sortedInstructions,
-        therapyTimelinesMap,
-        similarTherapiesMap,
-        department,
-        roundsInterval,
-        when,
-        locale);
-
-    addAdministrationsToTimelines(
-        administrations,
-        therapyTimelinesMap,
-        similarTherapiesMap,
-        medicationInstructions,
-        tasksInterval,
-        when,
-        locale);
-
-    if (tasks != null)
-    {
-      addTasksToTimeline(tasks, therapyTimelinesMap, similarTherapiesMap, when);
-    }
-    final List<TherapyTimelineRowDto> therapyTimelines = new ArrayList<>(therapyTimelinesMap.values());
-    sortTherapyTimelineRows(therapyTimelines, therapySortTypeEnum);
-
-    //show ony therapies that are active today
-    removeOldTherapiesFromTimeline(therapyTimelines, when.withTimeAtStartOfDay());
-
-    if (centralCaseId > 0)
-    {
-      final TagFilteringDto filter = new TagFilteringDto();
-      filter.setCompositionVersion(TagFilteringDto.CompositionVersion.LAST_VERSION_OF_ANY_TAGGED);
-
-      final Set<TaggedObjectDto<Instruction>> taggedTherapies =
-          ehrTaggingDao.findObjectCompositionPairs(
-              filter,
-              TherapyTaggingUtils.generateTag(TherapyTag.PRESCRIPTION, centralCaseId));
-
-      fillPrescriptionTagsForTherapyTimeline(therapyTimelines, taggedTherapies);
-    }
-
-    fillTherapyTimelineLinksDisplay(therapyTimelines);
-    return therapyTimelines;
-  }
-
-  //fills linkToTherapy for all linked therapies (when linksFromTherapy exists)
-  private void fillTherapyTimelineLinksDisplay(final List<TherapyTimelineRowDto> therapyTimelines)
-  {
-    String link = "A";
-    for (final TherapyTimelineRowDto therapyTimeline : therapyTimelines)
-    {
-      final TherapyDto therapy = therapyTimeline.getTherapy();
-      if (therapy != null && therapy.getLinkFromTherapy() != null)
-      {
-        final boolean incrementLink = setTherapyTimelineLinkDisplay(
-            therapy,
-            therapyTimelines,
-            link);
-        if (incrementLink)
-        {
-          final int charValue = link.charAt(0);
-          link = String.valueOf((char)(charValue + 1));
-        }
-      }
-    }
-  }
-
-  private boolean setTherapyTimelineLinkDisplay(
-      final TherapyDto therapyWithLink,
-      final List<TherapyTimelineRowDto> therapyTimelines,
-      final String link)
-  {
-    boolean linkUsed = false;
-
-    for (TherapyTimelineRowDto therapyTimeline : therapyTimelines)
-    {
-      final TherapyDto therapyDto = therapyTimeline.getTherapy();
-      final boolean therapyUsedNewLink = setTherapyLinkDisplayValue(therapyWithLink, therapyDto, link);
-      linkUsed = therapyUsedNewLink ? true : linkUsed;
-    }
-    return linkUsed;
-  }
-
-  private void fillPrescriptionTagsForTherapyTimeline(
-      final List<TherapyTimelineRowDto> therapyTimelines,
-      final Set<TaggedObjectDto<Instruction>> taggedTherapies)
-  {
-    final List<TherapyDto> therapyDtos = new ArrayList<>();
-    for (final TherapyTimelineRowDto timelineRowDto : therapyTimelines)
-    {
-      therapyDtos.add(timelineRowDto.getTherapy());
-    }
-    fillPrescriptionTagsForTherapies(therapyDtos, taggedTherapies);
-  }
-
-  void fillPrescriptionTagsForTherapies(
-      final List<TherapyDto> therapies,
-      final Set<TaggedObjectDto<Instruction>> taggedTherapies)
-  {
-    for (final TherapyDto therapy : therapies)
-    {
-      final String compositionId = therapy.getCompositionUid();
-      for (final TaggedObjectDto<Instruction> taggedObjectDto : taggedTherapies)
-      {
-        if (taggedObjectDto.getComposition().getUid().getValue().equals(compositionId)
-            && taggedObjectDto.getObject().getName().getValue().equals(therapy.getEhrOrderName()))
-        {
-          therapy.addTag(TherapyTag.PRESCRIPTION);
-        }
-      }
-    }
-  }
-
-
-  private void addTasksToTimeline(
-      final List<TherapyTaskDto> tasks,
-      final Map<String, TherapyTimelineRowDto> therapyTimelineRowsMap,
-      final Map<String, String> similarTherapiesMap,
-      final DateTime when)
-  {
-    for (final TherapyTaskDto task : tasks)
-    {
-      final String therapyId = task.getTherapyId();
-      final String latestTherapyId =
-          similarTherapiesMap.containsKey(therapyId) ? similarTherapiesMap.get(therapyId) : therapyId;
-      final TherapyTimelineRowDto timelineRow = therapyTimelineRowsMap.get(latestTherapyId);
-      if (timelineRow != null)
-      {
-        boolean isAdministrationFound = false;
-        for (final AdministrationDto administration : timelineRow.getAdministrations())
-        {
-          final String administrationUidWithoutVersion =
-              InstructionTranslator.getCompositionUidWithoutVersion(administration.getAdministrationId());
-          final String taskAdministrationUidWithoutVersion =
-              InstructionTranslator.getCompositionUidWithoutVersion(task.getAdministrationId());
-          if (administrationUidWithoutVersion != null &&
-              administrationUidWithoutVersion.equals(taskAdministrationUidWithoutVersion))
-          {
-            isAdministrationFound = true;
-            administration.setTaskId(task.getTaskId());
-            administration.setPlannedTime(task.getPlannedAdministrationTime());
-            administration.setTriggersTherapyId(task.getTriggersTherapyId());
-
-            if (administration.getAdministrationStatus() == AdministrationStatusEnum.COMPLETED
-                || administration.getAdministrationStatus() == AdministrationStatusEnum.FAILED)
-            {
-              if (administration instanceof StartAdministrationDto)
-              {
-                final StartAdministrationDto startAdministration = (StartAdministrationDto)administration;
-                final TherapyDoseDto administrationDose = startAdministration.getAdministeredDose();
-                final TherapyDoseDto taskDose = task.getTherapyDoseDto();
-                startAdministration.setPlannedDose(taskDose);
-                if (administrationDose == null || taskDose == null)
-                {
-                  startAdministration.setDifferentFromOrder(false);
-                }
-                else
-                {
-                  startAdministration.setDifferentFromOrder(
-                      //!administrationDose.equals(taskDose) || startAdministration.getSubstituteMedication() != null); //TODO ENGLISH
-                      !administrationDose.equals(taskDose));
-                }
-              }
-              else if (administration instanceof AdjustInfusionAdministrationDto)
-              {
-                final AdjustInfusionAdministrationDto adjustAdministrationDto = (AdjustInfusionAdministrationDto)administration;
-                final TherapyDoseDto administrationDose = adjustAdministrationDto.getAdministeredDose();
-                final TherapyDoseDto taskDose = task.getTherapyDoseDto();
-                adjustAdministrationDto.setPlannedDose(taskDose);
-                if (administrationDose == null && taskDose == null)
-                {
-                  adjustAdministrationDto.setDifferentFromOrder(false);
-                }
-                else
-                {
-                  adjustAdministrationDto.setDifferentFromOrder(
-                      administrationDose == null || !administrationDose.equals(taskDose));
-                }
-              }
-
-              if (administration.getAdministrationStatus() == AdministrationStatusEnum.COMPLETED)
-              {
-                if (isAdministrationLate(task.getPlannedAdministrationTime(), administration.getAdministrationTime()))
-                {
-                  administration.setAdministrationStatus(AdministrationStatusEnum.COMPLETED_LATE);
-                }
-                else if (isAdministrationEarly(task.getPlannedAdministrationTime(), administration.getAdministrationTime()))
-                {
-                  administration.setAdministrationStatus(AdministrationStatusEnum.COMPLETED_EARLY);
-                }
-              }
-            }
-            break;
-          }
-        }
-        if (!isAdministrationFound)
-        {
-          final AdministrationDto administration = buildAdministrationFromTask(task, when);
-          timelineRow.getAdministrations().add(administration);
-        }
-      }
-    }
-  }
-
-  private void addAdministrationsToTimelines(
-      final Map<String, List<MedicationAdministrationComposition>> administrations,
-      final Map<String, TherapyTimelineRowDto> therapyTimelineRowsMap,
-      final Map<String, String> similarTherapiesMap,
-      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> medicationInstructions,
-      final Interval tasksInterval,
-      final DateTime when,
-      final Locale locale)
-  {
-    for (final String therapyId : administrations.keySet())
-    {
-      final String latestTherapyId =
-          similarTherapiesMap.containsKey(therapyId) ? similarTherapiesMap.get(therapyId) : therapyId;
-      final TherapyTimelineRowDto timelineRow = therapyTimelineRowsMap.get(latestTherapyId);
-      final List<MedicationAdministrationComposition> administrationsList = administrations.get(therapyId);
-      for (final MedicationAdministrationComposition administrationComp : administrationsList)
-      {
-        final AdministrationDto administration;
-        final Action action;
-        if (!administrationComp.getMedicationDetail().getMedicationAction().isEmpty())
-        {
-          action = administrationComp.getMedicationDetail().getMedicationAction().get(0);
-          final Pair<MedicationOrderComposition, MedicationInstructionInstruction> medicationInstructionPair =
-              MedicationsEhrUtils.findMedicationInstructionPairByTherapyId(therapyId, medicationInstructions);
-          administration =
-              buildAdministrationFromMedicationAction((MedicationActionAction)action, medicationInstructionPair, when);
-        }
-        else if (!administrationComp.getMedicationDetail().getClinicalIntervention().isEmpty())
-        {
-          action = administrationComp.getMedicationDetail().getClinicalIntervention().get(0);
-          administration =
-              buildAdministrationFromClinicalIntervention((ClinicalInterventionAction)action);
-        }
-        else
-        {
-          throw new IllegalArgumentException(
-              "MedicationAdministrationComposition must have MedicationActions or ClinicalInterventions");
-        }
-
-        administration.setAdministrationTime(DataValueUtils.getDateTime(action.getTime()));
-        final String composerName =
-            administrationComp.getComposer() instanceof PartyIdentified ?
-            ((PartyIdentified)administrationComp.getComposer()).getName() : "";
-        administration.setComposerName(composerName);
-        administration.setAdministrationId(administrationComp.getUid().getValue());
-        administration.setTherapyId(therapyId);
-
-        timelineRow.getAdministrations().add(administration);
-      }
-    }
-
-    fillContinuousInfusionCurrentRate(therapyTimelineRowsMap, locale);
-    filterAdministrationsByTime(therapyTimelineRowsMap, tasksInterval);
-  }
-
-  private AdministrationDto buildAdministrationFromMedicationAction(
-      final MedicationActionAction action,
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair,
-      final DateTime when)
-  {
-    final MedicationActionEnum actionEnum =
-        MedicationActionEnum.getAction(
-            action.getIsmTransition().getCareflowStep(),
-            action.getIsmTransition().getCurrentState());
-    Preconditions.checkArgument(
-        actionEnum == MedicationActionEnum.ADMINISTER || actionEnum == MedicationActionEnum.WITHHOLD);
-    final AdministrationDto administration;
-    final AdministrationTypeEnum reasonAdministrationTypeEnum =
-        action.getReason().isEmpty() ? null :
-        AdministrationTypeEnum.getByFullString(action.getReason().get(0).getValue());
-    final AdministrationDetailsCluster administrationDetails = action.getAdministrationDetails();
-    if (reasonAdministrationTypeEnum != null && reasonAdministrationTypeEnum == AdministrationTypeEnum.START)
-    {
-      administration = new StartAdministrationDto();
-      if (administrationDetails != null && !administrationDetails.getInfusionAdministrationDetails().isEmpty() &&
-          administrationDetails.getInfusionAdministrationDetails()
-              .get(0).getDoseAdministrationRate() instanceof DvQuantity) //TherapyDoseTypeEnum RATE
-      {
-        final InfusionAdministrationDetailsCluster infusionAdministrationDetails =
-            administrationDetails.getInfusionAdministrationDetails().get(0);
-        final TherapyDoseDto administeredDose =
-            MedicationsEhrUtils.buildTherapyDoseDtoForRate(infusionAdministrationDetails);
-        ((StartAdministrationDto)administration).setAdministeredDose(administeredDose);
-      }
-      else if (action.getStructuredDose() != null) //TherapyDoseTypeEnum QUANTITY, VOLUME_SUM
-      {
-        ((StartAdministrationDto)administration).setAdministeredDose(
-            MedicationsEhrUtils.buildTherapyDoseDto(action.getStructuredDose()));
-        final MedicationInstructionInstruction instruction = instructionPair.getSecond();
-        if (MedicationsEhrUtils.isSimpleInstruction(instruction))
-        {
-          final DvText therapyMedicine = instruction.getOrder().get(0).getMedicine();
-          if (therapyMedicine != null && therapyMedicine instanceof DvCodedText)
-          {
-            if (action.getMedicine() != null && action.getMedicine() instanceof DvCodedText)
-            {
-              final Long therapyMedicationId =
-                  Long.parseLong(((DvCodedText)therapyMedicine).getDefiningCode().getCodeString());
-              final Long administrationMedicationId =
-                  Long.parseLong(((DvCodedText)action.getMedicine()).getDefiningCode().getCodeString());
-              if (!therapyMedicationId.equals(administrationMedicationId))
-              {
-                final MedicationDto substituteMedication =
-                    medicationsDao.getMedicationById(administrationMedicationId, when);
-                ((StartAdministrationDto)administration).setSubstituteMedication(substituteMedication);
-              }
-            }
-          }
-        }
-      }
-    }
-    else if (reasonAdministrationTypeEnum != null && reasonAdministrationTypeEnum == AdministrationTypeEnum.ADJUST_INFUSION)   //TherapyDoseTypeEnum RATE
-    {
-      administration = new AdjustInfusionAdministrationDto();
-      final InfusionAdministrationDetailsCluster infusionAdministrationDetails =
-          administrationDetails.getInfusionAdministrationDetails().get(0);
-      ((AdjustInfusionAdministrationDto)administration).setAdministeredDose(
-          MedicationsEhrUtils.buildTherapyDoseDtoForRate(infusionAdministrationDetails));
-    }
-    else if (reasonAdministrationTypeEnum != null && reasonAdministrationTypeEnum == AdministrationTypeEnum.STOP)
-    {
-      administration = new StopAdministrationDto();
-    }
-    else
-    {
-      throw new IllegalArgumentException("Administration reason not supported");
-    }
-    final AdministrationStatusEnum administrationStatus =
-        actionEnum == MedicationActionEnum.ADMINISTER
-        ? AdministrationStatusEnum.COMPLETED
-        : AdministrationStatusEnum.FAILED;
-    administration.setAdministrationStatus(administrationStatus);
-    if (action.getComment() != null)
-    {
-      administration.setComment(action.getComment().getValue());
-    }
-    return administration;
-  }
-
-  private InfusionSetChangeDto buildAdministrationFromClinicalIntervention(final ClinicalInterventionAction action)
-  {
-    final InfusionSetChangeDto administration = new InfusionSetChangeDto();
-    administration.setAdministrationStatus(AdministrationStatusEnum.COMPLETED);
-    administration.setInfusionSetChangeEnum(
-        InfusionSetChangeEnum.getEnumByCode(action.getIntervention().getDefiningCode().getCodeString()));
-    if (action.getComments() != null)
-    {
-      administration.setComment(action.getComments().getValue());
-    }
-    return administration;
-  }
-
-  private void filterAdministrationsByTime(
-      final Map<String, TherapyTimelineRowDto> therapyTimelineRowsMap, final Interval tasksInterval)
-  {
-    for (final String timelineKey : therapyTimelineRowsMap.keySet())
-    {
-      final TherapyTimelineRowDto timelineRow = therapyTimelineRowsMap.get(timelineKey);
-      final List<AdministrationDto> filteredAdministrations = new ArrayList<>();
-      for (final AdministrationDto administration : timelineRow.getAdministrations())
-      {
-        if (administration.getAdministrationTime() != null &&
-            tasksInterval.contains(administration.getAdministrationTime()))
-        {
-          filteredAdministrations.add(administration);
-        }
-      }
-      timelineRow.setAdministrations(filteredAdministrations);
-    }
-  }
-
-  private void fillContinuousInfusionCurrentRate(
-      final Map<String, TherapyTimelineRowDto> therapyTimelineRowsMap, final Locale locale)
-  {
-    for (final String timelineKey : therapyTimelineRowsMap.keySet())
-    {
-      final TherapyTimelineRowDto timelineRow = therapyTimelineRowsMap.get(timelineKey);
-      if (timelineRow instanceof TherapyTimelineRowForContInfusionDto)
-      {
-        final List<AdministrationDto> administrations = timelineRow.getAdministrations();
-
-        AdministrationDto lastAdministration = null;
-
-        for (final AdministrationDto administration : administrations)
-        {
-          if (AdministrationTypeEnum.MEDICATION_ADMINISTRATION.contains(administration.getAdministrationType()))
-          {
-            if (lastAdministration == null ||
-                administration.getAdministrationTime().isAfter(lastAdministration.getAdministrationTime()))
-            {
-              lastAdministration = administration;
-            }
-          }
-        }
-
-        if (lastAdministration != null && lastAdministration.getAdministrationType() != AdministrationTypeEnum.STOP)
-        {
-          TherapyDoseDto dose = null;
-          if (lastAdministration instanceof StartAdministrationDto)
-          {
-            dose = ((StartAdministrationDto)lastAdministration).getAdministeredDose();
-          }
-          else if (lastAdministration instanceof AdjustInfusionAdministrationDto)
-          {
-            dose = ((AdjustInfusionAdministrationDto)lastAdministration).getAdministeredDose();
-          }
-          if (dose != null && dose.getNumerator() != null)
-          {
-            try
-            {
-              final String rateDisplayString =
-                  therapyDisplayProvider.getRateDisplayString(dose.getNumerator(), dose.getNumeratorUnit(), locale);
-              ((TherapyTimelineRowForContInfusionDto)timelineRow).setInfusionRateDisplay(rateDisplayString);
-            }
-            catch (final ParseException e)
-            {
-              throw new IllegalArgumentException("Infusion rate invalid format" + e);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  private void fillTherapyTimelinesMaps(
-      final long patientId,
-      final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> therapies,
-      final Map<String, TherapyTimelineRowDto> therapyTimelineRowsMap,
-      final Map<String, String> similarTherapiesMap,
-      final KnownClinic department,
-      final RoundsIntervalDto roundsInterval,
-      final DateTime when,
-      final Locale locale)
-  {
-    final Map<String, Pair<MedicationOrderComposition, MedicationInstructionInstruction>> processedTherapiesMap = new HashMap<>();
-    final Map<Long, MedicationDataForTherapyDto> medicationsDataMap =
-        getMedicationDataForTherapies(therapies, department, when);
-    for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair : therapies)
-    {
-      final MedicationInstructionInstruction instruction = instructionPair.getSecond();
-      final MedicationOrderComposition composition = instructionPair.getFirst();
-      final String therapyId = InstructionTranslator.translate(instruction, composition);
-
-      final String latestSimilarTherapyId =
-          findSimilarTherapyForTimeline(processedTherapiesMap, medicationsDataMap, instructionPair);
-      if (latestSimilarTherapyId != null)
-      {
-        similarTherapiesMap.put(therapyId, latestSimilarTherapyId);
-        processedTherapiesMap.put(latestSimilarTherapyId, instructionPair);
-      }
-      else
-      {
-        final TherapyTimelineRowDto timelineRow =
-            buildTherapyTimelineDto(
-                roundsInterval,
-                when,
-                locale,
-                medicationsDataMap,
-                instructionPair,
-                instruction,
-                composition,
-                therapyId,
-                patientId);
-        therapyTimelineRowsMap.put(therapyId, timelineRow);
-
-        processedTherapiesMap.put(therapyId, instructionPair);
-      }
-    }
-  }
-
-  private TherapyTimelineRowDto buildTherapyTimelineDto(
-      final RoundsIntervalDto roundsInterval,
-      final DateTime when,
-      final Locale locale,
-      final Map<Long, MedicationDataForTherapyDto> medicationsDataMap,
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair,
-      final MedicationInstructionInstruction instruction,
-      final MedicationOrderComposition composition,
-      final String therapyId,
-      final long patientId)
-  {
-    final boolean continuousInfusion = MedicationsEhrUtils.isContinuousInfusion(instructionPair.getSecond());
-    final TherapyDto therapy = convertInstructionToTherapyDto(
-        instructionPair.getFirst(),
-        instructionPair.getSecond(),
-        null,
-        null,
-        when,
-        true,
-        locale);
-    final TherapyTimelineRowDto timelineRow =
-        continuousInfusion ? new TherapyTimelineRowForContInfusionDto() : new TherapyTimelineRowDto();
-    final Long mainMedicationId = getMainMedicationId(instructionPair.getSecond().getOrder().get(0));
-    final MedicationDataForTherapyDto mainMedicationData = medicationsDataMap.get(mainMedicationId);
-    if (mainMedicationData != null)
-    {
-      timelineRow.setCustomGroup(mainMedicationData.getCustomGroupName());
-      timelineRow.setCustomGroupSortOrder(mainMedicationData.getCustomGroupSortOrder());
-      timelineRow.setAtcGroupCode(mainMedicationData.getAtcCode());
-      timelineRow.setAtcGroupName(mainMedicationData.getAtcName());
-    }
-    timelineRow.setTherapy(therapy);
-    timelineRow.setTherapyId(therapyId);
-    fillTherapyDayState(
-        timelineRow,
-        patientId,
-        therapy,
-        instruction,
-        composition,
-        roundsInterval,
-        medicationsDataMap,
-        Intervals.wholeDay(when),
-        when);
-    return timelineRow;
-  }
-
-  private String findSimilarTherapyForTimeline(
-      final Map<String, Pair<MedicationOrderComposition, MedicationInstructionInstruction>> processedTherapiesMap,
-      final Map<Long, MedicationDataForTherapyDto> medicationsDataMap,
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair)
-  {
-    String similarTherapyId = null;
-    for (final String therapyId : processedTherapiesMap.keySet())
-    {
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> compareInstructionPair =
-          processedTherapiesMap.get(therapyId);
-
-      final boolean laterLinkedTherapyFound = areInstructionsLinkedByUpdate(instructionPair, compareInstructionPair);
-      if (laterLinkedTherapyFound)
-      {
-        similarTherapyId = therapyId;
-        break;
-      }
-    }
-    if (similarTherapyId == null)
-    {
-      for (final String therapyId : processedTherapiesMap.keySet())
-      {
-        final Pair<MedicationOrderComposition, MedicationInstructionInstruction> compareInstructionPair =
-            processedTherapiesMap.get(therapyId);
-
-        final boolean similarTherapyFound =
-            areTherapiesSimilar(instructionPair, compareInstructionPair, medicationsDataMap, false);
-        if (similarTherapyFound)
-        {
-          similarTherapyId = therapyId;
-        }
-      }
-    }
-    return similarTherapyId;
-  }
-
-  private void fillTherapyDayState(
-      final TherapyDayDto therapyDayDto,
-      final long patientId,
-      final TherapyDto therapy,
-      final MedicationInstructionInstruction instruction,
-      final MedicationOrderComposition composition,
-      final RoundsIntervalDto roundsInterval,
-      final Map<Long, MedicationDataForTherapyDto> medicationsDataMap,
-      final Interval therapyDay,
-      final DateTime currentTime)
-  {
-    final List<MedicationActionAction> actions = getInstructionActions(composition, instruction);
-    final OrderActivity orderActivity = instruction.getOrder().get(0);
-    final DateTime therapyStart = getTherapyStart(patientId, instruction);
-    DateTime therapyEnd = DataValueUtils.getDateTime(orderActivity.getMedicationTiming().getStopDate());
-    therapyEnd = therapyEnd != null ? therapyEnd : Intervals.INFINITE.getEnd();
-
-    final TherapyStatusEnum therapyStatus =
-        getTherapyStatusFromMedicationAction(actions, therapyStart, roundsInterval, therapyDay, currentTime);
-    final boolean modifiedFromLastReview = wasTherapyModifiedFromLastReview(
-        instruction,
-        actions,
-        DataValueUtils.getDateTime(composition.getCompositionEventContext().getStartTime()));
-
-    final List<Long> medicationIds = getMedicationIds(orderActivity);
-    final boolean containsAntibiotic = containsAntibiotic(medicationIds, medicationsDataMap);
-    final Integer pastDaysOfTherapy =
-        orderActivity.getPastDaysOfTherapy() != null ? (int)orderActivity.getPastDaysOfTherapy().getMagnitude() : null;
-    final int consecutiveDay =
-        getTherapyConsecutiveDay(therapyStart, therapyDay.getStart(), currentTime, pastDaysOfTherapy);
-    final boolean therapyActionsAllowed = areTherapyActionsAllowed(therapyStatus, roundsInterval, currentTime);
-    final boolean therapyEndsBeforeNextRounds = doesTherapyEndBeforeNextRounds(therapyEnd, roundsInterval, currentTime);
-    final boolean therapyIsActive =
-        isTherapyActive(
-            therapy.getDaysOfWeek(),
-            therapy.getDosingDaysFrequency(),
-            new Interval(therapyStart, therapyEnd),
-            therapyDay.getStart());
-
-    therapyDayDto.setActive(therapyIsActive);
-    therapyDayDto.setModified(!instruction.getLinks().isEmpty());
-    therapyDayDto.setTherapyEndsBeforeNextRounds(therapyEndsBeforeNextRounds);
-    therapyDayDto.setTherapyStatus(therapyStatus);
-    therapyDayDto.setShowConsecutiveDay(containsAntibiotic && therapyDay.getStart().isBefore(currentTime));
-    therapyDayDto.setModifiedFromLastReview(modifiedFromLastReview);
-    therapyDayDto.setConsecutiveDay(consecutiveDay);
-    therapyDayDto.setTherapyActionsAllowed(therapyActionsAllowed);
-  }
-
-  private void sortTherapiesByMedicationTimingStart(
+  public void sortTherapiesByMedicationTimingStart(
       final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> therapies, final boolean descending)
   {
     Collections.sort(
-        therapies, new Comparator<Pair<MedicationOrderComposition, MedicationInstructionInstruction>>()
-        {
-          @Override
-          public int compare(
-              final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapy1,
-              final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapy2)
+        therapies, (therapy1, therapy2) -> {
+          final DateTime firstCompositionStart =
+              DataValueUtils.getDateTime(therapy1.getSecond().getOrder().get(0).getMedicationTiming().getStartDate());
+          final DateTime secondCompositionStart =
+              DataValueUtils.getDateTime(therapy2.getSecond().getOrder().get(0).getMedicationTiming().getStartDate());
+
+          final DateTime firstContextStart =
+              DataValueUtils.getDateTime(therapy1.getFirst().getCompositionEventContext().getStartTime());
+          final DateTime secondContextStart =
+              DataValueUtils.getDateTime(therapy2.getFirst().getCompositionEventContext().getStartTime());
+
+          if (descending)
           {
-            final DateTime firstCompositionStart =
-                DataValueUtils.getDateTime(therapy1.getSecond().getOrder().get(0).getMedicationTiming().getStartDate());
-            final DateTime secondCompositionStart =
-                DataValueUtils.getDateTime(therapy2.getSecond().getOrder().get(0).getMedicationTiming().getStartDate());
-            if (descending)
+            if (secondCompositionStart.equals(firstCompositionStart))
             {
-              return secondCompositionStart.compareTo(firstCompositionStart);
+              return secondContextStart.compareTo(firstContextStart);
             }
-            return firstCompositionStart.compareTo(secondCompositionStart);
+            return secondCompositionStart.compareTo(firstCompositionStart);
           }
-        }
-    );
-  }
-
-  AdministrationDto buildAdministrationFromTask(final TherapyTaskDto task, final DateTime when)
-  {
-    final AdministrationDto administration;
-    if (task.getAdministrationTypeEnum() == AdministrationTypeEnum.START)
-    {
-      administration = new StartAdministrationDto();
-      ((StartAdministrationDto)administration).setPlannedDose(task.getTherapyDoseDto());
-    }
-    else if (task.getAdministrationTypeEnum() == AdministrationTypeEnum.STOP)
-    {
-      administration = new StopAdministrationDto();
-    }
-    else if (task.getAdministrationTypeEnum() == AdministrationTypeEnum.ADJUST_INFUSION)
-    {
-      administration = new AdjustInfusionAdministrationDto();
-      ((AdjustInfusionAdministrationDto)administration).setPlannedDose(task.getTherapyDoseDto());
-    }
-    else
-    {
-      throw new IllegalArgumentException("Administration type not supported!");
-    }
-
-    administration.setTaskId(task.getTaskId());
-    administration.setAdministrationId(task.getAdministrationId());
-    administration.setPlannedTime(task.getPlannedAdministrationTime());
-    administration.setTriggersTherapyId(task.getTriggersTherapyId());
-
-    if (isAdministrationDue(task.getPlannedAdministrationTime(), when))
-    {
-      administration.setAdministrationStatus(AdministrationStatusEnum.DUE);
-    }
-    else if (isAdministrationLate(task.getPlannedAdministrationTime(), when))
-    {
-      administration.setAdministrationStatus(AdministrationStatusEnum.LATE);
-    }
-    else
-    {
-      administration.setAdministrationStatus(AdministrationStatusEnum.PLANNED);
-    }
-    return administration;
-  }
-
-  private boolean isAdministrationLate(final DateTime planned, final DateTime compare)
-  {
-    return getOffsetInMinutes(planned, compare) > 30;
-  }
-
-  private boolean isAdministrationEarly(final DateTime planned, final DateTime compare)
-  {
-    return getOffsetInMinutes(planned, compare) < -30;
-  }
-
-  private boolean isAdministrationDue(final DateTime planned, final DateTime compare)
-  {
-    final long offset = getOffsetInMinutes(planned, compare);
-    return offset < 30 && offset > -30;
-  }
-
-  private long getOffsetInMinutes(final DateTime planned, final DateTime compare)
-  {
-    return new Duration(planned, compare).getStandardMinutes();
-  }
-
-  @Override
-  public String confirmTherapyAdministration(
-      final String therapyCompositionUid,
-      final String ehrOrderName,
-      final Long patientId,
-      final Long userId,
-      final Long centralCaseId,
-      final Long careProviderId,
-      final AdministrationDto administrationDto,
-      final boolean administrationSuccessful,
-      final DateTime when,
-      final Locale locale)
-  {
-    final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyInstructionPair =
-        ehrMedicationsDao.getTherapyInstructionPair(patientId, therapyCompositionUid, ehrOrderName);
-
-    if (AdministrationTypeEnum.MEDICATION_ADMINISTRATION.contains(administrationDto.getAdministrationType()))
-    {
-      final MedicationActionEnum medicationActionEnum =
-          administrationSuccessful ? MedicationActionEnum.ADMINISTER : MedicationActionEnum.WITHHOLD;
-      return confirmMedicationAdministration(
-          therapyInstructionPair,
-          patientId,
-          userId,
-          centralCaseId,
-          careProviderId,
-          administrationDto,
-          medicationActionEnum,
-          when);
-    }
-    else if (administrationDto.getAdministrationType() == AdministrationTypeEnum.INFUSION_SET_CHANGE)
-    {
-      return confirmInfusionSetChange(
-          therapyInstructionPair, patientId, userId, (InfusionSetChangeDto)administrationDto, when, locale);
-    }
-    else
-    {
-      throw new IllegalArgumentException(
-          "Administration type: " + administrationDto.getAdministrationType().name() + " not supported;");
-    }
-  }
-
-  @Override
-  public String confirmMedicationAdministration(
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyInstructionPair,
-      final Long patientId,
-      final Long userId,
-      final Long centralCaseId,
-      final Long careProviderId,
-      final AdministrationDto administrationDto,
-      final MedicationActionEnum medicationActionEnum,
-      final DateTime when)
-  {
-    Preconditions.checkArgument(
-        AdministrationTypeEnum.MEDICATION_ADMINISTRATION.contains(administrationDto.getAdministrationType()));
-    final MedicationInstructionInstruction instruction = therapyInstructionPair.getSecond();
-    final MedicationAdministrationComposition administrationComposition = new MedicationAdministrationComposition();
-    InstructionToAdministrationMapper.map(instruction, administrationComposition);
-    updateAdministrationComposition(administrationComposition, administrationDto, medicationActionEnum);
-    linkActionsToInstructions(therapyInstructionPair, administrationComposition.getMedicationDetail().getMedicationAction());
-
-    final NamedIdentity usersName = medicationsConnector.getUsersName(userId, when);
-    addContext(administrationComposition, usersName, null, null, null, when);
-    return ehrMedicationsDao.saveMedicationAdministrationComposition(
-        patientId, administrationComposition, administrationDto.getAdministrationId());
-  }
-
-  private String confirmInfusionSetChange(
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyInstructionPair,
-      final Long patientId,
-      final Long userId,
-      final InfusionSetChangeDto administrationDto,
-      final DateTime when,
-      final Locale locale)
-  {
-    final MedicationAdministrationComposition administrationComposition = new MedicationAdministrationComposition();
-    administrationComposition.setMedicationDetail(new MedicationDetailSection());
-    final ClinicalInterventionAction clinicalInterventionAction = new ClinicalInterventionAction();
-    administrationComposition.getMedicationDetail().getClinicalIntervention().add(clinicalInterventionAction);
-
-    final String translatedIntervention =
-        medicationsConnector.getEntry(EnumUtils.getIdentifier(administrationDto.getInfusionSetChangeEnum()), null, locale);
-
-    clinicalInterventionAction.setIntervention(
-        DataValueUtils.getCodedText(
-            EhrTerminologyEnum.PK_NANDA.getEhrName(),
-            administrationDto.getInfusionSetChangeEnum().getCode(),
-            translatedIntervention)
-    );
-    clinicalInterventionAction.setInterventionUnsuccessful(DataValueUtils.getBoolean(false));
-    clinicalInterventionAction.setTime(DataValueUtils.getDateTime(administrationDto.getAdministrationTime()));
-    clinicalInterventionAction.setComments(DataValueUtils.getText(administrationDto.getComment()));
-
-    final IsmTransition ismTransition = new IsmTransition();
-    ismTransition.setCareflowStep(ClinicalInterventionEnum.COMPLETED.getCareflowStep());
-    ismTransition.setCurrentState(ClinicalInterventionEnum.COMPLETED.getCurrentState());
-    clinicalInterventionAction.setIsmTransition(ismTransition);
-
-    linkActionsToInstructions(
-        therapyInstructionPair, administrationComposition.getMedicationDetail().getClinicalIntervention());
-
-    final NamedIdentity usersName = medicationsConnector.getUsersName(userId, when);
-    addContext(administrationComposition, usersName, null, null, null, when);
-    return ehrMedicationsDao.saveMedicationAdministrationComposition(
-        patientId, administrationComposition, administrationDto.getAdministrationId());
-  }
-
-  private void updateAdministrationComposition(
-      final MedicationAdministrationComposition administrationComposition,
-      final AdministrationDto administrationDto,
-      final MedicationActionEnum medicationActionEnum)
-  {
-    final MedicationActionAction medicationAction =
-        administrationComposition.getMedicationDetail().getMedicationAction().get(0);
-    medicationAction.setTime(DataValueUtils.getDateTime(administrationDto.getAdministrationTime()));
-    medicationAction.getReason().add(
-        DataValueUtils.getText(AdministrationTypeEnum.getFullString(administrationDto.getAdministrationType())));
-
-    // for simple therapies user can select substitute medication
-    if (administrationDto instanceof StartAdministrationDto)
-    {
-      final MedicationDto substituteMedication = ((StartAdministrationDto)administrationDto).getSubstituteMedication();
-      if (substituteMedication != null)
-      {
-        if (medicationAction.getIngredientsAndForm() != null &&
-            !medicationAction.getIngredientsAndForm().getIngredient().isEmpty())
-        {
-          throw new IllegalArgumentException("Substitute medication can only be set for simple therapies");
-        }
-        medicationAction.setMedicine(
-            DataValueUtils.getLocalCodedText(String.valueOf(substituteMedication.getId()), substituteMedication.getName()));
-        medicationAction.setBrandSubstituted(DataValueUtils.getBoolean(true));
-      }
-    }
-
-    //is start or adjust set therapyDose data
-    if (administrationDto instanceof StartAdministrationDto || administrationDto instanceof AdjustInfusionAdministrationDto)
-    {
-      final TherapyDoseDto therapyDose = administrationDto instanceof StartAdministrationDto
-                                         ? ((StartAdministrationDto)administrationDto).getAdministeredDose()
-                                         : ((AdjustInfusionAdministrationDto)administrationDto).getAdministeredDose();
-      if (therapyDose != null && therapyDose.getNumerator() != null)
-      {
-        if (therapyDose.getTherapyDoseTypeEnum() == TherapyDoseTypeEnum.QUANTITY)
-        {
-          medicationAction.setStructuredDose(
-              MedicationsEhrUtils.buildStructuredDose(
-                  therapyDose.getNumerator(),
-                  therapyDose.getNumeratorUnit(),
-                  therapyDose.getDenominator(),
-                  therapyDose.getDenominatorUnit(),
-                  null)
-          );
-        }
-        else if (therapyDose.getTherapyDoseTypeEnum() == TherapyDoseTypeEnum.RATE)
-        {
-          final InfusionAdministrationDetailsCluster infusionDetails = MedicationsEhrUtils.getInfusionDetails(
-              false,
-              null,
-              therapyDose.getNumerator(),
-              therapyDose.getNumeratorUnit(),
-              therapyDose.getDenominator(),
-              therapyDose.getDenominatorUnit());
-          if (!medicationAction.getAdministrationDetails().getInfusionAdministrationDetails().isEmpty())
+          if (firstCompositionStart.equals(secondCompositionStart))
           {
-            infusionDetails.setPurposeEnum(
-                medicationAction.getAdministrationDetails().getInfusionAdministrationDetails().get(0).getPurposeEnum());
+            return firstContextStart.compareTo(secondContextStart);
           }
-          medicationAction.getAdministrationDetails().getInfusionAdministrationDetails().clear();
-          medicationAction.getAdministrationDetails().getInfusionAdministrationDetails().add(infusionDetails);
+          return firstCompositionStart.compareTo(secondCompositionStart);
         }
-        else if (therapyDose.getTherapyDoseTypeEnum() == TherapyDoseTypeEnum.VOLUME_SUM)
-        {
-          medicationAction.setStructuredDose(
-              MedicationsEhrUtils.buildStructuredDose(
-                  therapyDose.getNumerator(),
-                  therapyDose.getNumeratorUnit(),
-                  null, null, null)
-          );
-        }
-      }
-    }
-    medicationAction.setComment(DataValueUtils.getText(administrationDto.getComment()));
-
-    final IsmTransition ismTransition = new IsmTransition();
-    ismTransition.setCareflowStep(medicationActionEnum.getCareflowStep());
-    ismTransition.setCurrentState(medicationActionEnum.getCurrentState());
-    medicationAction.setIsmTransition(ismTransition);
-  }
-
-  private void linkActionsToInstructions(
-      final Pair<MedicationOrderComposition, MedicationInstructionInstruction> therapyInstructionPair,
-      final List<? extends Action> actions)
-  {
-    for (final Action action : actions)
-    {
-      final MedicationInstructionInstruction therapyInstruction = therapyInstructionPair.getSecond();
-      final MedicationOrderComposition therapyComposition = therapyInstructionPair.getFirst();
-      action.setInstructionDetails(new InstructionDetails());
-      action.getInstructionDetails().setActivityId("activities[at0001] ");
-
-      final LocatableRef actionInstructionId =
-          MedicationsEhrUtils.createInstructionLocatableRef(therapyComposition, therapyInstruction);
-      final RmPath rmPath = TdoPathable.pathOfItem(therapyComposition, therapyInstruction);
-      actionInstructionId.setPath(rmPath.getCanonicalString());
-      final ObjectVersionId objectVersionId = new ObjectVersionId();
-      final String compositionUid =
-          InstructionTranslator.getCompositionUidWithoutVersion(therapyComposition.getUid().getValue());
-      objectVersionId.setValue(compositionUid);
-      actionInstructionId.setId(objectVersionId);
-      action.getInstructionDetails().setInstructionId(actionInstructionId);
-    }
+    );
   }
 
   @Override
-  public void deleteAdministration(final long patientId, final String compositionId, final String comment)
+  public void deleteAdministration(final String patientId, final String compositionId, final String comment)
   {
-    ehrMedicationsDao.deleteTherapyAdministration(patientId, compositionId, comment);
+    medicationsOpenEhrDao.deleteTherapyAdministration(patientId, compositionId, comment);
   }
 
   @Override
   public DocumentationTherapiesDto findTherapyGroupsForDocumentation(
-      final Long patientId,
-      final Long centralCaseId,
+      final String patientId,
+      final String centralCaseId,
       final Interval centralCaseEffective,
       final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionPairs,
-      final KnownClinic department,
       final boolean isOutpatient,
       final DateTime when,
       final Locale locale)
   {
     sortTherapiesByMedicationTimingStart(instructionPairs, false);
 
-    final Map<Long, MedicationDataForTherapyDto> medicationsDataMap =
-        getMedicationDataForTherapies(instructionPairs, department, when);
+    final Map<Long, MedicationDataForTherapyDto> medicationsDataMap = getMedicationDataForTherapies(instructionPairs, null);
 
     return getTherapiesForDocumentation(
         patientId,
@@ -3716,8 +2124,8 @@ public class DefaultMedicationsBo
   }
 
   DocumentationTherapiesDto getTherapiesForDocumentation(
-      final Long patientId,
-      final Long centralCaseId,
+      final String patientId,
+      final String centralCaseId,
       final Interval centralCaseEffective,
       final List<Pair<MedicationOrderComposition, MedicationInstructionInstruction>> instructionPairs,
       final Map<Long, MedicationDataForTherapyDto> medicationsDataMap,
@@ -3728,36 +2136,26 @@ public class DefaultMedicationsBo
     final List<TherapyDocumentationData> therapies = new ArrayList<>();
     final List<TherapyDocumentationData> dischargeTherapies = new ArrayList<>();
     final List<TherapyDocumentationData> admissionTherapies = new ArrayList<>();
-    final List<TherapyDocumentationData> taggedTherapiesForPrescription = new ArrayList<>();
+    final List<TherapyDto> taggedTherapiesForPrescription = new ArrayList<>();
 
-    if (centralCaseId != null && centralCaseId > 0)
+    if (!isOutpatient)
     {
-      final TagFilteringDto filter = new TagFilteringDto();
-      filter.setCompositionVersion(TagFilteringDto.CompositionVersion.LAST_VERSION_OF_ANY_TAGGED);
+      //use taggedTherapiesForPrescription to display medication on discharge list for EMRAM
+      final List<MedicationOnDischargeComposition> dischargeCompositions =
+          medicationsOpenEhrDao.findMedicationOnDischargeCompositions(patientId, centralCaseEffective);
 
-      final Set<TaggedObjectDto<Instruction>> compositionPairs =
-          ehrTaggingDao.findObjectCompositionPairs(
-              filter,
-              TherapyTaggingUtils.generateTag(TherapyTag.PRESCRIPTION, centralCaseId));
-
-      for (final TaggedObjectDto<Instruction> taggedObjectDto : compositionPairs)
+      for (final MedicationOnDischargeComposition dischargeComposition : dischargeCompositions)
       {
-        final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair =
-            ehrMedicationsDao.getTherapyInstructionPair(
-                patientId,
-                taggedObjectDto.getComposition().getUid().getValue(),
-                taggedObjectDto.getObject().getName().getValue());
-
-        final TherapyDto convertedTherapy = convertInstructionToTherapyDto(
-            instructionPair.getFirst(),
-            instructionPair.getSecond(),
+        final TherapyDto convertedTherapy = convertInstructionToTherapyDtoWithDisplayValues(
+            dischargeComposition,
+            dischargeComposition.getMedicationDetail().getMedicationInstruction().get(0),
             null,
             null,
             when,
             true,
             locale);
 
-        taggedTherapiesForPrescription.add(createTherapyData(instructionPair, convertedTherapy, null));
+        taggedTherapiesForPrescription.add(convertedTherapy);
       }
     }
 
@@ -3767,10 +2165,12 @@ public class DefaultMedicationsBo
 
     for (final Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair : instructionPairs)
     {
-      final DateTime therapyStart = DataValueUtils.getDateTime(instructionPair.getSecond().getOrder().get(0).getMedicationTiming().getStartDate());
-      final DateTime therapyEnd = DataValueUtils.getDateTime(instructionPair.getSecond().getOrder().get(0).getMedicationTiming().getStopDate());
+      final DateTime therapyStart =
+          DataValueUtils.getDateTime(instructionPair.getSecond().getOrder().get(0).getMedicationTiming().getStartDate());
+      final DateTime therapyEnd =
+          DataValueUtils.getDateTime(instructionPair.getSecond().getOrder().get(0).getMedicationTiming().getStopDate());
 
-      final TherapyDto convertedTherapy = convertInstructionToTherapyDto(
+      final TherapyDto convertedTherapy = convertInstructionToTherapyDtoWithDisplayValues(
           instructionPair.getFirst(),
           instructionPair.getSecond(),
           null,
@@ -3781,7 +2181,8 @@ public class DefaultMedicationsBo
 
       if (!areAllIngredientsSolutions(convertedTherapy))
       {
-        final Interval therapyInterval = new Interval(therapyStart, therapyEnd != null ? therapyEnd : Intervals.INFINITE.getEnd());
+        final Interval therapyInterval =
+            new Interval(therapyStart, therapyEnd != null ? therapyEnd : Intervals.INFINITE.getEnd());
 
         final boolean handled =
             handleSimilarAndLinkedTherapies(
@@ -3840,7 +2241,7 @@ public class DefaultMedicationsBo
         getTherapyDisplayValuesForDocumentation(therapies, locale),
         getTherapyDisplayValuesForDocumentation(dischargeTherapies, locale),
         getTherapyDisplayValuesForDocumentation(admissionTherapies, locale),
-        getTherapyDisplayValuesForDocumentation(taggedTherapiesForPrescription, locale));
+        getTherapyDisplayValues(taggedTherapiesForPrescription, locale));
   }
 
   private TherapyDocumentationData createTherapyData(
@@ -3854,7 +2255,8 @@ public class DefaultMedicationsBo
 
     if (therapyInterval != null)
     {
-      therapyData.addInterval(InstructionTranslator.createId(therapy.getEhrOrderName(), therapy.getCompositionUid()), therapyInterval);
+      therapyData.addInterval(
+          TherapyIdUtils.createTherapyId(therapy.getCompositionUid(), therapy.getEhrOrderName()), therapyInterval);
     }
     return therapyData;
   }
@@ -3887,11 +2289,10 @@ public class DefaultMedicationsBo
     if (pair.getFirst() == TherapyLinkType.REGULAR_LINK)
     {
       final TherapyDocumentationData linkedToTherapy = pair.getSecond();
-      final Interval interval = linkedToTherapy.findIntervalForId(InstructionTranslator.createId(
-                                                                      linkedToTherapy.getTherapy()
-                                                                          .getEhrOrderName(),
-                                                                      linkedToTherapy.getTherapy()
-                                                                          .getCompositionUid()));
+      final Interval interval =
+          linkedToTherapy.findIntervalForId(
+              TherapyIdUtils.createTherapyId(
+                  linkedToTherapy.getTherapy().getCompositionUid(), linkedToTherapy.getTherapy().getEhrOrderName()));
 
       if (isDischargeTherapy(therapyInterval, centralCaseEnd, when))
       {
@@ -3903,18 +2304,22 @@ public class DefaultMedicationsBo
         {
           admissionTherapies.remove(linkedToTherapy);
         }
-        final TherapyDocumentationData dischargeTherapy = createTherapyData(therapyToCompare, convertedTherapy, new Interval(interval.getStart(), therapyInterval.getEnd()));
+        final TherapyDocumentationData dischargeTherapy =
+            createTherapyData(
+                therapyToCompare, convertedTherapy, new Interval(interval.getStart(), therapyInterval.getEnd()));
         dischargeTherapies.add(dischargeTherapy);
       }
       else
       {
         final Interval newInterval = new Interval(interval.getStart(), therapyInterval.getEnd());
-        linkedToTherapy.addInterval(InstructionTranslator.createId(
-                                        convertedTherapy.getEhrOrderName(),
-                                        convertedTherapy.getCompositionUid()), newInterval);
-        linkedToTherapy.removeInterval(InstructionTranslator.createId(
-                                           linkedToTherapy.getTherapy().getEhrOrderName(),
-                                           linkedToTherapy.getTherapy().getCompositionUid()), interval);
+        linkedToTherapy.addInterval(
+            TherapyIdUtils.createTherapyId(
+                convertedTherapy.getCompositionUid(),
+                convertedTherapy.getEhrOrderName()), newInterval);
+        linkedToTherapy.removeInterval(
+            TherapyIdUtils.createTherapyId(
+                linkedToTherapy.getTherapy().getCompositionUid(),
+                linkedToTherapy.getTherapy().getEhrOrderName()), interval);
         linkedToTherapy.setTherapy(convertedTherapy);
       }
       return true;
@@ -3923,7 +2328,8 @@ public class DefaultMedicationsBo
     {
       if (isDischargeTherapy(therapyInterval, centralCaseEnd, when))
       {
-        final TherapyDocumentationData newDischargeTherapy = createTherapyData(therapyToCompare, convertedTherapy, therapyInterval);
+        final TherapyDocumentationData newDischargeTherapy =
+            createTherapyData(therapyToCompare, convertedTherapy, therapyInterval);
         dischargeTherapies.add(newDischargeTherapy);
       }
       else
@@ -3931,14 +2337,18 @@ public class DefaultMedicationsBo
         final TherapyDocumentationData linkedToTherapy = pair.getSecond();
         final Interval interval =
             linkedToTherapy.findIntervalForId(
-                InstructionTranslator.createId(linkedToTherapy.getTherapy().getEhrOrderName(), linkedToTherapy.getTherapy().getCompositionUid()));
+                TherapyIdUtils.createTherapyId(
+                    linkedToTherapy.getTherapy().getCompositionUid(),
+                    linkedToTherapy.getTherapy().getEhrOrderName()));
         final Interval newInterval = new Interval(interval.getStart(), therapyInterval.getEnd());
-        linkedToTherapy.addInterval(InstructionTranslator.createId(
-                                        convertedTherapy.getEhrOrderName(),
-                                        convertedTherapy.getCompositionUid()), newInterval);
-        linkedToTherapy.removeInterval(InstructionTranslator.createId(
-                                           linkedToTherapy.getTherapy().getEhrOrderName(),
-                                           linkedToTherapy.getTherapy().getCompositionUid()), interval);
+        linkedToTherapy.addInterval(
+            TherapyIdUtils.createTherapyId(
+                convertedTherapy.getCompositionUid(),
+                convertedTherapy.getEhrOrderName()), newInterval);
+        linkedToTherapy.removeInterval(
+            TherapyIdUtils.createTherapyId(
+                linkedToTherapy.getTherapy().getCompositionUid(),
+                linkedToTherapy.getTherapy().getEhrOrderName()), interval);
       }
       return true;
     }
@@ -3957,9 +2367,9 @@ public class DefaultMedicationsBo
       }
       else
       {
-        similarTherapy.addInterval(InstructionTranslator.createId(
-                                       convertedTherapy.getEhrOrderName(),
-                                       convertedTherapy.getCompositionUid()), therapyInterval);
+        similarTherapy.addInterval(
+            TherapyIdUtils.createTherapyId(convertedTherapy.getCompositionUid(), convertedTherapy.getEhrOrderName()),
+            therapyInterval);
       }
       return true;
     }
@@ -3977,7 +2387,8 @@ public class DefaultMedicationsBo
         {
           admissionTherapies.remove(similarTherapy);
         }
-        final TherapyDocumentationData dischargeTherapy = createTherapyData(therapyToCompare, convertedTherapy, therapyInterval);
+        final TherapyDocumentationData dischargeTherapy =
+            createTherapyData(therapyToCompare, convertedTherapy, therapyInterval);
 
         for (final Pair<String, Interval> pair1 : similarTherapy.getIntervals())
         {
@@ -3987,9 +2398,10 @@ public class DefaultMedicationsBo
       }
       else
       {
-        similarTherapy.addInterval(InstructionTranslator.createId(
-                                       convertedTherapy.getEhrOrderName(),
-                                       convertedTherapy.getCompositionUid()), therapyInterval);
+        similarTherapy.addInterval(
+            TherapyIdUtils.createTherapyId(
+                convertedTherapy.getCompositionUid(),
+                convertedTherapy.getEhrOrderName()), therapyInterval);
         similarTherapy.setTherapy(convertedTherapy);
       }
       return true;
@@ -4073,14 +2485,17 @@ public class DefaultMedicationsBo
     for (final TherapyDocumentationData therapy : therapyList)
     {
       therapyDisplayProvider.fillDisplayValues(therapy.getTherapy(), true, false, locale);
-      String formatted =  therapy.getTherapy().getFormattedTherapyDisplay();
+      String formatted = therapy.getTherapy().getFormattedTherapyDisplay();
       for (final Pair<String, Interval> pair : therapy.getIntervals())
       {
         final Interval interval = pair.getSecond();
-        final String endDate = Intervals.isEndInfinity(interval.getEnd()) ? "..." : DateTimeFormatters.shortDateTime().print(interval.getEnd());
+        final String endDate =
+            Intervals.isEndInfinity(interval.getEnd()) ?
+            "..." :
+            DateTimeFormatters.shortDateTime(locale).print(interval.getEnd());
         formatted =
             formatted + " "
-                + DateTimeFormatters.shortDateTime().print(interval.getStart()) + " &ndash; "
+                + DateTimeFormatters.shortDateTime(locale).print(interval.getStart()) + " &ndash; "
                 + endDate + "<br>";
       }
       strings.add(formatted);
@@ -4088,86 +2503,71 @@ public class DefaultMedicationsBo
     return strings;
   }
 
+  private List<String> getTherapyDisplayValues(final List<TherapyDto> therapyList, final Locale locale)
+  {
+    final List<String> therapyDisplayValues = new ArrayList<>();
+    for (final TherapyDto therapy : therapyList)
+    {
+      therapyDisplayProvider.fillDisplayValues(therapy, true, false, locale);
+      therapyDisplayValues.add(therapy.getFormattedTherapyDisplay());
+    }
+    return therapyDisplayValues;
+  }
+
   @Override
-  public List<MedicationSearchDto> filterMedicationsTree(
-      final List<MedicationSearchDto> medications, final String searchString)
+  @Transactional
+  @ServiceMethod(auditing = @Auditing(level = Level.FULL))
+  public DateTime findPreviousTaskForTherapy(
+      final String patientId,
+      final String compositionUid,
+      final String ehrOrderName,
+      final DateTime when)
   {
-    if (searchString == null)
+    Pair<MedicationOrderComposition, MedicationInstructionInstruction> instructionPair = medicationsOpenEhrDao.getTherapyInstructionPair(
+        patientId,
+        compositionUid,
+        ehrOrderName);
+
+    while (instructionPair != null)
     {
-      return medications;
+      final List<AdministrationDto> administrations = administrationProvider.getTherapiesAdministrations(
+          patientId,
+          Collections.singletonList(instructionPair),
+          null);
+
+      final String therapyId = TherapyIdUtils.createTherapyId(instructionPair.getFirst(), instructionPair.getSecond());
+
+      final DateTime lastTask = medicationsTasksProvider.findLastAdministrationTaskTimeForTherapy(
+          patientId,
+          therapyId,
+          new Interval(when.minusDays(10), when),
+          false)
+          .orElse(null);
+
+      final DateTime lastAdministration = administrations
+          .stream()
+          .filter(a -> a.getAdministrationResult() != AdministrationResultEnum.NOT_GIVEN)
+          .map(AdministrationDto::getAdministrationTime)
+          .max(Comparator.naturalOrder())
+          .orElse(null);
+
+      final DateTime lastTime = getMostRecent(lastTask, lastAdministration);
+      if (lastTime != null)
+      {
+        return lastTime;
+      }
+
+      instructionPair = getInstructionFromLink(patientId, instructionPair.getSecond(), EhrLinkType.UPDATE, true);
     }
-    final String[] searchSubstrings = searchString.split(" ");
-    return filterMedicationsTree(medications, searchSubstrings);
+    return null;
   }
 
-  private List<MedicationSearchDto> filterMedicationsTree(
-      final List<MedicationSearchDto> medications, final String[] searchSubstrings)
+  private DateTime getMostRecent(final DateTime t1, final DateTime t2)
   {
-    final List<MedicationSearchDto> filteredMedications = new ArrayList<>();
-
-    for (final MedicationSearchDto medication : medications)
+    if (t1 != null && t2 != null && t2.isAfter(t1))
     {
-      final String medicationSearchName =
-          medication.getMedication().getGenericName() != null ?
-          medication.getMedication().getGenericName() + " " + medication.getTitle() :
-          medication.getTitle();
-
-      medication.setExpand(false);
-      boolean match = true;
-
-      if (searchSubstrings.length > 0)
-      {
-        final String firstSearchString = searchSubstrings[0];
-        final boolean genericStartsWithFirstSearchString =
-            medication.getMedication().getGenericName() != null &&
-                StringUtils.startsWithIgnoreCase(medication.getMedication().getGenericName(), firstSearchString);
-        final boolean medicationStartsWithFirstSearchString =
-            StringUtils.startsWithIgnoreCase(medication.getTitle(), firstSearchString);
-        if (!genericStartsWithFirstSearchString && !medicationStartsWithFirstSearchString)
-        {
-          match = false;
-        }
-      }
-      if (match)
-      {
-        for (int i = 1; i < searchSubstrings.length; i++)
-        {
-          if (!StringUtils.containsIgnoreCase(medicationSearchName, searchSubstrings[i]))
-          {
-            match = false;
-            break;
-          }
-        }
-      }
-      if (match)
-      {
-        filteredMedications.add(medication);
-        fillMedicationTreeChildren(Collections.singletonList(medication));
-      }
-      else
-      {
-        if (!medication.getSublevelMedications().isEmpty())
-        {
-          final List<MedicationSearchDto> filteredChildren =
-              filterMedicationsTree(medication.getSublevelMedications(), searchSubstrings);
-          if (!filteredChildren.isEmpty())
-          {
-            medication.setChildren(filteredChildren);
-            filteredMedications.add(medication);
-            medication.setExpand(true);
-          }
-        }
-      }
+      return t2;
     }
-    return filteredMedications;
-  }
-
-  private void fillMedicationTreeChildren(final List<MedicationSearchDto> medications)
-  {
-    for (final MedicationSearchDto medication : medications)
-    {
-      medication.setChildren(medication.getSublevelMedications());
-      fillMedicationTreeChildren(medication.getChildren());
-    }
+    return t1 != null ? t1 : t2;
   }
 }

@@ -19,17 +19,12 @@
 
 package com.marand.thinkmed.medications;
 
-import java.util.EnumSet;
-import java.util.Set;
-
 /**
  * @author Mitja Lapajne
  */
 public enum MedicationStartCriterionEnum
 {
-  BY_DOCTOR_ORDERS, BEFORE_MEAL, AFTER_MEAL;
-
-  public static final Set<MedicationStartCriterionEnum> APPLICATION_PRECONDITION = EnumSet.of(BEFORE_MEAL, AFTER_MEAL);
+  BY_DOCTOR_ORDERS;
 
   public static String getFullString(final MedicationStartCriterionEnum startConditionEnum)
   {

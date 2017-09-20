@@ -1,0 +1,27 @@
+<div data-tm-flex-layout="column"
+     data-align-items="stretch" data-justify-content="flex-start">
+    <div class="header" data-tm-flex-item="0 0 auto" data-tm-flex-layout="row" data-align-items="flex-start"
+         data-justify-content="flex-start">
+        <tm-meds-document-header data-tm-flex-item="1 1 auto"
+                                 data-document="vm.getDocument()"></tm-meds-document-header>
+    </div>
+
+    <div class="body" data-tm-flex-item="0 0 auto" data-tm-flex-layout="row" data-justify-content="flex-start"
+         data-align-items="flex-start">
+        <div data-tm-flex-item="0 0 5px" data-align-self="stretch" class="status-line"></div>
+
+        <div class="content" data-tm-flex-item="1 1 auto" data-tm-flex-layout="column" data-justify-content="flex-start"
+             data-align-items="stretch">
+            <tm-meds-external-eer-prescription-document-section data-ng-if="vm.showWhitePrescriptionsSection()"
+                                                                data-section-title="{{::'white.prescription' | tmDictionaryTermFilter | uppercase }}"
+                                                                data-section-therapies="vm.getWhiteDocumentTypePrescriptionTherapies()"
+                                                                data-prescription-date="vm.getDocument().getContent().getPrescriptionDate()">
+            </tm-meds-external-eer-prescription-document-section>
+            <tm-meds-external-eer-prescription-document-section data-ng-if="vm.showGreenPrescriptionsSection()"
+                                                                data-section-title="{{::'green.prescription' | tmDictionaryTermFilter | uppercase }}"
+                                                                data-section-therapies="vm.getGreenDocumentTypePrescriptionTherapies()"
+                                                                data-prescription-date="vm.getDocument().getContent().getPrescriptionDate()">
+            </tm-meds-external-eer-prescription-document-section>
+        </div>
+    </div>
+</div>

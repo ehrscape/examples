@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.2.2.final using JasperReports Library version 6.2.2  -->
+<!-- 2016-05-18T08:50:26 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TherapyDayA_Complex" pageWidth="786" pageHeight="539" orientation="Landscape" columnWidth="786" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="com.marand.ispek.common.Dictionary" whenResourceMissingType="Key" uuid="8d713aa8-1f3a-4536-a167-162361f93792">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<template><![CDATA[$P{initData}.getStylesDir() + "TherapyDay_Styles.jrtx"]]></template>
+	<subDataset name="EmptyDataset" uuid="19abbe06-48f2-4aa7-bbe3-3003f56dec5a"/>
+	<parameter name="initData" class="com.marand.ispek.print.jasperreports.IspekJasperReportInitData" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.ispek.print.jasperreports.SampleIspekJRDataSourceFactory.createInitData()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="labelFieldDelimiter" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[": "]]></defaultValueExpression>
+	</parameter>
+	<parameter name="showGroups" class="java.lang.Boolean" isForPrompting="false">
+		<defaultValueExpression><![CDATA[true]]></defaultValueExpression>
+	</parameter>
+	<parameter name="therapyApplicationStartDate" class="java.util.Date" isForPrompting="false">
+		<defaultValueExpression><![CDATA[com.marand.thinkmed.medications.client.SampleMedicationsJRDataSourceFactory.getTherapyApplicationStartDate()]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="order" class="com.marand.thinkmed.medications.dto.ComplexTherapyDto">
+		<fieldDescription><![CDATA[order]]></fieldDescription>
+	</field>
+	<field name="therapyConsecutiveDay" class="java.lang.String">
+		<fieldDescription><![CDATA[therapyConsecutiveDay]]></fieldDescription>
+	</field>
+	<field name="therapyStart" class="java.lang.String">
+		<fieldDescription><![CDATA[therapyStart]]></fieldDescription>
+	</field>
+	<field name="therapyEnd" class="java.lang.String">
+		<fieldDescription><![CDATA[therapyEnd]]></fieldDescription>
+	</field>
+	<field name="therapyReportStatusEnum" class="com.marand.thinkmed.medications.TherapyReportStatusEnum">
+		<fieldDescription><![CDATA[therapyReportStatusEnum]]></fieldDescription>
+	</field>
+	<field name="customGroupName" class="java.lang.String">
+		<fieldDescription><![CDATA[customGroupName]]></fieldDescription>
+	</field>
+	<field name="customGroupSortOrder" class="java.lang.Integer">
+		<fieldDescription><![CDATA[customGroupSortOrder]]></fieldDescription>
+	</field>
+	<field name="administrations" class="java.util.List">
+		<fieldDescription><![CDATA[administrations]]></fieldDescription>
+	</field>
+	<sortField name="customGroupSortOrder"/>
+	<sortField name="customGroupName"/>
+	<group name="customGroupSortOrder">
+		<groupExpression><![CDATA[$F{customGroupSortOrder}]]></groupExpression>
+		<groupHeader>
+			<band/>
+		</groupHeader>
+	</group>
+	<group name="customGroupName" isReprintHeaderOnEachPage="true" keepTogether="true">
+		<groupExpression><![CDATA[$F{customGroupName}]]></groupExpression>
+		<groupHeader>
+			<band height="13">
+				<printWhenExpression><![CDATA[$P{showGroups}]]></printWhenExpression>
+				<textField>
+					<reportElement style="group" x="0" y="0" width="786" height="13" uuid="1c75be6e-89d5-463b-b63e-3374703ebcc6"/>
+					<textFieldExpression><![CDATA[$F{customGroupName} == null ? $R{other.undef} : $F{customGroupName}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="order">
+		<groupExpression><![CDATA[$F{order}]]></groupExpression>
+		<groupHeader>
+			<band height="3">
+				<printWhenExpression><![CDATA[!$P{showGroups}]]></printWhenExpression>
+			</band>
+			<band height="20" splitType="Prevent">
+				<subreport>
+					<reportElement x="0" y="0" width="786" height="20" uuid="8f803aec-2d76-4deb-98ca-1f41872f91f0"/>
+					<parametersMapExpression><![CDATA[$P{REPORT_PARAMETERS_MAP}]]></parametersMapExpression>
+					<subreportParameter name="therapyConsecutiveDay">
+						<subreportParameterExpression><![CDATA[$F{therapyConsecutiveDay}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="order">
+						<subreportParameterExpression><![CDATA[$F{order}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="therapyApplicationStartDate">
+						<subreportParameterExpression><![CDATA[$P{therapyApplicationStartDate}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="administrations">
+						<subreportParameterExpression><![CDATA[$F{administrations}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="therapyReportStatusEnum">
+						<subreportParameterExpression><![CDATA[$F{therapyReportStatusEnum}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="therapyEnd">
+						<subreportParameterExpression><![CDATA[$F{therapyEnd}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="therapyStart">
+						<subreportParameterExpression><![CDATA[$F{therapyStart}]]></subreportParameterExpression>
+					</subreportParameter>
+					<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.JREmptyDataSource()]]></dataSourceExpression>
+					<subreportExpression><![CDATA[$P{initData}.getSubreportsDir() + "TherapyDayScotlandA_Complex_Section.jasper"]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupHeader>
+	</group>
+</jasperReport>

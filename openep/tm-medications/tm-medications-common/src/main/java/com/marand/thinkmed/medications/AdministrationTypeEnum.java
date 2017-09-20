@@ -27,9 +27,11 @@ import java.util.Set;
  */
 public enum AdministrationTypeEnum
 {
-  START, STOP, ADJUST_INFUSION, INFUSION_SET_CHANGE;
+  START, STOP, ADJUST_INFUSION, INFUSION_SET_CHANGE, BOLUS;
 
-  public static final Set<AdministrationTypeEnum> MEDICATION_ADMINISTRATION = EnumSet.of(START, STOP, ADJUST_INFUSION);
+  public static final Set<AdministrationTypeEnum> MEDICATION_ADMINISTRATION = EnumSet.of(START, STOP, ADJUST_INFUSION, BOLUS);
+  public static final Set<AdministrationTypeEnum> START_OR_ADJUST = EnumSet.of(START, ADJUST_INFUSION);
+  public static final Set<AdministrationTypeEnum> NOT_STOP = EnumSet.of(START, ADJUST_INFUSION, INFUSION_SET_CHANGE, BOLUS);
 
   public static String getFullString(final AdministrationTypeEnum additionalInstructionEnum)
   {

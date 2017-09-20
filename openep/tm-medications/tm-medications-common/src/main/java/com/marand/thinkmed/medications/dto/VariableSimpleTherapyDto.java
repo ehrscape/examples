@@ -22,12 +22,13 @@ package com.marand.thinkmed.medications.dto;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.marand.thinkmed.medications.dto.dose.TimedSimpleDoseElementDto;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Bostjan Vester
  */
-public class VariableSimpleTherapyDto extends SimpleTherapyDto
+public class VariableSimpleTherapyDto extends SimpleTherapyDto implements VariableTherapy
 {
   private List<TimedSimpleDoseElementDto> timedDoseElements = new ArrayList<>();
 

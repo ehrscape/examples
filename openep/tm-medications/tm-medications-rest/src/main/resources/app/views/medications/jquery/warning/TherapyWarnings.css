@@ -1,0 +1,293 @@
+/*
+ * Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+ *
+ * This file is part of Think!Med Clinical Medication Management.
+ *
+ * Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*------------------------------------------------------------------------------------------------------------*/
+
+.v-therapy-view .reconciliation-container .warnings-container,
+.v-therapy-view .medications-ordering-container .warnings-container {
+    border-top: 1px solid #d6d6d6;
+}
+
+.v-therapy-view .reconciliation-container .simple-warnings-container,
+.v-therapy-view .medications-ordering-container .simple-warnings-container {
+    border-top: 1px solid #d6d6d6;
+    padding: 0 25px;
+    margin-top: 3px;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .severity-filter-button button li.severity,
+.v-therapy-view .medications-ordering-container .warnings-container .severity-filter-button button li.severity {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .warnings-counter span,
+.v-therapy-view .medications-ordering-container .warnings-container .warnings-counter span {
+    color: #646464;
+    margin: 0 1px;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .warnings-counter .severity-high,
+.v-therapy-view .medications-ordering-container .warnings-container .warnings-counter .severity-high {
+    color: red;
+    font-weight: bold;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .warnings-counter .severity-significant,
+.v-therapy-view .medications-ordering-container .warnings-container .warnings-counter .severity-significant {
+    color: darkorange;
+    font-weight: bold;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .warnings-counter .severity-low,
+.v-therapy-view .medications-ordering-container .warnings-container .warnings-counter .severity-low {
+    font-weight: bold;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .warnings-counter .severity-without ,
+.v-therapy-view .medications-ordering-container .warnings-container .warnings-counter .severity-without {
+    color: #0098C2;
+    font-weight: bold;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .dropdown-menu li .severity,
+.v-therapy-view .medications-ordering-container .warnings-container .dropdown-menu li .severity {
+    padding-left: 28px;
+    padding-top: 3px;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .dropdown-menu li div,
+.v-therapy-view .medications-ordering-container .warnings-container .dropdown-menu li div {
+    color: #646464;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .severity,
+.v-therapy-view .reconciliation-container .simple-warnings-container .severity,
+.v-therapy-view .medications-ordering-container .warnings-container .severity,
+.v-therapy-view .medications-ordering-container .simple-warnings-container .severity {
+    /*float: left;*/
+    background-repeat: no-repeat;
+    background-position: center top;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .icons-container,
+.v-therapy-view .reconciliation-container .simple-warnings-container .icons-container
+.v-therapy-view .medications-ordering-container .warnings-container .icons-container,
+.v-therapy-view .medications-ordering-container .simple-warnings-container .icons-container {
+}
+
+.v-therapy-view .simple-warnings-container .warnings-message-container {
+    padding: 5px 5px 5px 5px;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .severity-filter-button,
+.v-therapy-view .medications-ordering-container .warnings-container .severity-filter-button {
+    margin-top: -1px;
+    border: none;
+    background-color: #f6f6f6;
+    background: none;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .severity-filter-button div div,
+.v-therapy-view .medications-ordering-container .warnings-container .severity-filter-button div div {
+    border: none !important;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .tm-component.tm-checkbox.override-warning-check-box .checkbox-field,
+.v-therapy-view .medications-ordering-container .warnings-container .tm-component.tm-checkbox.override-warning-check-box .checkbox-field {
+    width: 24px;
+}
+
+.v-therapy-view .reconciliation-container .warnings-container .tm-component.tm-checkbox.override-warning-check-box .checkbox-label,
+.v-therapy-view .medications-ordering-container .warnings-container .tm-component.tm-checkbox.override-warning-check-box .checkbox-label {
+    margin-top: 24px !important;
+    margin-left: -37px !important; /* (checkbox-label.width+checkbox-field.width)/2 */
+    font-size: 8px;
+    font-weight: bold;
+    width: 50px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+/****** ICONS ******/
+.v-therapy-view .reconciliation-container .icon-monograph,
+.v-therapy-view .medications-ordering-container .icon-monograph {
+    background-repeat: no-repeat;
+    background-position: center top;
+    background-image: url('${context.path}/resources/images/icons/document_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-high,
+.v-therapy-view .warnings-legend .severity.icon-high,
+.v-therapy-view .medications-ordering-container .severity.icon-high {
+    background-image: url('${context.path}/resources/images/icons/status_warningRed_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-significant,
+.v-therapy-view .warnings-legend .severity.icon-significant,
+.v-therapy-view .medications-ordering-container .severity.icon-significant {
+    background-image: url('${context.path}/resources/images/icons/warningYellow_status_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-low,
+.v-therapy-view .warnings-legend .severity.icon-low,
+.v-therapy-view .medications-ordering-container .severity.icon-low {
+    background-image: url('${context.path}/resources/images/icons/warning_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-without,
+.v-therapy-view .medications-ordering-container .severity.icon-without {
+    background-image: url('${context.path}/resources/images/icons/warning_24.png');
+}
+
+/* interaction */
+.v-therapy-view .reconciliation-container .severity.icon-high.interaction,
+.v-therapy-view .medications-ordering-container .severity.icon-high.interaction {
+    background-image: url('${context.path}/resources/images/icons/therapyInteractionRed_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-significant.interaction,
+.v-therapy-view .medications-ordering-container .severity.icon-significant.interaction {
+    background-image: url('${context.path}/resources/images/icons/therapyInteractionYellow_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-low.interaction,
+.v-therapy-view .medications-ordering-container .severity.icon-low.interaction {
+    background-image: url('${context.path}/resources/images/icons/therapyInteractionGrey_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-without.interaction,
+.v-therapy-view .warnings-legend .severity.icon-without.interaction,
+.v-therapy-view .medications-ordering-container .severity.icon-without.interaction {
+    background-image: url('${context.path}/resources/images/icons/therapyInteractionBlue_24.png');
+}
+
+/* allergy */
+.v-therapy-view .reconciliation-container .severity.icon-high.allergy,
+.v-therapy-view .medications-ordering-container .severity.icon-high.allergy {
+    background-image: url('${context.path}/resources/images/icons/allergyRed_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-significant.allergy,
+.v-therapy-view .medications-ordering-container .severity.icon-significant.allergy {
+    background-image: url('${context.path}/resources/images/icons/allergyYellow_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-low.allergy,
+.v-therapy-view .medications-ordering-container .severity.icon-low.allergy {
+    background-image: url('${context.path}/resources/images/icons/allergyGrey_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-without.allergy,
+.v-therapy-view .warnings-legend .severity.icon-without.allergy,
+.v-therapy-view .medications-ordering-container .severity.icon-without.allergy {
+    background-image: url('${context.path}/resources/images/icons/allergyBlue_24.png');
+}
+
+/* contraindication */
+.v-therapy-view .reconciliation-container .severity.icon-high.contraindication,
+.v-therapy-view .medications-ordering-container .severity.icon-high.contraindication {
+    background-image: url('${context.path}/resources/images/icons/therapyContraIndicationRed_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-significant.contraindication,
+.v-therapy-view .medications-ordering-container .severity.icon-significant.contraindication {
+    background-image: url('${context.path}/resources/images/icons/therapyContraIndicationYellow_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-low.contraindication,
+.v-therapy-view .medications-ordering-container .severity.icon-low.contraindication {
+    background-image: url('${context.path}/resources/images/icons/therapyContraIndicationGrey_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-without.contraindication,
+.v-therapy-view .warnings-legend .severity.icon-without.contraindication,
+.v-therapy-view .medications-ordering-container .severity.icon-without.contraindication {
+    background-image: url('${context.path}/resources/images/icons/therapyContraIndicationBlue_24.png');
+}
+
+/* ADDITIONAL WARNINGS - BNF, PARACETAMOL */
+.v-therapy-view .reconciliation-container .severity.icon-high.bnf,
+.v-therapy-view .medications-ordering-container .severity.icon-high.bnf,
+.v-therapy-view .reconciliation-container .severity.icon-high.paracetamol,
+.v-therapy-view .medications-ordering-container .severity.icon-high.paracetamol {
+    background-image: url('${context.path}/resources/images/icons/status_warningRed_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-significant.bnf,
+.v-therapy-view .medications-ordering-container .severity.icon-significant.bnf {
+    background-image: url('${context.path}/resources/images/icons/warningYellow_status_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-low.bnf,
+.v-therapy-view .medications-ordering-container .severity.icon-low.bnf {
+    background-image: url('${context.path}/resources/images/icons/warning_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-without.bnf,
+.v-therapy-view .warnings-legend .severity.icon-without.bnf,
+.v-therapy-view .medications-ordering-container .severity.icon-without.bnf {
+    background-image: url('${context.path}/resources/images/icons/warning_24.png');
+}
+
+/* duplicate */
+.v-therapy-view .reconciliation-container .severity.icon-high.duplicate,
+.v-therapy-view .medications-ordering-container .severity.icon-high.duplicate {
+    background-image: url('${context.path}/resources/images/icons/therapyDuplicateRed_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-significant.duplicate,
+.v-therapy-view .medications-ordering-container .severity.icon-significant.duplicate {
+    background-image: url('${context.path}/resources/images/icons/therapyDuplicateYellow_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-low.duplicate,
+.v-therapy-view .medications-ordering-container .severity.icon-low.duplicate {
+    background-image: url('${context.path}/resources/images/icons/therapyDuplicateGrey_24.png');
+}
+
+.v-therapy-view .reconciliation-container .severity.icon-without.duplicate,
+.v-therapy-view .warnings-legend .severity.icon-without.duplicate,
+.v-therapy-view .medications-ordering-container .severity.icon-without.duplicate {
+    background-image: url('${context.path}/resources/images/icons/therapyDuplicateBlue_24.png');
+}
+.v-therapy-view .warnings-legend {
+    padding: 5px 5px 5px 5px;
+}
+/* bnf maximum*/
+.v-therapy-view .bnf-low-icon,
+.v-therapy-view .bnf-significant-icon,
+.v-therapy-view .bnf-high-icon {
+    background-position: center center;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin: 0px 5px 0px 5px;
+    cursor: pointer;
+}
+
+.v-therapy-view .bnf-low-icon {
+    background-image: url('${context.path}/resources/images/icons/bnf_green.png');
+}
+.v-therapy-view .bnf-significant-icon {
+    background-image: url('${context.path}/resources/images/icons/bnf_yellow.png');
+}
+.v-therapy-view .bnf-high-icon {
+    background-image: url('${context.path}/resources/images/icons/bnf_red.png');
+}

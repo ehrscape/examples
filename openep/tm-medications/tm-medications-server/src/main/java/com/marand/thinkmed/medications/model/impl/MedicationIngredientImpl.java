@@ -20,9 +20,13 @@
 package com.marand.thinkmed.medications.model.impl;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 import com.marand.maf.core.hibernate.entity.AbstractEffectiveCatalogEntity;
 import com.marand.thinkmed.medications.model.MedicationIngredient;
+import com.marand.thinkmed.medications.rule.MedicationRuleEnum;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
@@ -30,4 +34,25 @@ import com.marand.thinkmed.medications.model.MedicationIngredient;
 @Entity
 public class MedicationIngredientImpl extends AbstractEffectiveCatalogEntity implements MedicationIngredient
 {
+  private MedicationRuleEnum rule;
+
+  @Override
+  @Enumerated(EnumType.STRING)
+  public MedicationRuleEnum getRule()
+  {
+    return rule;
+  }
+
+  @Override
+  public void setRule(final MedicationRuleEnum rule)
+  {
+    this.rule = rule;
+  }
+
+  @Override
+  protected void appendToString(final ToStringBuilder tsb)
+  {
+    super.appendToString(tsb);
+    tsb.append("rule", rule);
+  }
 }

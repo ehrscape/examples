@@ -21,6 +21,7 @@ package com.marand.thinkmed.medications.dto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.marand.thinkmed.medications.MedicationOrderFormType;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -181,8 +182,27 @@ public abstract class ComplexTherapyDto extends TherapyDto
   }
 
   @Override
+  public boolean isNormalInfusion()
+  {
+    return isWithRate() && !continuousInfusion;
+  }
+
+  @Override
+  public List<MedicationDto> getMedications()
+  {
+    return ingredientsList.stream().map(InfusionIngredientDto::getMedication).collect(Collectors.toList());
+  }
+
+  @Override
+  public Long getMainMedicationId()
+  {
+    return ingredientsList.isEmpty() ? null : ingredientsList.get(0).getMedication().getId();
+  }
+
+  @Override
   protected void appendToString(final ToStringBuilder tsb)
   {
+    super.appendToString(tsb);
     tsb
         .append("ingredientsList", ingredientsList)
         .append("continuousInfusion", continuousInfusion)

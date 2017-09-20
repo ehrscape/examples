@@ -6,6 +6,7 @@ import com.marand.thinkmed.fdb.dto.FdbPatientDto;
 import com.marand.thinkmed.fdb.dto.FdbScreeningDto;
 import com.marand.thinkmed.fdb.dto.FdbScreeningResultDto;
 import com.marand.thinkmed.fdb.dto.FdbTerminologyDto;
+import com.marand.thinkmed.fdb.dto.FdbTerminologyWithConceptDto;
 import com.marand.thinkmed.fdb.rest.FdbRestService;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -141,27 +142,33 @@ public class FdbTestTool
 
 
     //
-    //final FdbTerminologyDto prospectiveDrug1 = new FdbTerminologyDto();
-    //prospectiveDrug1.setId("892211000001107");
-    //prospectiveDrug1.setName("Ibuprofen 200mg tablets (Aspar Pharmaceuticals Ltd)");
-    //prospectiveDrug1.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
-    //prospectiveDrug1.setConceptType(FdbEnums.PRODUCT_CONCEPT_TYPE.getNameValue());
-    //screeningDto.getProspectiveDrugs().add(prospectiveDrug1);
+    final FdbTerminologyWithConceptDto prospectiveDrug1 = new FdbTerminologyWithConceptDto();
+    prospectiveDrug1.setId("96195007");
+    prospectiveDrug1.setName("lamotrigine");
+    prospectiveDrug1.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
+    prospectiveDrug1.setConceptType(FdbEnums.DRUG_CONCEPT_TYPE.getNameValue());
+    screeningDto.getProspectiveDrugs().add(prospectiveDrug1);
 
-    final FdbTerminologyDto prospectiveDrug2 = new FdbTerminologyDto();
+    final FdbTerminologyWithConceptDto prospectiveDrug2 = new FdbTerminologyWithConceptDto();
     //prospectiveDrug2.setId("27658006");
-    prospectiveDrug2.setId("384611000001100");
-    prospectiveDrug2.setName("Amoxicillin");
+    prospectiveDrug2.setId("10049011000001109");
+    prospectiveDrug2.setName("sodium valproate");
     prospectiveDrug2.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
-    prospectiveDrug2.setConceptType(FdbEnums.PRODUCT_CONCEPT_TYPE.getNameValue());
+    prospectiveDrug2.setConceptType(FdbEnums.DRUG_CONCEPT_TYPE.getNameValue());
     screeningDto.getProspectiveDrugs().add(prospectiveDrug2);
 
-    final FdbTerminologyDto allergen = new FdbTerminologyDto();
+    final FdbTerminologyWithConceptDto allergen = new FdbTerminologyWithConceptDto();
     allergen.setId("91936005");
     allergen.setName("Penicillin");
     allergen.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
     allergen.setConceptType(FdbEnums.DRUG_CONCEPT_TYPE.getNameValue());
     screeningDto.getAllergens().add(allergen);
+
+    final FdbTerminologyDto condition = new FdbTerminologyDto();
+    condition.setId("279039007");
+    condition.setName("Low back pain");
+    condition.setTerminology(FdbEnums.SNOMED_TERMINOLOGY.getNameValue());
+    screeningDto.getConditions().add(condition);
 
     screeningDto.setCheckAllDrugs(true);
     screeningDto.setValidateInput(true);

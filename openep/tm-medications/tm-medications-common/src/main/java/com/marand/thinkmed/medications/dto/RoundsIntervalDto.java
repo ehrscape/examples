@@ -19,13 +19,13 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.DataObject;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
-public class RoundsIntervalDto extends DataObject
+public class RoundsIntervalDto extends DataTransferObject
 {
   private int startHour;
   private int startMinute;

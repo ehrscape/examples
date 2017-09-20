@@ -19,15 +19,15 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.DataObject;
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
+import com.marand.thinkmed.api.core.JsonSerializable;
 import com.marand.thinkmed.medications.MedicationTypeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
-public class MedicationDto extends DataObject implements JsonSerializable
+public class MedicationDto extends DataTransferObject implements JsonSerializable
 {
   private Long id;
   private String name;

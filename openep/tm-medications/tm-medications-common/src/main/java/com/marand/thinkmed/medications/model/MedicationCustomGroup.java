@@ -26,11 +26,11 @@ import com.marand.maf.core.data.entity.CatalogEntity;
  */
 public interface MedicationCustomGroup extends CatalogEntity
 {
-  String getOrganizationalEntityName();
+  String getCareProviderId();
 
-  void setOrganizationalEntityName(String organizationalEntityName);
+  void setCareProviderId(String careProviderId);
 
   Integer getSortOrder();
 
-  void setSortOrder(final Integer sortOrder);
+  void setSortOrder(Integer sortOrder);
 }

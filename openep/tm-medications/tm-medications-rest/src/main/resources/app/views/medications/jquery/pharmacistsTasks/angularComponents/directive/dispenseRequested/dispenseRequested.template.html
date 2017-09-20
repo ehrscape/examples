@@ -1,0 +1,17 @@
+<div class="textLineHeight">
+    <div class="float-left textBold">{{::$row.createdDateTime | tmFriendlyDateFilter }}</div>
+    <br>
+    <div ng-if="dataItem.supplyInDays" class="text-grey">
+        <div class="display-inline float-left">{{::$row.supplyInDays}}</div>
+        <div class="display-inline float-left left-margin-5">{{($row.supplyInDays === '1' ? 'day' : 'days') |
+            tmDictionaryTermFilter | lowercase}}
+        </div>
+        <div class="display-inline float-left left-margin-5"> ({{$row.supplyTypeEnum | SupplyTypeEnumFilter | lowercase}})
+        </div>
+        <br>
+    </div>
+    <div class="text-grey">{{::'requested.by' | tmDictionaryTermFilter | lowercase}} {{$row.requesterRole |
+        RequesterRoleFilter | lowercase}}
+    </div>
+</div>
+

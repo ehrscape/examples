@@ -1,0 +1,10 @@
+<div data-tm-flex-layout="row" data-justify-content="flex-end" data-align-items="center"
+     data-tm-flex-item="0 0 auto">
+    <tm-dropdown-menu data-menu-title="{{data.title}}">
+        <tm-menu-checkbox-item data-ng-repeat="option in data.options"
+                               data-checked="option.selected"
+                               data-action="filterClick(option)">{{::option.key}}
+        </tm-menu-checkbox-item>
+    </tm-dropdown-menu>
+</div>
+

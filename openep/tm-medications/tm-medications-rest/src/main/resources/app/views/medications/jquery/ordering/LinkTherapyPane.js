@@ -22,11 +22,8 @@ Class.define('app.views.medications.ordering.LinkTherapyPane', 'app.views.common
   /** configs */
   view: null,
   orderedTherapies: null,
-  linkIndex: null,
-
   /** components **/
   list: null,
-
   /** privates*/
   resultCallback: null,
 
@@ -35,9 +32,7 @@ Class.define('app.views.medications.ordering.LinkTherapyPane', 'app.views.common
   {
     var self = this;
     this.callSuper(config);
-
-    var appFactory = this.view.getAppFactory();
-    this.setLayout(appFactory.createDefaultVFlexboxLayout("start", "stretch"));
+    this.setLayout(tm.jquery.VFlexboxLayout.create("flex-start", "stretch"));
     this._buildComponents();
     this._buildGui();
 
@@ -52,7 +47,8 @@ Class.define('app.views.medications.ordering.LinkTherapyPane', 'app.views.common
   {
     var self = this;
     this.list = new tm.jquery.List({
-      flex: 1,
+      cls: 'link-candidates-list',
+      flex: tm.jquery.flexbox.item.Flex.create(1, 1, "auto"),
       autoLoad: false,
       dataSource: [],
       itemTpl: function(index, item)
@@ -69,14 +65,10 @@ Class.define('app.views.medications.ordering.LinkTherapyPane', 'app.views.common
 
   _buildRow: function(index, therapy)
   {
-    var self = this;
     var container = new tm.jquery.Container({
+      cls: 'link-candidates-row',
       padding: '5 5 5 10',
-      layout: new tm.jquery.HFlexboxLayout({
-        alignment: new tm.jquery.FlexboxLayoutAlignment({
-          pack: 'start',
-          align: 'start'
-        })})
+      layout: tm.jquery.HFlexboxLayout.create("flex-start", "start")
     });
 
     container.add(new tm.jquery.Container({
@@ -87,7 +79,7 @@ Class.define('app.views.medications.ordering.LinkTherapyPane', 'app.views.common
     }));
 
     var therapyContainer = new tm.jquery.Container({
-      flex: 1,
+      flex: tm.jquery.flexbox.item.Flex.create(1, 0, "auto"),
       html: therapy.formattedTherapyDisplay,
       cls: 'TherapyDescription'
     });
@@ -105,7 +97,9 @@ Class.define('app.views.medications.ordering.LinkTherapyPane', 'app.views.common
     for (var i = 0; i < therapies.length; i++)
     {
       var therapy = therapies[i];
-      if (!tm.jquery.Utils.isEmpty(therapy.end) && tm.jquery.Utils.isEmpty(therapy.linkToTherapy))
+      var otherTherapiesLinkedToTherapy =
+          tm.views.medications.MedicationUtils.areOtherTherapiesLinkedToTherapy(therapy.linkName, therapies);
+      if (!tm.jquery.Utils.isEmpty(therapy.end) && !otherTherapiesLinkedToTherapy)
       {
         var rowData = {therapy: therapies[i]};
         this.list.addRowData(rowData, i);
@@ -123,10 +117,6 @@ Class.define('app.views.medications.ordering.LinkTherapyPane', 'app.views.common
     this.resultCallback = resultDataCallback;
     var selectedTherapy = this.list.getSelections().isEmpty() ? null : this.list.getSelections().get(0).therapy;
 
-    if (selectedTherapy != null)
-    {
-      selectedTherapy.linkToTherapy = this.linkIndex;
-    }
     if (tm.jquery.Utils.isEmpty(selectedTherapy))
     {
       var message = this.view.getDictionary('you.have.no.therapies.selected');

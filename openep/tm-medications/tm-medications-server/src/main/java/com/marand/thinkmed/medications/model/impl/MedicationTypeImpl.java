@@ -31,12 +31,16 @@ import com.marand.thinkmed.medications.MedicationTypeEnum;
 import com.marand.thinkmed.medications.model.Medication;
 import com.marand.thinkmed.medications.model.MedicationType;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xfMedicationTypeMed", columnList = "medication_id"),
+    @Index(name = "xpMedicationTypeMed", columnList = "type")})
 public class MedicationTypeImpl extends AbstractPermanentEntity implements MedicationType
 {
   private Medication medication;
@@ -44,7 +48,6 @@ public class MedicationTypeImpl extends AbstractPermanentEntity implements Medic
 
   @Override
   @ManyToOne(targetEntity = MedicationImpl.class, fetch = FetchType.LAZY, optional = false)
-  @Index(name = "xfMedicationTypeMed")
   public Medication getMedication()
   {
     return medication;
@@ -59,7 +62,6 @@ public class MedicationTypeImpl extends AbstractPermanentEntity implements Medic
   @Override
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  @Index(name = "xpMedicationTypeMed")
   public MedicationTypeEnum getType()
   {
     return type;

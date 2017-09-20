@@ -19,20 +19,20 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.DataObject;
-import com.marand.maf.core.JsonSerializable;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
+import com.marand.thinkmed.api.core.JsonSerializable;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
-public class InfusionIngredientDto extends DataObject implements JsonSerializable
+public class InfusionIngredientDto extends DataTransferObject implements JsonSerializable
 {
   private MedicationDto medication;
   private Double quantity;
   private String quantityUnit;
-  private Double volume;
-  private String volumeUnit;
+  private Double quantityDenominator;
+  private String quantityDenominatorUnit;
   private DoseFormDto doseForm;
 
   private String quantityDisplay;
@@ -67,24 +67,24 @@ public class InfusionIngredientDto extends DataObject implements JsonSerializabl
     this.quantityUnit = quantityUnit;
   }
 
-  public Double getVolume()
+  public Double getQuantityDenominator()
   {
-    return volume;
+    return quantityDenominator;
   }
 
-  public void setVolume(final Double volume)
+  public void setQuantityDenominator(final Double quantityDenominator)
   {
-    this.volume = volume;
+    this.quantityDenominator = quantityDenominator;
   }
 
-  public String getVolumeUnit()
+  public String getQuantityDenominatorUnit()
   {
-    return volumeUnit;
+    return quantityDenominatorUnit;
   }
 
-  public void setVolumeUnit(final String volumeUnit)
+  public void setQuantityDenominatorUnit(final String quantityDenominatorUnit)
   {
-    this.volumeUnit = volumeUnit;
+    this.quantityDenominatorUnit = quantityDenominatorUnit;
   }
 
   public DoseFormDto getDoseForm()
@@ -113,8 +113,8 @@ public class InfusionIngredientDto extends DataObject implements JsonSerializabl
     tsb.append("medication", medication)
         .append("quantity", quantity)
         .append("quantityUnit", quantityUnit)
-        .append("volume", volume)
-        .append("volumeUnit", volumeUnit)
+        .append("quantityDenominator", quantityDenominator)
+        .append("quantityDenominatorUnit", quantityDenominatorUnit)
         .append("doseForm", doseForm)
         .append("quantityDisplay", quantityDisplay);
   }

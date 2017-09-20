@@ -1,0 +1,32 @@
+<!DOCTYPE dataset SYSTEM "dbunit_dataset.dtd"><!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<dataset>
+
+    <MEDICATION ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" DESCRIPTION="Lekadol description" MEDICATION_LEVEL="VTM" ORDERABLE="1" VTM_ID="1"/>
+    <MEDICATION_VERSION ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" NAME="Lekadol" SHORT_NAME="Lek" SUGGEST_SWITCH_TO_ORAL="0" REVIEW_REMINDER="0" MENTAL_HEALTH_DRUG="0" MEDICATION_GENERIC_ID="1" DOSE_FORM_ID="1" ATC_CLASSIFICATION_ID="1111" BASIC_UNIT_ID="1" MEDICATION_ID="1" ACTIVE="1" BLACK_TRIANGLE_MEDICATION="1" CLINICAL_TRIAL_MEDICATION="0" OUTPATIENT_MEDICATION="1" INPATIENT_MEDICATION="1" ROUNDING_FACTOR="0.5"/>
+
+    <MEDICATION ID="2" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" DESCRIPTION="Lekadol description" MEDICATION_LEVEL="VTM" ORDERABLE="1" VTM_ID="1"/>
+    <MEDICATION_VERSION ID="2" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" NAME="Lekadol" SHORT_NAME="Lek" SUGGEST_SWITCH_TO_ORAL="0" REVIEW_REMINDER="0" MENTAL_HEALTH_DRUG="0" MEDICATION_GENERIC_ID="1" DOSE_FORM_ID="1" ATC_CLASSIFICATION_ID="1111" BASIC_UNIT_ID="1" MEDICATION_ID="2" ACTIVE="1" BLACK_TRIANGLE_MEDICATION="1" CLINICAL_TRIAL_MEDICATION="0" OUTPATIENT_MEDICATION="1" INPATIENT_MEDICATION="1" ROUNDING_FACTOR="0.5"/>
+
+    <MEDICATION_WARNING ID="1" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" DESCRIPTION="warning description" SEVERITY="SIGNIFICANT" MEDICATION_ID="1"/>
+
+    <MEDICATION_WARNING ID="2" VERSION="0" EFFECTIVE_START="-∞" EFFECTIVE_END="+∞" DESCRIPTION="warning description" SEVERITY="LOW" MEDICATION_ID="2"/>
+
+</dataset>

@@ -19,13 +19,13 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.DataObject;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Klavdij Lapajne
  */
-public class MedicationDocumentDto extends DataObject
+public class MedicationDocumentDto extends DataTransferObject
 {
   private String documentReference;
   private String externalSystem;

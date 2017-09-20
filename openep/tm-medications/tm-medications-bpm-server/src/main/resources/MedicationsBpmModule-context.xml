@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+<?xml version="1.0" encoding="UTF-8"?><!--
   ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
   ~
   ~ This file is part of Think!Med Clinical Medication Management.
@@ -21,6 +20,27 @@
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <import resource="MedicationsClientService-context.xml"/>
+    <bean id="dispenseMedicationTaskListener"
+            class="com.marand.thinkmed.medications.task.listener.DispenseMedicationTaskListener">
+    </bean>
 
+    <bean id="supplyReminderTaskListener"
+            class="com.marand.thinkmed.medications.task.listener.SupplyReminderTaskListener">
+    </bean>
+
+    <bean id="supplyReviewTaskListener"
+            class="com.marand.thinkmed.medications.task.listener.SupplyReviewTaskListener">
+    </bean>
+
+    <bean id="perfusionSyringeStartPreparationTaskListener"
+            class="com.marand.thinkmed.medications.task.listener.PerfusionSyringeStartPreparationTaskListener">
+    </bean>
+
+    <bean id="perfusionSyringeCompletePreparationTaskListener"
+            class="com.marand.thinkmed.medications.task.listener.PerfusionSyringeCompletePreparationTaskListener">
+    </bean>
+
+    <bean id="perfusionSyringeDispenseMedicationTaskListener"
+            class="com.marand.thinkmed.medications.task.listener.PerfusionSyringeDispenseMedicationTaskListener">
+    </bean>
 </beans>

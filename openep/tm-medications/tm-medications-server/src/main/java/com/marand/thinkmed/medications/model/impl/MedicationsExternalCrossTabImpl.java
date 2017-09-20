@@ -28,12 +28,17 @@ import com.marand.maf.core.hibernate.entity.AbstractPermanentEntity;
 import com.marand.thinkmed.medications.MedicationsExternalValueType;
 import com.marand.thinkmed.medications.model.MedicationExternalCrossTab;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author Mitja Lapajne
  */
 @Entity
+@Table(indexes = {
+    @Index(name = "xpMedsExternalTransExtSys", columnList = "external_system"),
+    @Index(name = "xpMedsExternalTransValueType", columnList = "value_type"),
+    @Index(name = "xpMedsExternalTransValue", columnList = "value")})
 public class MedicationsExternalCrossTabImpl extends AbstractPermanentEntity implements MedicationExternalCrossTab
 {
   private String externalSystem;
@@ -43,7 +48,6 @@ public class MedicationsExternalCrossTabImpl extends AbstractPermanentEntity imp
 
   @Override
   @Column(nullable = false)
-  @Index(name = "xpMedsExternalTransExtSys")
   public String getExternalSystem()
   {
     return externalSystem;
@@ -58,7 +62,6 @@ public class MedicationsExternalCrossTabImpl extends AbstractPermanentEntity imp
   @Override
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
-  @Index(name = "xpMedsExternalTransValueType")
   public MedicationsExternalValueType getValueType()
   {
     return valueType;
@@ -72,7 +75,6 @@ public class MedicationsExternalCrossTabImpl extends AbstractPermanentEntity imp
 
   @Override
   @Column(nullable = false)
-  @Index(name = "xpMedsExternalTransValue")
   public String getValue()
   {
     return value;

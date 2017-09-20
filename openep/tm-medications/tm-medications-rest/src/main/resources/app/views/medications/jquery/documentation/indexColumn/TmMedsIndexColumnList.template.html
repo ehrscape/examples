@@ -1,0 +1,27 @@
+<div data-tm-flex-layout="column" data-justify-content="flex-start" data-align-items="stretch">
+    <div class="header-row" data-tm-flex-layout="row" data-align-items="center" data-justify-content="center"
+         data-tm-flex-item="0 0 auto" data-ng-class="{'active': vm.showList()}">
+        <button type="button" class="tm-component tm-button btn btn-link" tabindex="-1" data-tm-flex-item="0 0 auto"
+                data-ng-click="vm.clearActiveDocument()">
+            <div tabindex="-1" style="display: inline-block; padding-top: 1px;">{{ 'list' | tmDictionaryTermFilter }}</div>
+        </button>
+    </div>
+    <div data-tm-flex-layout="column" data-align-items="stretch" data-justify-content="flex-start"
+         data-tm-flex-item="1 1 auto"
+         style="overflow-y: auto; min-height: 1px; height: 1px; min-width: 0px; overflow-x: hidden;" class="scrollable">
+        <tm-meds-index-column-list-item data-ng-repeat="document in vm.getDocuments()"
+                                        data-document="document"
+                                        data-tm-flex-item="0 0 auto" class="item"
+                                        data-ng-click="vm.setActiveDocument(document)"
+                                        data-ng-class="{'active': vm.isActiveDocument(document)}">
+        </tm-meds-index-column-list-item>
+        <div data-tm-flex-item="0 0 auto" class="show-more-container" data-tm-flex-layout="row" data-align-items="center"
+             data-justify-content="center" data-ng-if="vm.moreDocumentsExist()">
+            <button type="button" class="tm-component tm-button btn" tabindex="-1">
+                <div tabindex="-1" style="display: inline-block;padding-top: 1px;" data-ng-click="vm.loadMoreDocuments()">
+                    {{ 'more.results' | tmDictionaryTermFilter }}
+                </div>
+            </button>
+        </div>
+    </div>
+</div>

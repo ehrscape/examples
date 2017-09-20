@@ -23,9 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.marand.thinkmed.api.externals.data.object.NamedExternalDto;
 import com.marand.thinkmed.medicationsexternal.dto.DoseRangeCheckDto;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationForWarningsSearchDto;
 import com.marand.thinkmed.medicationsexternal.dto.MedicationsWarningDto;
+import com.marand.thinkmed.medicationsexternal.dto.WarningsProviderDto;
 import com.marand.thinkmed.medicationsexternal.plugin.MedicationExternalDataPlugin;
 import com.marand.thinkmed.medicationsexternal.service.MedicationsExternalService;
 import org.slf4j.Logger;
@@ -74,11 +76,10 @@ public class MedicationsExternalServiceImpl implements MedicationsExternalServic
       final String externalSystem,
       final long patientAgeInDays,
       final Double patientWeightInKg,
-      final Integer gabInWeeks,
       final Double bsaInM2,
       final boolean isFemale,
-      final List<String> diseaseTypeCodes,
-      final List<String> allergiesExternalValues,
+      final List<NamedExternalDto> diseaseTypeValues,
+      final List<NamedExternalDto> allergiesExternalValues,
       final List<MedicationForWarningsSearchDto> medicationSummaries)
   {
     final MedicationExternalDataPlugin plugin = plugins.get(externalSystem);
@@ -89,10 +90,9 @@ public class MedicationsExternalServiceImpl implements MedicationsExternalServic
         return plugin.findMedicationWarnings(
             patientAgeInDays,
             patientWeightInKg,
-            gabInWeeks,
             bsaInM2,
             isFemale,
-            diseaseTypeCodes,
+            diseaseTypeValues,
             allergiesExternalValues,
             medicationSummaries);
       }
@@ -105,14 +105,18 @@ public class MedicationsExternalServiceImpl implements MedicationsExternalServic
   }
 
   @Override
-  public List<String> getWarningProviders()
+  public List<WarningsProviderDto> getWarningProviders()
   {
-    final List<String> warningProviders = new ArrayList<String>();
+    final List<WarningsProviderDto> warningProviders = new ArrayList<>();
     for (final String pluginCode : plugins.keySet())
     {
-      if (plugins.get(pluginCode).isWarningsProvider())
+      final MedicationExternalDataPlugin externalDataPlugin = plugins.get(pluginCode);
+      if (externalDataPlugin.isWarningsProvider())
       {
-        warningProviders.add(pluginCode);
+        final WarningsProviderDto warningsProviderDto = new WarningsProviderDto();
+        warningsProviderDto.setExternalSystem(pluginCode);
+        warningsProviderDto.setRequiresDiseaseCodesTranslation(externalDataPlugin.requiresDiseaseCodesTranslation());
+        warningProviders.add(warningsProviderDto);
       }
     }
     return warningProviders;

@@ -19,20 +19,24 @@
 
 package com.marand.thinkmed.medications.dto;
 
-import com.marand.maf.core.data.object.DataObject;
+import com.marand.thinkmed.api.core.data.object.DataTransferObject;
 import com.marand.thinkmed.medications.TherapyDoseTypeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * @author Mitja Lapajne
  */
-public class TherapyDoseDto extends DataObject
+public class TherapyDoseDto extends DataTransferObject
 {
   private TherapyDoseTypeEnum therapyDoseTypeEnum;
   private Double numerator;
   private String numeratorUnit;
   private Double denominator;
   private String denominatorUnit;
+  private Double secondaryNumerator;
+  private String secondaryNumeratorUnit;
+  private Double secondaryDenominator;
+  private String secondaryDenominatorUnit;
 
   public Double getNumerator()
   {
@@ -72,6 +76,47 @@ public class TherapyDoseDto extends DataObject
   public void setDenominatorUnit(final String denominatorUnit)
   {
     this.denominatorUnit = denominatorUnit;
+  }
+
+
+  public Double getSecondaryNumerator()
+  {
+    return secondaryNumerator;
+  }
+
+  public void setSecondaryNumerator(final Double secondaryNumerator)
+  {
+    this.secondaryNumerator = secondaryNumerator;
+  }
+
+  public String getSecondaryNumeratorUnit()
+  {
+    return secondaryNumeratorUnit;
+  }
+
+  public void setSecondaryNumeratorUnit(final String secondaryNumeratorUnit)
+  {
+    this.secondaryNumeratorUnit = secondaryNumeratorUnit;
+  }
+
+  public Double getSecondaryDenominator()
+  {
+    return secondaryDenominator;
+  }
+
+  public void setSecondaryDenominator(final Double secondaryDenominator)
+  {
+    this.secondaryDenominator = secondaryDenominator;
+  }
+
+  public String getSecondaryDenominatorUnit()
+  {
+    return secondaryDenominatorUnit;
+  }
+
+  public void setSecondaryDenominatorUnit(final String secondaryDenominatorUnit)
+  {
+    this.secondaryDenominatorUnit = secondaryDenominatorUnit;
   }
 
   public TherapyDoseTypeEnum getTherapyDoseTypeEnum()
@@ -120,6 +165,10 @@ public class TherapyDoseDto extends DataObject
     buffer.append(numeratorUnit);
     buffer.append(denominator);
     buffer.append(denominatorUnit);
+    buffer.append(secondaryNumerator);
+    buffer.append(secondaryNumeratorUnit);
+    buffer.append(secondaryDenominator);
+    buffer.append(secondaryDenominatorUnit);
     return buffer.toString().hashCode();
   }
 
@@ -130,6 +179,10 @@ public class TherapyDoseDto extends DataObject
         .append("numeratorUnit", numeratorUnit)
         .append("denominator", denominator)
         .append("denominatorUnit", denominatorUnit)
-        .append("therapyDoseTypeEnum", therapyDoseTypeEnum);
+        .append("therapyDoseTypeEnum", therapyDoseTypeEnum)
+        .append("secondaryNumerator", secondaryNumerator)
+        .append("secondaryNumeratorUnit", secondaryNumeratorUnit)
+        .append("secondaryDenominator", secondaryDenominator)
+        .append("secondaryDenominatorUnit", secondaryDenominatorUnit);
   }
 }

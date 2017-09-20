@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2010-2014 Marand d.o.o. (www.marand.com)
+  ~
+  ~ This file is part of Think!Med Clinical Medication Management.
+  ~
+  ~ Think!Med Clinical Medication Management is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Think!Med Clinical Medication Management is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Think!Med Clinical Medication Management.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <import resource="../../administration/impl/AdministrationTaskConverterTest-context.xml"/>
+    <import resource="../../administration/impl/AdministrationHandlerTest-context.xml"/>
+    <import resource="../../business/impl/DefaultMedicationsBoTest-context.xml"/>
+
+    <bean id="overviewContentProvider" class="com.marand.thinkmed.medications.overview.impl.OverviewContentProviderImpl"/>
+
+    <bean id="medicationHolderDtoMapper" class="com.marand.thinkmed.medications.business.mapper.MedicationHolderDtoMapper">
+        <property name="therapyDisplayProvider" ref="therapyDisplayProvider"/>
+        <property name="markNonFormularyMedication">
+            <value type="java.lang.Boolean">true</value>
+        </property>
+    </bean>
+
+    <!--MOCKS-->
+    <bean id="medicationsOpenEhrDao" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.dao.openehr.MedicationsOpenEhrDao"/>
+    </bean>
+
+    <bean id="additionalWarningsDelegator" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.warnings.additional.AdditionalWarningsDelegator"/>
+    </bean>
+
+    <bean id="medicationsDao" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.dao.MedicationsDao"/>
+    </bean>
+
+    <bean id="taggingOpenEhrDao" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.maf.core.openehr.dao.openehr.TaggingOpenEhrDao"/>
+    </bean>
+
+    <bean id="medicationsTasksProvider" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.task.MedicationsTasksProvider"/>
+    </bean>
+
+    <bean id="therapyDisplayProvider" class="com.marand.thinkmed.medications.business.impl.TherapyDisplayProvider" />
+
+    <bean id="processService" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.process.service.ProcessService"/>
+    </bean>
+
+    <bean id="medicationOnAdmissionHandler" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.thinkmed.medications.admission.MedicationOnAdmissionHandler"/>
+    </bean>
+
+    <bean id="mafDateRuleService" class="org.mockito.Mockito" factory-method="mock">
+        <constructor-arg value="com.marand.maf.core.daterule.service.MafDateRuleService"/>
+    </bean>
+
+    <bean id="testDictionary" class="com.marand.thinkmed.medications.MedicationsTestDictionary"/>
+</beans>

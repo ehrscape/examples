@@ -26,37 +26,50 @@ Class.define('app.views.medications.ordering.SimpleTherapyEditContainer', 'app.v
   therapy: null,
   copyTherapy: false,
   isPastMode: false,
+  therapyAlreadyStarted: false,
+  therapyModifiedInThePast: false,
+  saveTherapyFunction: null, //optional
+  medicationData: null, /** @param {Array<app.views.medications.common.dto.MedicationData>} medicationData */
   /** privates */
   resultCallback: null,
   medications: null,
+  editingStartTimestamp: null,
   /** privates: components */
   simpleTherapyContainer: null,
   performerContainer: null,
   saveDateTimePane: null,
 
+  _renderConditionTask: null,
+  _testRenderCoordinator: null,
+
   /** constructor */
   Constructor: function(config)
   {
     var self = this;
-    this.medications = [];
     this.callSuper(config);
-    this.setLayout(tm.jquery.VFlexboxLayout.create('start', "stretch", 0));
+    var appFactory = this.view.getAppFactory();
+    this.setLayout(tm.jquery.VFlexboxLayout.create('flex-start', "stretch", 0));
 
     this._buildComponents();
     this._buildGui();
 
-    var appFactory = this.view.getAppFactory();
-    appFactory.createConditionTask(
-        function()
-        {
-          self._presentValue();
-        },
-        function()
-        {
-          return self.isRendered(true);
-        },
-        50, 1000
-    );
+    this.on(tm.jquery.ComponentEvent.EVENT_TYPE_RENDER, function()
+    {
+      self._abortRenderConditionTask();
+      self._renderConditionTask = appFactory.createConditionTask(
+          function()
+          {
+            self._presentValue();
+            self._renderConditionTask = null;
+            self._testRenderCoordinator.insertCoordinator();
+          },
+          function()
+          {
+            return self.isRendered(true);
+          },
+          20, 1000
+      );
+    });
   },
 
   /** private methods */
@@ -64,41 +77,53 @@ Class.define('app.views.medications.ordering.SimpleTherapyEditContainer', 'app.v
   {
     var self = this;
 
-    var editingStartDateTime = new Date();
-    editingStartDateTime.setSeconds(0);
-    editingStartDateTime.setMilliseconds(0);
+    this.editingStartTimestamp = CurrentTime.get();
+    this.editingStartTimestamp.setSeconds(0);
+    this.editingStartTimestamp.setMilliseconds(0);
+
+    this._testRenderCoordinator = new app.views.medications.common.testing.RenderCoordinator({
+      attributeName: 'simple-therapy-edit-container-coordinator',
+      view: this.getView(),
+      component: this,
+      manualMode: true
+    });
 
     this.simpleTherapyContainer = new app.views.medications.ordering.SimpleTherapyContainer({
       view: this.view,
-      editMode: !this.copyTherapy,
+      editMode: true,
       copyMode: this.copyTherapy,
       isPastMode: this.isPastMode,
-      getTherapyStartNotBeforeDateFunction:  function()
+      therapyAlreadyStarted: this.therapyAlreadyStarted,
+      changeReasonRequired: this.therapy.linkedToAdmission,
+      bnfMaximumPercentage: tm.jquery.Utils.isEmpty(this.therapy.bnfMaximumPercentage) ? null :
+          this.therapy.bnfMaximumPercentage,
+      showBnf: !tm.jquery.Utils.isEmpty(this.therapy.bnfMaximumPercentage),
+      getTherapyStartNotBeforeDateFunction: function()
       {
-        return self.isPastMode == true ? null : self.saveDateTimePane.isHidden() ? editingStartDateTime : self.saveDateTimePane.getSaveDateTime();
+        return self.isPastMode == true ? null : self._getEditTimestamp();
       },
-      confirmTherapyEvent: function(result)
+      confirmTherapyEvent: function(result, changeReason)
       {
         if (result == "VALIDATION_FAILED")
         {
           self.resultCallback(new app.views.common.AppResultData({success: false}));
         }
-        else if (!self.isPastMode && !self.performerContainer.getPerformer())
-        {
-          var warningSystemDialog = self.view.getAppFactory().createWarningSystemDialog(self.view.getDictionary("prescriber.not.defined.warning"));
-          warningSystemDialog.setWidth(320);
-          warningSystemDialog.setHeight(122);
-          warningSystemDialog.show();
-          self.resultCallback(new app.views.common.AppResultData({success: false}));
-        }
         else
         {
-          self._saveTherapy(result);
+          var performer = self._performerContainer != null ?
+              self._performerContainer.getPerformer() : self.view.getCurrentUserAsCareProfessional();
+
+          if (self.saveTherapyFunction)
+          {
+            self.saveTherapyFunction(result, performer);
+            self.resultCallback(new app.views.common.AppResultData({success: true}));
+          }
+          else
+          {
+            self._saveTherapy(result, changeReason, performer,
+                self.saveDateTimePane.isHidden() ? null : self.saveDateTimePane.getSaveDateTime());
+          }
         }
-      },
-      medicationsProviderFunction: function()
-      {
-        return self.medications;
       },
       saveDateTimePaneEvent: function()
       {
@@ -109,105 +134,100 @@ Class.define('app.views.medications.ordering.SimpleTherapyEditContainer', 'app.v
       }
     });
 
-    var careProfessionals = this.view.getCareProfessionals();
-    var currentUserAsCareProfessionalName = null;
-    if (this.isPastMode)
+    if (this.isPastMode === true)
     {
-      currentUserAsCareProfessionalName = this.therapy.prescriberName;
-    }
-    else if (this.view.getCurrentUserAsCareProfessional())
-    {
-      currentUserAsCareProfessionalName = this.view.getCurrentUserAsCareProfessional().name;
+      var careProfessionals = this.view.getCareProfessionals();
+      var currentUserAsCareProfessionalName = this.view.getCurrentUserAsCareProfessional() ? this.view.getCurrentUserAsCareProfessional().name : null;
+      this._performerContainer =
+          tm.views.medications.MedicationUtils.createPerformerContainer(this.view, careProfessionals, currentUserAsCareProfessionalName);
     }
 
-    this.performerContainer =
-        tm.views.medications.MedicationUtils.createPerformerContainer(this.view, careProfessionals, currentUserAsCareProfessionalName);
-
-    this.saveDateTimePane = new app.views.medications.ordering.TherapySaveDatePane();
-    this.saveDateTimePane.hide();
+    this.saveDateTimePane = new app.views.medications.ordering.TherapySaveDatePane({
+      hidden: true
+    });
   },
 
   _buildGui: function()
   {
     this.add(this.simpleTherapyContainer);
-    this.add(new tm.jquery.Container({flex: 1}));
-    this.add(this.performerContainer);
+    this.add(new tm.jquery.Container({flex: tm.jquery.flexbox.item.Flex.create(1, 0, "auto")}));
+    if (this._performerContainer != null)
+    {
+      this.add(this._performerContainer);
+    }
     this.add(this.saveDateTimePane);
   },
 
-  _loadSimilarMedications: function(medicationId, routeCode) //Similar medications have same generic and route
+  _getEditTimestamp: function()
   {
-    var self = this;
-    var medicationsUrl =
-        this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_FIND_SIMILAR_MEDICATIONS;
-    var params = {
-      medicationId: medicationId,
-      routeCode: routeCode
-    };
-    this.view.loadViewData(medicationsUrl, params, null, function(data)
-    {
-      self.medications.length = 0;
-      $.merge(self.medications, data);
-    });
+    return this.saveDateTimePane.isHidden() ? this.editingStartTimestamp : this.saveDateTimePane.getSaveDateTime();
   },
 
   _presentValue: function()
   {
-    this._loadSimilarMedications(this.therapy.medication.id, this.therapy.route.code);
-    this.simpleTherapyContainer.setSimpleTherapy(this.therapy, this.isPastMode == true);
+    var therapy = this.getTherapy();
+
+    var therapyHasAlreadyStarted = therapy.getStart() < this._getEditTimestamp();
+    var setTherapyStart = !therapyHasAlreadyStarted || this.isPastMode == true;
+    this.simpleTherapyContainer.setSimpleTherapyData(therapy,
+        this.getMedicationData(),
+        setTherapyStart,
+        this.therapyModifiedInThePast);
   },
 
-  _saveTherapy: function(newTherapy)
+  _saveTherapy: function(therapy, changeReason, prescriber, saveDateTime)
   {
     var self = this;
-    var saveUrl;
-    var params;
-    var saveDateTime = this.saveDateTimePane.isHidden() ? null : this.saveDateTimePane.getSaveDateTime();
-    var centralCaseData = this.view.getCentralCaseData();
+
     if (this.copyTherapy)
     {
-      saveUrl = this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_SAVE_MEDICATIONS_ORDER;
-      params = {
-        patientId: self.view.getPatientId(),
-        therapies: JSON.stringify([newTherapy]),
-        centralCaseId: centralCaseData ? centralCaseData.centralCaseId : null,
-        careProviderId: centralCaseData ? centralCaseData.careProviderId : null,
-        sessionId: centralCaseData && centralCaseData.sessionId ? centralCaseData.sessionId : null,
-        knownOrganizationalEntity: self.view.getKnownOrganizationalEntity(),
-        prescriber: JSON.stringify(this.performerContainer.getPerformer()),
-        roundsInterval: JSON.stringify(self.view.getRoundsInterval()),
-        saveDateTime: JSON.stringify(saveDateTime)
-      };
+      var medicationOrder = [
+        new app.views.medications.common.dto.SaveMedicationOrder({
+          therapy: therapy,
+          actionEnum: app.views.medications.TherapyEnums.medicationOrderActionEnum.PRESCRIBE
+        })
+      ];
+
+      this.getView().getRestApi().saveMedicationsOrder(medicationOrder, prescriber, saveDateTime, null, true)
+          .then(function onSuccess()
+              {
+                self.resultCallback(new app.views.common.AppResultData({success: true}));
+              },
+              function onFailure()
+              {
+                self.resultCallback(new app.views.common.AppResultData({success: false}));
+              });
     }
     else
     {
-      newTherapy.compositionUid = this.therapy.compositionUid;
-      newTherapy.ehrOrderName = this.therapy.ehrOrderName;
-      saveUrl = this.view.getViewModuleUrl() + tm.views.medications.TherapyView.SERVLET_PATH_MODIFY_THERAPY;
-      params = {
-        patientId: this.view.getPatientId(),
-        therapy: JSON.stringify(newTherapy),
-        centralCaseId: centralCaseData ? centralCaseData.centralCaseId : null,
-        careProviderId: centralCaseData ? centralCaseData.careProviderId : null,
-        sessionId: centralCaseData && centralCaseData.sessionId ? centralCaseData.sessionId : null,
-        knownOrganizationalEntity: self.view.getKnownOrganizationalEntity(),
-        prescriber: JSON.stringify(self.performerContainer.getPerformer()),
-        saveDateTime: JSON.stringify(saveDateTime)
-      };
-    }
+      therapy.setCompositionUid(this.getTherapy().getCompositionUid());
+      therapy.setEhrOrderName(this.getTherapy().getEhrOrderName());
 
-    this.view.loadPostViewData(saveUrl, params, null,
-        function()
-        {
-          var resultData = new app.views.common.AppResultData({success: true});
-          self.resultCallback(resultData);
-        },
-        function()
-        {
-          var resultData = new app.views.common.AppResultData({success: false});
-          self.resultCallback(resultData);
-        },
-        true);
+      this.getView().getRestApi().modifyTherapy(
+          therapy,
+          changeReason,
+          prescriber,
+          this.therapyAlreadyStarted,
+          saveDateTime,
+          true)
+          .then(function onSuccess()
+              {
+                self.resultCallback(new app.views.common.AppResultData({success: true}));
+              },
+              function onFailure()
+              {
+                self.resultCallback(new app.views.common.AppResultData({success: false}));
+              });
+    }
+  },
+
+  _abortRenderConditionTask: function()
+  {
+    if (!tm.jquery.Utils.isEmpty(this._renderConditionTask))
+    {
+      this._renderConditionTask.abort();
+      this._renderConditionTask = null;
+    }
   },
 
   /** public methods */
@@ -215,6 +235,38 @@ Class.define('app.views.medications.ordering.SimpleTherapyEditContainer', 'app.v
   {
     this.resultCallback = resultDataCallback;
     this.simpleTherapyContainer.validateAndConfirmOrder();
+  },
+  /**
+   * @Override
+   */
+  destroy: function()
+  {
+    this._abortRenderConditionTask();
+    this.callSuper();
+  },
+
+  /**
+   * @returns {app.views.common.AppView}
+   */
+  getView: function()
+  {
+    return this.view;
+  },
+
+  /**
+   * @returns {app.views.medications.common.dto.Therapy}
+   */
+  getTherapy: function()
+  {
+    return this.therapy;
+  },
+
+  /**
+   * @returns {Array<app.views.medications.common.dto.MedicationData>}
+   */
+  getMedicationData: function()
+  {
+    return this.medicationData;
   }
 });
 
